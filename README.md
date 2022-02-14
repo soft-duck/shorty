@@ -1,0 +1,3 @@
+# shorty
+
+Small link shortener
