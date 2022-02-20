@@ -35,7 +35,9 @@ async fn get_shortened(params: web::Path<String>, map: web::Data<LinkMap>) -> im
 
 #[post("/{url:.*}")]
 async fn create_shortened(req: HttpRequest, map: web::Data<LinkMap>) -> impl Responder {
-	let url = uri_to_url(req.uri());
+	let uri = req.uri();
+	info!("URI is {uri}");
+	let url = uri_to_url(uri);
 	let random_chars = generate_random_chars();
 	let shortened_url = format!("http://{}/{}", BASE_URL, random_chars);
 	info!("Shortening URL {url} to {shortened_url}");
@@ -46,8 +48,7 @@ async fn create_shortened(req: HttpRequest, map: web::Data<LinkMap>) -> impl Res
 	}
 
 
-	HttpResponse::Ok()
-		.body(shortened_url)
+	HttpResponse::Ok().body(shortened_url)
 }
 
 #[tokio::main]
@@ -74,6 +75,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.bind(("127.0.0.1", 8080))?
 		.run()
 		.await?;
+
 
 	Ok(())
 }
