@@ -3,7 +3,7 @@ use std::error::Error;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use tokio::sync::RwLock;
-use tracing::{info, Level};
+use tracing::{info, Level, instrument};
 use tracing_subscriber::EnvFilter;
 
 use crate::util::{generate_random_chars, uri_to_url};
@@ -15,6 +15,7 @@ type LinkMap = RwLock<HashMap<String, String>>;
 const BASE_URL: &str = "localhost:8080";
 
 #[get("/{shortened_url:.*}")]
+#[instrument(skip_all)]
 async fn get_shortened(params: web::Path<String>, map: web::Data<LinkMap>) -> impl Responder {
 	let shortened_url = params.into_inner();
 
@@ -34,6 +35,7 @@ async fn get_shortened(params: web::Path<String>, map: web::Data<LinkMap>) -> im
 }
 
 #[post("/{url:.*}")]
+#[instrument(skip_all)]
 async fn create_shortened(req: HttpRequest, map: web::Data<LinkMap>) -> impl Responder {
 	let uri = req.uri();
 	info!("URI is {uri}");
