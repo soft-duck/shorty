@@ -9,6 +9,7 @@ use tracing_subscriber::EnvFilter;
 use crate::util::{generate_random_chars, uri_to_url};
 
 mod util;
+mod Link;
 
 type LinkMap = RwLock<HashMap<String, String>>;
 
