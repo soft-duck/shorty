@@ -3,7 +3,7 @@ use std::error::Error;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use tokio::sync::RwLock;
-use tracing::{debug, info, Level};
+use tracing::{info, Level};
 use tracing_subscriber::EnvFilter;
 
 use crate::util::{generate_random_chars, uri_to_url};
@@ -68,7 +68,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	HttpServer::new(move ||
 		App::new()
 			.app_data(links.clone())
-			.service(test)
 			.service(get_shortened)
 			.service(create_shortened)
 	)
