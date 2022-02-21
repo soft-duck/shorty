@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 
-use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, middleware, post, Responder, web};
+use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use tokio::sync::RwLock;
 use tracing::{info, Level, instrument};
 use tracing_subscriber::EnvFilter;
@@ -71,7 +71,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	HttpServer::new(move ||
 		App::new()
-			.wrap(middleware::NormalizePath::new(middleware::TrailingSlash::MergeOnly))
 			.app_data(links.clone())
 			.service(get_shortened)
 			.service(create_shortened)
