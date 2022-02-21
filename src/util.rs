@@ -23,3 +23,12 @@ pub fn uri_to_url(uri: &Uri) -> String {
 
 	url
 }
+
+pub fn sanitize_url(url: String) -> String {
+	if url.starts_with("http://") || url.starts_with("https://") {
+		return url;
+	}
+
+
+	format!("http://{url}")
+}

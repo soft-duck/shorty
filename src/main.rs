@@ -6,7 +6,7 @@ use tokio::sync::RwLock;
 use tracing::{info, Level, instrument};
 use tracing_subscriber::EnvFilter;
 
-use crate::util::{generate_random_chars, uri_to_url};
+use crate::util::{generate_random_chars, sanitize_url, uri_to_url};
 
 mod util;
 mod link;
@@ -41,6 +41,7 @@ async fn create_shortened(req: HttpRequest, map: web::Data<LinkMap>) -> impl Res
 	let uri = req.uri();
 	info!("URI is {uri}");
 	let url = uri_to_url(uri);
+	let url = sanitize_url(url);
 	let random_chars = generate_random_chars();
 	let shortened_url = format!("http://{}/{}", BASE_URL, random_chars);
 	info!("Shortening URL {url} to {shortened_url}");
