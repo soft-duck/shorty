@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 			.service(get_shortened)
 			.service(create_shortened)
 	)
-		.bind(("127.0.0.1", 8080))?
+		.bind(("127.0.0.1", 7999))?
 		.run()
 		.await?;
 
