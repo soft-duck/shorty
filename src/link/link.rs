@@ -1,6 +1,7 @@
-use chrono::Local;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
+
+use chrono::Local;
 use tokio::sync::RwLock;
 use tracing::debug;
 
@@ -35,6 +36,11 @@ impl Link {
 			valid_for: 1000 * 60 * 60 * 24, //24 hours
 		}
 	}
+
+	pub fn is_invalid(&self) -> bool {
+		self.invocations > self.max_uses
+			|| (Local::now().timestamp_millis() - self.created_at) > self.valid_for
+	}
 }
 
 pub struct LinkStore {
@@ -51,8 +57,8 @@ impl LinkStore {
 	pub async fn get(&self, id: &str) -> Option<Link> {
 		let link;
 		{
-			let lock = self.links.read().await;
-			let link_opt = lock.get(id);
+			let links = self.links.read().await;
+			let link_opt = links.get(id);
 
 			if link_opt.is_none() {
 				return None;
@@ -61,18 +67,23 @@ impl LinkStore {
 			link = link_opt.unwrap().clone();
 		}
 
-		if link.invocations > link.max_uses
-			|| (Local::now().timestamp_millis() - link.created_at) > link.valid_for
-		{
+		if link.is_invalid() {
 			debug!("{} got requested but is expired.", link.id);
 			return None;
 		}
+
 
 		Some(link)
 	}
 
 	pub async fn insert(&self, link: Link) {
-		let mut lock = self.links.write().await;
-		lock.insert(link.id.clone(), link);
+		let mut links = self.links.write().await;
+		links.insert(link.id.clone(), link);
+	}
+
+	pub async fn clean(&self) {
+		debug!("Clearing stale links");
+		let mut links = self.links.write().await;
+		links.retain(|_, link| !link.is_invalid())
 	}
 }
