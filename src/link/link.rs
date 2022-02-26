@@ -4,7 +4,6 @@ use std::fmt::{Display, Formatter};
 use chrono::Local;
 use tokio::sync::RwLock;
 use tracing::debug;
-use tracing::instrument;
 
 use crate::generate_random_chars;
 
