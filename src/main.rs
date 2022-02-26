@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::io::Read;
+use std::time::Duration;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use tracing::{debug, info, instrument, Level};
@@ -12,6 +13,8 @@ use crate::util::{generate_random_chars, sanitize_url, uri_to_url};
 mod util;
 mod link;
 mod config;
+
+const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 
 
 #[get("/{shortened_url:.*}")]
@@ -77,8 +80,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let config = web::Data::new(config);
 	let _config = config.clone();
 
-	let links = LinkStore::new();
-	let links = web::Data::new(links);
+	let links = web::Data::new(LinkStore::new());
+	let _links = links.clone();
+
+	tokio::task::spawn(async move {
+		loop {
+			_links.clean().await;
+			tokio::time::sleep(CLEAN_SLEEP_DURATION).await;
+		}
+	});
 
 	info!("Starting server at {}:{}", config.base_url, config.port);
 	HttpServer::new(move ||

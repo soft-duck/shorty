@@ -1,7 +1,6 @@
+use chrono::Local;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
-
-use chrono::Local;
 use tokio::sync::RwLock;
 use tracing::debug;
 
@@ -63,7 +62,7 @@ impl LinkStore {
 		}
 
 		if link.invocations > link.max_uses
-		|| (Local::now().timestamp_millis() - link.created_at) > link.valid_for
+			|| (Local::now().timestamp_millis() - link.created_at) > link.valid_for
 		{
 			debug!("{} got requested but is expired.", link.id);
 			return None;
