@@ -44,7 +44,7 @@ async fn create_shortened(
 	let url = sanitize_url(url);
 
 	let link = Link::new(url);
-	let shortened_url = format!("http://{}/{}", config.public_url, link.id);
+	let shortened_url = format!("{}/{}", config.public_url, link.id);
 	info!("Shortening URL {} to {}", link.redirect_to, shortened_url);
 
 	link_store.insert(link).await;
