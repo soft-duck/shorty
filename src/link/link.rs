@@ -84,6 +84,11 @@ impl LinkStore {
 	pub async fn clean(&self) {
 		debug!("Clearing stale links");
 		let mut links = self.links.write().await;
-		links.retain(|_, link| !link.is_invalid())
+		let num_before = links.len();
+
+		links.retain(|_, link| !link.is_invalid());
+		let num_after = links.len();
+		let delta = num_before - num_after;
+		debug!("Size before cleaning: {num_before}. After cleaning: {num_after}. Removed elements: {delta}");
 	}
 }
