@@ -2,7 +2,7 @@ use actix_web::http::Uri;
 use base64::CharacterSet;
 use rand::RngCore;
 
-const URL_SIZE: usize = 6;
+const URL_SIZE: usize = 4; //size in bytes
 const BASE64_CONFIG: base64::Config = base64::Config::new(CharacterSet::UrlSafe, false);
 
 
