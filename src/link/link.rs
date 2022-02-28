@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 use chrono::Local;
+use sqlx::{Database, Pool, Sqlite};
 use tokio::sync::RwLock;
 use tracing::debug;
 
@@ -26,20 +28,45 @@ impl Display for Link {
 }
 
 impl Link {
-	pub fn new(link: String) -> Self {
-		Self {
+	pub async fn new(link: String, pool: &Pool<Sqlite>) -> Result<Self, Box<dyn Error>> {
+		let new_link = Self {
 			id: generate_random_chars(),
 			redirect_to: link,
 			max_uses: 0, //unlimited uses
 			invocations: 0,
 			created_at: Local::now().timestamp_millis(),
 			valid_for: 1000 * 60 * 60 * 24, //24 hours
-		}
+		};
+
+		let id = &new_link.id;
+		let redirect_to = &new_link.redirect_to;
+
+		sqlx::query!(
+			r#"
+			INSERT INTO links
+			VALUES ($1, $2, $3, $4, $5, $6)
+			"#,
+			id,
+			redirect_to,
+			new_link.created_at,
+			new_link.invocations,
+			new_link.created_at,
+			new_link.valid_for
+		)
+			.execute(pool)
+			.await?;
+
+
+		Ok(new_link)
 	}
 
 	pub fn is_invalid(&self) -> bool {
 		self.invocations > self.max_uses
 			|| (Local::now().timestamp_millis() - self.created_at) > self.valid_for
+	}
+
+	pub fn from_id(id: &str, pool: &Pool<impl Database>) -> Result<Self, Box<dyn Error>> {
+		todo!()
 	}
 }
 

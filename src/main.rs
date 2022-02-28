@@ -3,6 +3,7 @@ use std::io::Read;
 use std::time::Duration;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
+use sqlx::{Pool, Sqlite};
 use tracing::{debug, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
@@ -19,18 +20,20 @@ const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 
 #[get("/{shortened_url:.*}")]
 #[instrument(skip_all)]
-async fn get_shortened(params: web::Path<String>, link_store: web::Data<LinkStore>) -> impl Responder {
+async fn get_shortened(params: web::Path<String>, link_store: web::Data<LinkStore>) -> Result<impl Responder, Box<dyn std::error::Error>> {
 	let shortened_url = params.into_inner();
 	debug!("Got request for {shortened_url}");
 
-	if let Some(link) = link_store.get(shortened_url.as_str()).await {
-		info!("Return url for {shortened_url} is {link}");
-		HttpResponse::TemporaryRedirect()
-			.append_header(("Location", link.redirect_to.as_str()))
-			.finish()
-	} else {
-		HttpResponse::NotFound().finish()
-	}
+	Ok(
+		if let Some(link) = link_store.get(shortened_url.as_str()).await {
+			info!("Return url for {shortened_url} is {link}");
+			HttpResponse::TemporaryRedirect()
+				.append_header(("Location", link.redirect_to.as_str()))
+				.finish()
+		} else {
+			HttpResponse::NotFound().finish()
+		}
+	)
 }
 
 #[post("/{url:.*}")]
@@ -39,21 +42,22 @@ async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
 	config: web::Data<Config>,
-) -> impl Responder {
+	pool: web::Data<Pool<Sqlite>>
+) -> Result<impl Responder, Box<dyn std::error::Error>> {
 	let uri = req.uri();
 	info!("URI is {uri}");
 
 	let url = uri_to_url(uri);
 	let url = sanitize_url(url);
 
-	let link = Link::new(url);
+	let link = Link::new(url, &pool).await?;
 	let shortened_url = format!("{}/{}", config.public_url, link.id);
 	info!("Shortening URL {} to {}", link.redirect_to, shortened_url);
 
 	link_store.insert(link).await;
 
 
-	HttpResponse::Ok().body(shortened_url)
+	Ok(HttpResponse::Ok().body(shortened_url))
 }
 
 #[tokio::main]
