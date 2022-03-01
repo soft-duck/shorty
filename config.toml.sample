@@ -4,3 +4,4 @@ port = 7999
 # The shortened link ajnIUh1H in the server response will look like `$public_url/ajnIUh1H`.
 # If the public url is `short.example.com` the link the server will respond with will be `http://short.example.com/ajnIUh1H`
 public_url = "http://localhost:7999"
+database_url = 'sqlite://database/database.db'

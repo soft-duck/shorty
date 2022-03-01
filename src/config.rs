@@ -6,6 +6,7 @@ pub struct Config {
 	pub public_url: String,
 	#[serde(default = "port_default")]
 	pub port: u16,
+	pub database_url: String
 }
 
 impl Config {
