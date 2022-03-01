@@ -1,0 +1,13 @@
+{
+  "db": "SQLite",
+  "668d477c527a22f43c81eb4388d0a3cf89ce528ad72b73d511e22e0cad388a2a": {
+    "query": "\n\t\t\tINSERT INTO links\n\t\t\tVALUES ($1, $2, $3, $4, $5, $6)\n\t\t\t",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Right": 6
+      },
+      "nullable": []
+    }
+  }
+}
