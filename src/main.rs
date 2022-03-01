@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use sqlx::{Pool, Sqlite};
+use sqlx::sqlite::SqlitePoolOptions;
 use tracing::{debug, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
@@ -93,6 +94,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
 			tokio::time::sleep(CLEAN_SLEEP_DURATION).await;
 		}
 	});
+
+	let pool = SqlitePoolOptions::new()
+		.max_connections(5)
+		.min_connections(1)
+		.max_lifetime(Some(Duration::from_secs(60 * 60)))
+		.connect(config.database_url.as_str())
+		.await?;
+
+	sqlx::migrate!()
+		.run(&pool)
+		.await?;
 
 	info!("Starting server at {}:{}", config.base_url, config.port);
 	HttpServer::new(move ||
