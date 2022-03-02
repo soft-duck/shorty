@@ -48,7 +48,7 @@ impl Link {
 			"#,
 			id,
 			redirect_to,
-			new_link.created_at,
+			0,
 			new_link.invocations,
 			new_link.created_at,
 			new_link.valid_for
