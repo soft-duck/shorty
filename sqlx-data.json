@@ -57,5 +57,33 @@
         false
       ]
     }
+  },
+  "b58d738c1069ee5fcedc29e687038ac497e31ce2137cda1a5e45a8b3888aeda3": {
+    "query": "\n\t\t\tSELECT COUNT(*) AS count FROM links;\n\t\t\t",
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "parameters": {
+        "Right": 0
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "ef52d0438c4119bd50065310acfdba69ddca1f2a7adeb36fdd8c6e92ab421eee": {
+    "query": "\n\t\t\tDELETE FROM links WHERE created_at + valid_for < $1;\n\t\t\t",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": []
+    }
   }
 }
