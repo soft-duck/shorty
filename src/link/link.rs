@@ -1,10 +1,8 @@
-use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 use chrono::Local;
 use sqlx::{Pool, Sqlite};
-use tokio::sync::RwLock;
 use tracing::debug;
 
 use crate::generate_random_chars;
@@ -83,14 +81,12 @@ impl Link {
 }
 
 pub struct LinkStore {
-	links: RwLock<HashMap<String, Link>>,
 	db: Pool<Sqlite>,
 }
 
 impl LinkStore {
 	pub fn new(db: Pool<Sqlite>) -> Self {
 		Self {
-			links: RwLock::new(HashMap::new()),
 			db
 		}
 	}
@@ -113,14 +109,37 @@ impl LinkStore {
 		Link::new(link, &self.db).await
 	}
 
-	pub async fn clean(&self) {
+	pub async fn clean(&self) -> Result<(), Box<dyn Error>> {
 		debug!("Clearing stale links");
-		let mut links = self.links.write().await;
-		let num_before = links.len();
 
-		links.retain(|_, link| !link.is_invalid());
-		let num_after = links.len();
+		let now = Local::now().timestamp_millis();
+
+		let num_before = sqlx::query!(
+			r#"
+			SELECT COUNT(*) AS count FROM links;
+			"#
+		).fetch_one(&self.db).await?;
+
+		sqlx::query!(
+			r#"
+			DELETE FROM links WHERE created_at + valid_for < $1;
+			"#,
+			now
+		).execute(&self.db).await?;
+
+		let num_after = sqlx::query!(
+			r#"
+			SELECT COUNT(*) AS count FROM links;
+			"#
+		).fetch_one(&self.db).await?;
+
+		let num_before = num_before.count;
+		let num_after = num_after.count;
+
 		let delta = num_before - num_after;
 		debug!("Size before cleaning: {num_before}. After cleaning: {num_after}. Removed elements: {delta}");
+
+
+		Ok(())
 	}
 }
