@@ -9,5 +9,53 @@
       },
       "nullable": []
     }
+  },
+  "945fbc9e3cec53c5a39063ebdca3245dd3368697806ddfec3b40d8ec05098e4f": {
+    "query": "\n\t\t\tSELECT * FROM links\n\t\t\tWHERE id = $1\n\t\t\t",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "redirect_to",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "max_uses",
+          "ordinal": 2,
+          "type_info": "Int64"
+        },
+        {
+          "name": "invocations",
+          "ordinal": 3,
+          "type_info": "Int64"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 4,
+          "type_info": "Int64"
+        },
+        {
+          "name": "valid_for",
+          "ordinal": 5,
+          "type_info": "Int64"
+        }
+      ],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
   }
 }
