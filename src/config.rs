@@ -2,10 +2,11 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct Config {
-	pub base_url: String,
+	pub listen_url: String,
 	pub public_url: String,
 	#[serde(default = "port_default")]
 	pub port: u16,
+	pub database_url: String
 }
 
 impl Config {

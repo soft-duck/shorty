@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 use chrono::Local;
+use sqlx::{Pool, Sqlite};
 use tokio::sync::RwLock;
 use tracing::debug;
 
@@ -26,54 +28,99 @@ impl Display for Link {
 }
 
 impl Link {
-	pub fn new(link: String) -> Self {
-		Self {
+	async fn new(link: String, pool: &Pool<Sqlite>) -> Result<Self, Box<dyn Error>> {
+		let new_link = Self {
 			id: generate_random_chars(),
 			redirect_to: link,
 			max_uses: 0, //unlimited uses
 			invocations: 0,
 			created_at: Local::now().timestamp_millis(),
 			valid_for: 1000 * 60 * 60 * 24, //24 hours
-		}
+		};
+
+		let id = &new_link.id;
+		let redirect_to = &new_link.redirect_to;
+
+		sqlx::query!(
+			r#"
+			INSERT INTO links
+			VALUES ($1, $2, $3, $4, $5, $6)
+			"#,
+			id,
+			redirect_to,
+			0,
+			new_link.invocations,
+			new_link.created_at,
+			new_link.valid_for
+		)
+			.execute(pool)
+			.await?;
+
+
+		Ok(new_link)
+	}
+
+	pub fn is_invalid(&self) -> bool {
+		self.invocations > self.max_uses
+			|| (Local::now().timestamp_millis() - self.created_at) > self.valid_for
+	}
+
+	async fn from_id(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, Box<dyn Error>> {
+		let link = sqlx::query_as!(
+			Self,
+			r#"
+			SELECT * FROM links
+			WHERE id = $1
+			"#,
+			id
+		)
+			.fetch_optional(pool)
+			.await?;
+
+
+		Ok(link)
 	}
 }
 
 pub struct LinkStore {
 	links: RwLock<HashMap<String, Link>>,
+	db: Pool<Sqlite>,
 }
 
 impl LinkStore {
-	pub fn new() -> Self {
+	pub fn new(db: Pool<Sqlite>) -> Self {
 		Self {
-			links: RwLock::new(HashMap::new())
+			links: RwLock::new(HashMap::new()),
+			db
 		}
 	}
 
 	pub async fn get(&self, id: &str) -> Option<Link> {
-		let link;
-		{
-			let lock = self.links.read().await;
-			let link_opt = lock.get(id);
+		let link = Link::from_id(id, &self.db).await;
 
-			if link_opt.is_none() {
-				return None;
+		if let Ok(Some(link)) = link {
+			if !link.is_invalid() {
+				return Some(link);
 			}
 
-			link = link_opt.unwrap().clone();
-		}
-
-		if link.invocations > link.max_uses
-		|| (Local::now().timestamp_millis() - link.created_at) > link.valid_for
-		{
 			debug!("{} got requested but is expired.", link.id);
-			return None;
 		}
 
-		Some(link)
+		None
 	}
 
-	pub async fn insert(&self, link: Link) {
-		let mut lock = self.links.write().await;
-		lock.insert(link.id.clone(), link);
+	pub async fn create_link(&self, link: String) -> Result<Link, Box<dyn Error>> {
+		Link::new(link, &self.db).await
+	}
+
+	pub async fn clean(&self) {
+		debug!("Clearing stale links");
+		let mut links = self.links.write().await;
+		let num_before = links.len();
+
+		links.retain(|_, link| !link.is_invalid());
+		let num_after = links.len();
+		let delta = num_before - num_after;
+		debug!("Size before cleaning: {num_before}. After cleaning: {num_after}. Removed elements: {delta}");
 	}
 }
