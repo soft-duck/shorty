@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 use chrono::Local;
-use sqlx::{Database, Pool, Sqlite};
+use sqlx::{Pool, Sqlite};
 use tokio::sync::RwLock;
 use tracing::debug;
 
@@ -28,7 +28,7 @@ impl Display for Link {
 }
 
 impl Link {
-	pub async fn new(link: String, pool: &Pool<Sqlite>) -> Result<Self, Box<dyn Error>> {
+	async fn new(link: String, pool: &Pool<Sqlite>) -> Result<Self, Box<dyn Error>> {
 		let new_link = Self {
 			id: generate_random_chars(),
 			redirect_to: link,
@@ -65,47 +65,52 @@ impl Link {
 			|| (Local::now().timestamp_millis() - self.created_at) > self.valid_for
 	}
 
-	pub fn from_id(id: &str, pool: &Pool<impl Database>) -> Result<Self, Box<dyn Error>> {
-		todo!()
+	async fn from_id(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, Box<dyn Error>> {
+		let link = sqlx::query_as!(
+			Self,
+			r#"
+			SELECT * FROM links
+			WHERE id = $1
+			"#,
+			id
+		)
+			.fetch_optional(pool)
+			.await?;
+
+
+		Ok(link)
 	}
 }
 
 pub struct LinkStore {
 	links: RwLock<HashMap<String, Link>>,
+	db: Pool<Sqlite>,
 }
 
 impl LinkStore {
-	pub fn new() -> Self {
+	pub fn new(db: Pool<Sqlite>) -> Self {
 		Self {
-			links: RwLock::new(HashMap::new())
+			links: RwLock::new(HashMap::new()),
+			db
 		}
 	}
 
 	pub async fn get(&self, id: &str) -> Option<Link> {
-		let link;
-		{
-			let links = self.links.read().await;
-			let link_opt = links.get(id);
+		let link = Link::from_id(id, &self.db).await;
 
-			if link_opt.is_none() {
-				return None;
+		if let Ok(Some(link)) = link {
+			if !link.is_invalid() {
+				return Some(link);
 			}
 
-			link = link_opt.unwrap().clone();
-		}
-
-		if link.is_invalid() {
 			debug!("{} got requested but is expired.", link.id);
-			return None;
 		}
 
-
-		Some(link)
+		None
 	}
 
-	pub async fn insert(&self, link: Link) {
-		let mut links = self.links.write().await;
-		links.insert(link.id.clone(), link);
+	pub async fn create_link(&self, link: String) -> Result<Link, Box<dyn Error>> {
+		Link::new(link, &self.db).await
 	}
 
 	pub async fn clean(&self) {
