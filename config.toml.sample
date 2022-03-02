@@ -1,4 +1,4 @@
-base_url = "localhost"
+listen_url = "localhost"
 port = 7999
 # This is the url that will be prefixed to the shortened ID.
 # The shortened link ajnIUh1H in the server response will look like `$public_url/ajnIUh1H`.
