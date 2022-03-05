@@ -46,7 +46,7 @@ impl Link {
 			"#,
 			id,
 			redirect_to,
-			0,
+			new_link.max_uses,
 			new_link.invocations,
 			new_link.created_at,
 			new_link.valid_for
@@ -59,21 +59,37 @@ impl Link {
 	}
 
 	pub fn is_invalid(&self) -> bool {
-		self.invocations > self.max_uses
+		(self.max_uses != 0 && self.invocations >= self.max_uses)
 			|| (Local::now().timestamp_millis() - self.created_at) > self.valid_for
 	}
 
 	async fn from_id(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, Box<dyn Error>> {
+		// Start transaction to prevent race condition between selecting and updating
+		let mut transaction = pool.begin().await?;
+
 		let link = sqlx::query_as!(
 			Self,
 			r#"
 			SELECT * FROM links
-			WHERE id = $1
+			WHERE id = $1;
 			"#,
 			id
 		)
-			.fetch_optional(pool)
+			.fetch_optional(&mut transaction)
 			.await?;
+
+		sqlx::query!(
+			r#"
+			UPDATE links
+			SET invocations = invocations + 1
+			WHERE id = $1;
+			"#,
+			id
+		)
+			.execute(&mut transaction)
+			.await?;
+
+		transaction.commit().await?;
 
 
 		Ok(link)

@@ -10,8 +10,8 @@
       "nullable": []
     }
   },
-  "945fbc9e3cec53c5a39063ebdca3245dd3368697806ddfec3b40d8ec05098e4f": {
-    "query": "\n\t\t\tSELECT * FROM links\n\t\t\tWHERE id = $1\n\t\t\t",
+  "7665d4546ee05e45bbc0328179635162c0f0a70038a3c3a1b3f77d49cb5a69b6": {
+    "query": "\n\t\t\tSELECT * FROM links\n\t\t\tWHERE id = $1;\n\t\t\t",
     "describe": {
       "columns": [
         {
@@ -74,6 +74,16 @@
       "nullable": [
         false
       ]
+    }
+  },
+  "d8076d6d36767757dbae78534885f57ab515c19244be635ea0910f6b492d0de7": {
+    "query": "\n\t\t\tUPDATE links\n\t\t\tSET invocations = invocations + 1\n\t\t\tWHERE id = $1;\n\t\t\t",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": []
     }
   },
   "ef52d0438c4119bd50065310acfdba69ddca1f2a7adeb36fdd8c6e92ab421eee": {
