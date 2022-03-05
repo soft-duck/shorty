@@ -105,13 +105,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	tokio::task::spawn(async move {
 		loop {
-			_links.clean().await;
+			if let Err(why) = _links.clean().await {
+				error!("Error cleaning database: {why}")
+			}
 			tokio::time::sleep(CLEAN_SLEEP_DURATION).await;
 		}
 	});
 
 	let pool = web::Data::new(pool);
-	info!("Starting server at {}:{}", config.base_url, config.port);
+	info!("Starting server at {}:{}", config.listen_url, config.port);
 	HttpServer::new(move ||
 		App::new()
 			.app_data(_config.clone())
@@ -120,7 +122,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 			.service(get_shortened)
 			.service(create_shortened)
 	)
-		.bind((config.base_url.as_str(), config.port))?
+		.bind((config.listen_url.as_str(), config.port))?
 		.run()
 		.await?;
 
