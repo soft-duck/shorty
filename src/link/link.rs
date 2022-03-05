@@ -30,7 +30,7 @@ impl Link {
 		let new_link = Self {
 			id: generate_random_chars(),
 			redirect_to: link,
-			max_uses: 0, //unlimited uses
+			max_uses: 5, //unlimited uses
 			invocations: 0,
 			created_at: Local::now().timestamp_millis(),
 			valid_for: 1000 * 60 * 60 * 24, //24 hours
@@ -46,7 +46,7 @@ impl Link {
 			"#,
 			id,
 			redirect_to,
-			0,
+			new_link.max_uses,
 			new_link.invocations,
 			new_link.created_at,
 			new_link.valid_for
