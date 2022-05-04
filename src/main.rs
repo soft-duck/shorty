@@ -50,11 +50,11 @@ async fn create_shortened(
 	let url = check_url_http(url);
 
 	let link = link_store.create_link(url).await?;
-	let shortened_url = format!("{}/{}", config.public_url, link.id);
-	info!("Shortening URL {} to {}", link.redirect_to, shortened_url);
+	let formatted = format!("{}/{}", config.public_url, link.id);
+	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
-	Ok(HttpResponse::Ok().body(shortened_url))
+	Ok(HttpResponse::Ok().body(formatted))
 }
 
 #[tokio::main]
@@ -87,7 +87,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	}
 
 	let config = web::Data::new(config);
-	let _config = config.clone();
+	let config_clone = config.clone();
 
 	let pool = SqlitePoolOptions::new()
 		.max_connections(5)
@@ -101,11 +101,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.await?;
 
 	let links = web::Data::new(LinkStore::new(pool.clone()));
-	let _links = links.clone();
+	let links_clone = links.clone();
 
 	tokio::task::spawn(async move {
 		loop {
-			_links.clean().await;
+			links_clone.clean().await;
 			tokio::time::sleep(CLEAN_SLEEP_DURATION).await;
 		}
 	});
@@ -114,7 +114,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	info!("Starting server at {}:{}", config.listen_url, config.port);
 	HttpServer::new(move ||
 		App::new()
-			.app_data(_config.clone())
+			.app_data(config_clone.clone())
 			.app_data(links.clone())
 			.app_data(pool.clone())
 			.service(get_shortened)
