@@ -28,6 +28,7 @@ impl Display for Link {
 }
 
 impl Link {
+	/// Creates a new link. Also inserts it into the database.
 	async fn new(link: String, pool: &Pool<Sqlite>) -> Result<Self, Box<dyn Error>> {
 		let new_link = Self {
 			id: generate_random_chars(),
@@ -65,6 +66,8 @@ impl Link {
 			|| (Local::now().timestamp_millis() - self.created_at) > self.valid_for
 	}
 
+	/// Retrieves a link from the database, if it exists.
+	/// Calling this function also increments the invocations if the link exists in the database.
 	async fn from_id(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, Box<dyn Error>> {
 		let link = sqlx::query_as!(
 			Self,
