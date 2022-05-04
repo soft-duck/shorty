@@ -9,7 +9,7 @@ use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
 use crate::link::link::LinkStore;
-use crate::util::{generate_random_chars, sanitize_url, uri_to_url};
+use crate::util::{generate_random_chars, check_url_http, uri_to_url};
 
 mod util;
 mod link;
@@ -47,7 +47,7 @@ async fn create_shortened(
 	info!("URI is {uri}");
 
 	let url = uri_to_url(uri);
-	let url = sanitize_url(url);
+	let url = check_url_http(url);
 
 	let link = link_store.create_link(url).await?;
 	let shortened_url = format!("{}/{}", config.public_url, link.id);
