@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use sqlx::sqlite::SqlitePoolOptions;
+use tokio::fs;
 use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
@@ -75,6 +76,30 @@ async fn create_shortened_custom(
 	Ok(HttpResponse::Ok().body(formatted))
 }
 
+#[get("/assets/{asset:.*}")]
+async fn serve_file(asset: web::Path<String>) -> Result<impl Responder, Box<dyn std::error::Error>> {
+	// let mut file = fs::File::open(format!()).await;
+	// let mut content = String::new();
+
+	debug!("Got file: {asset}");
+
+
+
+	Ok(HttpResponse::Ok())
+}
+
+#[get("/")]
+async fn index() -> Result<impl Responder, Box<dyn std::error::Error>> {
+	// let mut file = fs::File::open(format!()).await;
+	// let mut content = String::new();
+
+	debug!("Index");
+
+
+
+	Ok(HttpResponse::Ok())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
 	let env_filter = EnvFilter::from_default_env()
@@ -130,11 +155,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	let pool = web::Data::new(pool);
 	info!("Starting server at {}:{}", config.listen_url, config.port);
+
 	HttpServer::new(move ||
 		App::new()
 			.app_data(config_clone.clone())
 			.app_data(links.clone())
 			.app_data(pool.clone())
+			.service(index)
+			.service(serve_file)
 			.service(get_shortened)
 			.service(create_shortened_custom)
 			.service(create_shortened)
