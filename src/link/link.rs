@@ -1,13 +1,42 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt::{Display, Formatter};
+use actix_web::http::StatusCode;
+use actix_web::{HttpResponse, HttpResponseBuilder, ResponseError};
+use actix_web::body::BoxBody;
 
 use chrono::Local;
+use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use tokio::sync::RwLock;
 use tracing::debug;
+use thiserror::Error;
 
 use crate::generate_random_chars;
+use crate::util::time_now;
+
+#[derive(Debug, Error)]
+pub enum LinkError {
+	#[error("Link with provided ID already exists")]
+	Conflict,
+	#[error(transparent)]
+	Database(#[from] sqlx::Error),
+	#[error(transparent)]
+	Other(#[from] anyhow::Error),
+}
+
+/// This struct holds configuration options for a custom link.
+/// Optional fields are: `custom_id`, `max_uses`, and `valid_for`.
+/// `valid_for` and `max_uses` default to 0, which means essentially infinite
+#[derive(Debug, Clone, Deserialize)]
+pub struct LinkConfig {
+	link: String,
+	#[serde(alias = "id")]
+	custom_id: Option<String>,
+	#[serde(default)]
+	max_uses: i64,
+	#[serde(default)]
+	valid_for: i64,
+}
 
 /// Struct representing a (shortened) Link.
 /// All timestamps are in milliseconds.
@@ -29,13 +58,13 @@ impl Display for Link {
 
 impl Link {
 	/// Creates a new link. Also inserts it into the database.
-	async fn new(link: String, pool: &Pool<Sqlite>) -> Result<Self, Box<dyn Error>> {
+	async fn new(link: String, pool: &Pool<Sqlite>) -> Result<Self, LinkError> {
 		let new_link = Self {
 			id: generate_random_chars(),
 			redirect_to: link,
 			max_uses: 0, //unlimited uses
 			invocations: 0,
-			created_at: Local::now().timestamp_millis(),
+			created_at: time_now(),
 			valid_for: 1000 * 60 * 60 * 24, //24 hours
 		};
 
@@ -61,20 +90,76 @@ impl Link {
 		Ok(new_link)
 	}
 
+	pub async fn new_with_config(config: LinkConfig, pool: &Pool<Sqlite>) -> Result<Self, LinkError> {
+		let id = if let Some(id) = config.custom_id {
+			id
+		} else {
+			generate_random_chars()
+		};
+		let redirect_to = config.link;
+		let max_uses = config.max_uses;
+		let invocations = 0;
+		let created_at = time_now();
+		let valid_for = config.valid_for;
+
+		// If a link with the same ID exists already, return a conflict error.
+		let existing_opt = Link::from_id(id.as_str(), pool).await?;
+		if let Some(link) = existing_opt {
+			if !link.is_invalid() {
+				return Err(LinkError::Conflict);
+			}
+		}
+
+		// We checked if the link exists already and is valid.
+		// If it exists it has to be stale and can be replaced.
+		sqlx::query!(
+			r#"
+				INSERT OR REPLACE INTO links
+				VALUES ($1, $2, $3, $4, $5, $6)
+			"#,
+			id,
+			redirect_to,
+			max_uses,
+			invocations,
+			created_at,
+			valid_for
+		)
+			.execute(pool)
+			.await?;
+
+		Ok(Self {
+			id,
+			redirect_to,
+			max_uses,
+			invocations,
+			created_at,
+			valid_for,
+		})
+	}
+
 	pub fn is_invalid(&self) -> bool {
-		self.invocations > self.max_uses
-			|| (Local::now().timestamp_millis() - self.created_at) > self.valid_for
+		let expired = self.valid_for != 0
+			&& (Local::now().timestamp_millis() - self.created_at) > self.valid_for;
+
+		let uses_valid = self.max_uses != 0 && self.invocations >= self.max_uses;
+
+
+		expired || uses_valid
 	}
 
 	/// Retrieves a link from the database, if it exists.
 	/// Calling this function also increments the invocations if the link exists in the database.
-	async fn from_id(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, Box<dyn Error>> {
+	async fn from_id(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, LinkError> {
 		let link = sqlx::query_as!(
 			Self,
 			r#"
 			SELECT * FROM links
-			WHERE id = $1
+			WHERE id = $1;
+			UPDATE links
+			SET invocations = invocations + 1
+			WHERE id = $2;
 			"#,
+			id,
 			id
 		)
 			.fetch_optional(pool)
@@ -94,10 +179,11 @@ impl LinkStore {
 	pub fn new(db: Pool<Sqlite>) -> Self {
 		Self {
 			links: RwLock::new(HashMap::new()),
-			db
+			db,
 		}
 	}
 
+	/// Retrieves a link with the provided ID, if it exists.
 	pub async fn get(&self, id: &str) -> Option<Link> {
 		let link = Link::from_id(id, &self.db).await;
 
@@ -112,8 +198,12 @@ impl LinkStore {
 		None
 	}
 
-	pub async fn create_link(&self, link: String) -> Result<Link, Box<dyn Error>> {
+	pub async fn create_link(&self, link: String) -> Result<Link, LinkError> {
 		Link::new(link, &self.db).await
+	}
+
+	pub async fn create_link_with_config(&self, config: LinkConfig) -> Result<Link, LinkError> {
+		Link::new_with_config(config, &self.db).await
 	}
 
 	pub async fn clean(&self) {
@@ -125,5 +215,19 @@ impl LinkStore {
 		let num_after = links.len();
 		let delta = num_before - num_after;
 		debug!("Size before cleaning: {num_before}. After cleaning: {num_after}. Removed elements: {delta}");
+	}
+}
+
+impl ResponseError for LinkError {
+	fn status_code(&self) -> StatusCode {
+		match self {
+			LinkError::Conflict => StatusCode::CONFLICT,
+			_ => StatusCode::INTERNAL_SERVER_ERROR,
+		}
+	}
+
+	fn error_response(&self) -> HttpResponse<BoxBody> {
+		HttpResponseBuilder::new(self.status_code())
+			.body(self.to_string())
 	}
 }

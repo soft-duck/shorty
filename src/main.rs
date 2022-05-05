@@ -8,8 +8,9 @@ use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
-use crate::link::link::LinkStore;
+use crate::link::link::{LinkConfig, LinkStore};
 use crate::util::{generate_random_chars, check_url_http, uri_to_url};
+use crate::link::link::LinkError;
 
 mod util;
 mod link;
@@ -20,7 +21,10 @@ const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 
 #[get("/{shortened_url:.*}")]
 #[instrument(skip_all)]
-async fn get_shortened(params: web::Path<String>, link_store: web::Data<LinkStore>) -> Result<impl Responder, Box<dyn std::error::Error>> {
+async fn get_shortened(
+	params: web::Path<String>,
+	link_store: web::Data<LinkStore>
+) -> Result<impl Responder, LinkError> {
 	let shortened_url = params.into_inner();
 	debug!("Got request for {shortened_url}");
 
@@ -42,7 +46,7 @@ async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
 	config: web::Data<Config>
-) -> Result<impl Responder, Box<dyn std::error::Error>> {
+) -> Result<impl Responder, LinkError> {
 	let uri = req.uri();
 	info!("URI is {uri}");
 
@@ -52,6 +56,20 @@ async fn create_shortened(
 	let link = link_store.create_link(url).await?;
 	let formatted = format!("{}/{}", config.public_url, link.id);
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
+
+
+	Ok(HttpResponse::Ok().body(formatted))
+}
+
+#[post("/custom")]
+async fn create_shortened_custom(
+	link_store: web::Data<LinkStore>,
+	link_config: web::Json<LinkConfig>,
+	config: web::Data<Config>
+) -> Result<impl Responder, LinkError> {
+	let link = link_store.create_link_with_config(link_config.into_inner()).await?;
+
+	let formatted = format!("{}/{}", config.public_url, link.id);
 
 
 	Ok(HttpResponse::Ok().body(formatted))
@@ -118,6 +136,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 			.app_data(links.clone())
 			.app_data(pool.clone())
 			.service(get_shortened)
+			.service(create_shortened_custom)
 			.service(create_shortened)
 	)
 		.bind((config.listen_url.as_str(), config.port))?

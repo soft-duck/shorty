@@ -1,5 +1,6 @@
 use actix_web::http::Uri;
 use base64::CharacterSet;
+use chrono::Local;
 use rand::RngCore;
 
 /// Size of the random
@@ -42,4 +43,9 @@ pub fn uri_to_url(uri: &Uri) -> String {
 
 
 	url
+}
+
+/// Returns the current local time in milliseconds.
+pub fn time_now() -> i64 {
+	Local::now().timestamp_millis()
 }
