@@ -1,10 +1,12 @@
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::module_inception)]
+
 use std::error::Error;
 use std::io::Read;
 use std::time::Duration;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use sqlx::sqlite::SqlitePoolOptions;
-use tokio::fs;
 use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
