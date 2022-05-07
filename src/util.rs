@@ -1,5 +1,6 @@
 use actix_web::http::Uri;
 use base64::CharacterSet;
+use chrono::Local;
 use rand::RngCore;
 
 /// Size of the random
@@ -34,6 +35,7 @@ pub fn generate_random_chars() -> String {
 
 /// If the URI is longer than 0 chars, it contains a `/` char at the first position.
 /// If it is longer than 0 chars, this removes the prepended `/` char.
+#[allow(clippy::similar_names)]
 pub fn uri_to_url(uri: &Uri) -> String {
 	let mut url = uri.to_string();
 	if url.len() > 1 {
@@ -42,4 +44,9 @@ pub fn uri_to_url(uri: &Uri) -> String {
 
 
 	url
+}
+
+/// Returns the current local time in milliseconds.
+pub fn time_now() -> i64 {
+	Local::now().timestamp_millis()
 }

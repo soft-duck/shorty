@@ -2,3 +2,4 @@
 /config.toml
 /database
 /.env
+database.db

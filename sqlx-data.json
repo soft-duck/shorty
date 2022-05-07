@@ -1,17 +1,6 @@
 {
   "db": "SQLite",
-  "668d477c527a22f43c81eb4388d0a3cf89ce528ad72b73d511e22e0cad388a2a": {
-    "query": "\n\t\t\tINSERT INTO links\n\t\t\tVALUES ($1, $2, $3, $4, $5, $6)\n\t\t\t",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Right": 6
-      },
-      "nullable": []
-    }
-  },
-  "945fbc9e3cec53c5a39063ebdca3245dd3368697806ddfec3b40d8ec05098e4f": {
-    "query": "\n\t\t\tSELECT * FROM links\n\t\t\tWHERE id = $1\n\t\t\t",
+  "1ae8b7d2b93139fb6003bef62fc0ece8933cb321c2ca4e54187c176ad6a1abe0": {
     "describe": {
       "columns": [
         {
@@ -45,9 +34,6 @@
           "type_info": "Int64"
         }
       ],
-      "parameters": {
-        "Right": 1
-      },
       "nullable": [
         false,
         false,
@@ -55,7 +41,31 @@
         false,
         false,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "\n\t\t\tSELECT * FROM links\n\t\t\tWHERE id = $1;\n\t\t\tUPDATE links\n\t\t\tSET invocations = invocations + 1\n\t\t\tWHERE id = $2;\n\t\t\t"
+  },
+  "668d477c527a22f43c81eb4388d0a3cf89ce528ad72b73d511e22e0cad388a2a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 6
+      }
+    },
+    "query": "\n\t\t\tINSERT INTO links\n\t\t\tVALUES ($1, $2, $3, $4, $5, $6)\n\t\t\t"
+  },
+  "faf5fa247c55cd95f7dcec50b6ec85c3641cfa57d32fa052e4dfb3687c517c5c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 6
+      }
+    },
+    "query": "\n\t\t\t\tINSERT OR REPLACE INTO links\n\t\t\t\tVALUES ($1, $2, $3, $4, $5, $6)\n\t\t\t"
   }
 }

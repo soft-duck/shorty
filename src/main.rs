@@ -1,3 +1,6 @@
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::module_inception)]
+
 use std::error::Error;
 use std::io::Read;
 use std::time::Duration;
@@ -8,8 +11,9 @@ use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
-use crate::link::link::LinkStore;
+use crate::link::link::{LinkConfig, LinkStore};
 use crate::util::{generate_random_chars, check_url_http, uri_to_url};
+use crate::link::link::LinkError;
 
 mod util;
 mod link;
@@ -20,7 +24,10 @@ const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 
 #[get("/{shortened_url:.*}")]
 #[instrument(skip_all)]
-async fn get_shortened(params: web::Path<String>, link_store: web::Data<LinkStore>) -> Result<impl Responder, Box<dyn std::error::Error>> {
+async fn get_shortened(
+	params: web::Path<String>,
+	link_store: web::Data<LinkStore>
+) -> Result<impl Responder, LinkError> {
 	let shortened_url = params.into_inner();
 	debug!("Got request for {shortened_url}");
 
@@ -42,7 +49,7 @@ async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
 	config: web::Data<Config>
-) -> Result<impl Responder, Box<dyn std::error::Error>> {
+) -> Result<impl Responder, LinkError> {
 	let uri = req.uri();
 	info!("URI is {uri}");
 
@@ -50,11 +57,49 @@ async fn create_shortened(
 	let url = check_url_http(url);
 
 	let link = link_store.create_link(url).await?;
-	let shortened_url = format!("{}/{}", config.public_url, link.id);
-	info!("Shortening URL {} to {}", link.redirect_to, shortened_url);
+	let formatted = link.formatted(config.as_ref());
+	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
-	Ok(HttpResponse::Ok().body(shortened_url))
+	Ok(HttpResponse::Ok().body(formatted))
+}
+
+#[post("/custom")]
+async fn create_shortened_custom(
+	link_store: web::Data<LinkStore>,
+	link_config: web::Json<LinkConfig>,
+	config: web::Data<Config>
+) -> Result<impl Responder, LinkError> {
+	let link = link_store.create_link_with_config(link_config.into_inner()).await?;
+	let formatted = link.formatted(config.as_ref());
+	info!("Shortening URL {} to {}", link.redirect_to, formatted);
+
+
+	Ok(HttpResponse::Ok().body(link.formatted(config.as_ref())))
+}
+
+#[get("/assets/{asset:.*}")]
+async fn serve_file(asset: web::Path<String>) -> Result<impl Responder, Box<dyn std::error::Error>> {
+	// let mut file = fs::File::open(format!()).await;
+	// let mut content = String::new();
+
+	debug!("Got request for file: {asset}");
+
+
+
+	Ok(HttpResponse::Ok())
+}
+
+#[get("/")]
+async fn index() -> Result<impl Responder, Box<dyn std::error::Error>> {
+	// let mut file = fs::File::open(format!()).await;
+	// let mut content = String::new();
+
+	debug!("Index");
+
+
+
+	Ok(HttpResponse::Ok())
 }
 
 #[tokio::main]
@@ -87,7 +132,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	}
 
 	let config = web::Data::new(config);
-	let _config = config.clone();
+	let config_clone = config.clone();
 
 	let pool = SqlitePoolOptions::new()
 		.max_connections(5)
@@ -101,26 +146,30 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.await?;
 
 	let links = web::Data::new(LinkStore::new(pool.clone()));
-	let _links = links.clone();
+	let links_clone = links.clone();
 
 	tokio::task::spawn(async move {
 		loop {
-			_links.clean().await;
+			links_clone.clean().await;
 			tokio::time::sleep(CLEAN_SLEEP_DURATION).await;
 		}
 	});
 
 	let pool = web::Data::new(pool);
-	info!("Starting server at {}:{}", config.base_url, config.port);
+	info!("Starting server at {}:{}", config.listen_url, config.port);
+
 	HttpServer::new(move ||
 		App::new()
-			.app_data(_config.clone())
+			.app_data(config_clone.clone())
 			.app_data(links.clone())
 			.app_data(pool.clone())
+			.service(index)
+			.service(serve_file)
 			.service(get_shortened)
+			.service(create_shortened_custom)
 			.service(create_shortened)
 	)
-		.bind((config.base_url.as_str(), config.port))?
+		.bind((config.listen_url.as_str(), config.port))?
 		.run()
 		.await?;
 
