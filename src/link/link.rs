@@ -62,35 +62,14 @@ impl Link {
 		link: String,
 		pool: &Pool<Sqlite>,
 	) -> Result<Self, LinkError> {
-		let new_link = Self {
-			id: generate_random_chars(),
-			redirect_to: link,
-			max_uses: 0, //unlimited uses
-			invocations: 0,
-			created_at: time_now(),
-			valid_for: 1000 * 60 * 60 * 24, //24 hours
+		let link_config = LinkConfig {
+			link,
+			custom_id: None,
+			max_uses: 0, // unlimited uses
+			valid_for: 1000 * 60 * 60 * 24, // 24 hours
 		};
 
-		let id = &new_link.id;
-		let redirect_to = &new_link.redirect_to;
-
-		sqlx::query!(
-			r#"
-			INSERT INTO links
-			VALUES ($1, $2, $3, $4, $5, $6)
-			"#,
-			id,
-			redirect_to,
-			0,
-			new_link.invocations,
-			new_link.created_at,
-			new_link.valid_for
-		)
-			.execute(pool)
-			.await?;
-
-
-		Ok(new_link)
+		Link::new_with_config(link_config, pool).await
 	}
 
 	pub async fn new_with_config(
