@@ -29,19 +29,19 @@ stages:
 compile:
   stage: compile
   script:
-    - cd test-src
+    - cd src
     - cargo build --release
   artifacts:
     paths:
-      - test-src/target
-    expire_in: 10 minutes
+      - src/target
+    expire_in: 24 hours
 
 test:
   stage: test
   needs: ["compile"]
   script:
-    - cd test-src
+    - cd src
     - cargo test --release
   artifacts:
     paths:
-    - test-src/target/release/school_substitution_plan_alert
+    - src/target/release/shorty
