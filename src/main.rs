@@ -57,7 +57,7 @@ async fn create_shortened(
 	let url = check_url_http(url);
 
 	let link = link_store.create_link(url).await?;
-	let formatted = format!("{}/{}", config.public_url, link.id);
+	let formatted = link.formatted(config.as_ref());
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
@@ -71,11 +71,11 @@ async fn create_shortened_custom(
 	config: web::Data<Config>
 ) -> Result<impl Responder, LinkError> {
 	let link = link_store.create_link_with_config(link_config.into_inner()).await?;
+	let formatted = link.formatted(config.as_ref());
+	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
-	let formatted = format!("{}/{}", config.public_url, link.id);
 
-
-	Ok(HttpResponse::Ok().body(formatted))
+	Ok(HttpResponse::Ok().body(link.formatted(config.as_ref())))
 }
 
 #[get("/assets/{asset:.*}")]
@@ -83,7 +83,7 @@ async fn serve_file(asset: web::Path<String>) -> Result<impl Responder, Box<dyn 
 	// let mut file = fs::File::open(format!()).await;
 	// let mut content = String::new();
 
-	debug!("Got file: {asset}");
+	debug!("Got request for file: {asset}");
 
 
 

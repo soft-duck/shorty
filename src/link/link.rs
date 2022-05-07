@@ -11,7 +11,7 @@ use tokio::sync::RwLock;
 use tracing::debug;
 use thiserror::Error;
 
-use crate::generate_random_chars;
+use crate::{Config, generate_random_chars};
 use crate::util::time_now;
 
 #[derive(Debug, Error)]
@@ -58,7 +58,10 @@ impl Display for Link {
 
 impl Link {
 	/// Creates a new link. Also inserts it into the database.
-	async fn new(link: String, pool: &Pool<Sqlite>) -> Result<Self, LinkError> {
+	async fn new(
+		link: String,
+		pool: &Pool<Sqlite>,
+	) -> Result<Self, LinkError> {
 		let new_link = Self {
 			id: generate_random_chars(),
 			redirect_to: link,
@@ -90,17 +93,20 @@ impl Link {
 		Ok(new_link)
 	}
 
-	pub async fn new_with_config(config: LinkConfig, pool: &Pool<Sqlite>) -> Result<Self, LinkError> {
-		let id = if let Some(id) = config.custom_id {
+	pub async fn new_with_config(
+		link_config: LinkConfig,
+		pool: &Pool<Sqlite>,
+	) -> Result<Self, LinkError> {
+		let id = if let Some(id) = link_config.custom_id {
 			id
 		} else {
 			generate_random_chars()
 		};
-		let redirect_to = config.link;
-		let max_uses = config.max_uses;
+		let redirect_to = link_config.link;
+		let max_uses = link_config.max_uses;
 		let invocations = 0;
 		let created_at = time_now();
-		let valid_for = config.valid_for;
+		let valid_for = link_config.valid_for;
 
 		// If a link with the same ID exists already, return a conflict error.
 		let existing_opt = Link::from_id(id.as_str(), pool).await?;
@@ -168,6 +174,10 @@ impl Link {
 
 		Ok(link)
 	}
+
+	pub fn formatted(&self, config: &Config) -> String {
+		format!("{}/{}", config.public_url, self.id)
+	}
 }
 
 pub struct LinkStore {
@@ -202,8 +212,11 @@ impl LinkStore {
 		Link::new(link, &self.db).await
 	}
 
-	pub async fn create_link_with_config(&self, config: LinkConfig) -> Result<Link, LinkError> {
-		Link::new_with_config(config, &self.db).await
+	pub async fn create_link_with_config(
+		&self,
+		link_config: LinkConfig,
+	) -> Result<Link, LinkError> {
+		Link::new_with_config(link_config, &self.db).await
 	}
 
 	pub async fn clean(&self) {
