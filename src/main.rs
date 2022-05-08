@@ -1,7 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::module_inception)]
 
-use std::error::Error;
 use std::io::Read;
 use std::time::Duration;
 
@@ -11,12 +10,14 @@ use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
-use crate::util::{generate_random_chars, check_url_http, uri_to_url};
-use crate::link::{LinkConfig, LinkError, LinkStore};
+use crate::error::ShortyError;
+use crate::util::{generate_random_chars, ensure_http_prefix, uri_to_url};
+use crate::link::{LinkConfig, LinkStore};
 
-mod util;
-mod link;
-mod config;
+pub mod util;
+pub mod link;
+pub mod config;
+pub mod error;
 
 const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 
@@ -25,8 +26,8 @@ const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 #[instrument(skip_all)]
 async fn get_shortened(
 	params: web::Path<String>,
-	link_store: web::Data<LinkStore>
-) -> Result<impl Responder, LinkError> {
+	link_store: web::Data<LinkStore>,
+) -> Result<impl Responder, ShortyError> {
 	let shortened_url = params.into_inner();
 	debug!("Got request for {shortened_url}");
 
@@ -48,13 +49,13 @@ async fn get_shortened(
 async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
-	config: web::Data<Config>
-) -> Result<impl Responder, LinkError> {
+	config: web::Data<Config>,
+) -> Result<impl Responder, ShortyError> {
 	let uri = req.uri();
 	info!("URI is {uri}");
 
 	let url = uri_to_url(uri);
-	let url = check_url_http(url);
+	let url = ensure_http_prefix(url);
 
 	let link = link_store.create_link(url).await?;
 	let formatted = link.formatted(config.as_ref());
@@ -65,13 +66,13 @@ async fn create_shortened(
 }
 
 /// Custom shortened URL, configured via Json.
-/// Also see [`LinkConfig`](crate::link::link::LinkConfig)
+/// Also see [`LinkConfig`]
 #[post("/custom")]
 async fn create_shortened_custom(
 	link_store: web::Data<LinkStore>,
 	link_config: web::Json<LinkConfig>,
-	config: web::Data<Config>
-) -> Result<impl Responder, LinkError> {
+	config: web::Data<Config>,
+) -> Result<impl Responder, ShortyError> {
 	let link = link_store.create_link_with_config(link_config.into_inner()).await?;
 	let formatted = link.formatted(config.as_ref());
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
@@ -88,7 +89,6 @@ async fn serve_file(asset: web::Path<String>) -> Result<impl Responder, Box<dyn 
 	debug!("Got request for file: {asset}");
 
 
-
 	Ok(HttpResponse::Ok())
 }
 
@@ -100,15 +100,14 @@ async fn index() -> Result<impl Responder, Box<dyn std::error::Error>> {
 	debug!("Index");
 
 
-
 	Ok(HttpResponse::Ok())
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<(), ShortyError> {
 	let env_filter = EnvFilter::from_default_env()
 		.add_directive(Level::INFO.into())
-		.add_directive("shorty=debug".parse()?);
+		.add_directive("shorty=debug".parse().unwrap());
 
 	tracing_subscriber::fmt()
 		.with_env_filter(env_filter)
@@ -118,19 +117,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	let config;
 	{
-		let file = std::fs::File::open("./config.toml");
-		let mut file = match file {
-			Ok(file) => file,
-			Err(why) => {
-				error!("Error opening the config file: {why}");
-				std::process::exit(1);
-			}
-		};
-
+		let mut file = std::fs::File::open("./config.toml").expect("Failed to open config file.");
 		let mut content = String::new();
-		file.read_to_string(&mut content)?;
+		file.read_to_string(&mut content).expect("Failed to read config file.");
 
-		config = Config::new(content.as_str())?;
+		config = Config::new(content.as_str()).expect("Failed to parse config");
 	}
 
 	let config = web::Data::new(config);
@@ -145,7 +136,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	sqlx::migrate!()
 		.run(&pool)
-		.await?;
+		.await
+		.expect("Failed db schema migration.");
 
 	let links = web::Data::new(LinkStore::new(pool.clone()));
 	let links_clone = links.clone();
@@ -173,9 +165,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 			.service(create_shortened_custom)
 			.service(create_shortened)
 	)
-		.bind((config.listen_url.as_str(), config.port))?
+		.bind((config.listen_url.as_str(), config.port))
+		.expect("Failed to bind port or listen address.")
 		.run()
-		.await?;
+		.await
+		.expect("Error running the HTTP server.");
 
 
 	Ok(())

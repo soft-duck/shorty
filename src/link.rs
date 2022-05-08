@@ -1,26 +1,13 @@
 use std::fmt::{Display, Formatter};
-use actix_web::http::StatusCode;
-use actix_web::{HttpResponse, HttpResponseBuilder, ResponseError};
-use actix_web::body::BoxBody;
 
 use chrono::Local;
 use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use tracing::debug;
-use thiserror::Error;
 
 use crate::{Config, generate_random_chars};
+use crate::error::ShortyError;
 use crate::util::time_now;
-
-#[derive(Debug, Error)]
-pub enum LinkError {
-	#[error("Link with provided ID already exists")]
-	Conflict,
-	#[error(transparent)]
-	Database(#[from] sqlx::Error),
-	#[error(transparent)]
-	Other(#[from] anyhow::Error),
-}
 
 /// This struct holds configuration options for a custom link.
 /// Optional fields are: `custom_id`, `max_uses`, and `valid_for`.
@@ -63,7 +50,7 @@ impl Link {
 	pub async fn new(
 		link: String,
 		pool: &Pool<Sqlite>,
-	) -> Result<Self, LinkError> {
+	) -> Result<Self, ShortyError> {
 		let link_config = LinkConfig {
 			link,
 			custom_id: None,
@@ -77,7 +64,7 @@ impl Link {
 	pub async fn new_with_config(
 		link_config: LinkConfig,
 		pool: &Pool<Sqlite>,
-	) -> Result<Self, LinkError> {
+	) -> Result<Self, ShortyError> {
 		let id = if let Some(id) = link_config.custom_id {
 			id
 		} else {
@@ -93,7 +80,7 @@ impl Link {
 		let existing_opt = Link::from_id(id.as_str(), pool).await?;
 		if let Some(link) = existing_opt {
 			if !link.is_invalid() {
-				return Err(LinkError::Conflict);
+				return Err(ShortyError::LinkConflict);
 			}
 		}
 
@@ -124,6 +111,7 @@ impl Link {
 		})
 	}
 
+	#[must_use]
 	pub fn is_invalid(&self) -> bool {
 		let expired = self.valid_for != 0
 			&& (Local::now().timestamp_millis() - self.created_at) > self.valid_for;
@@ -136,7 +124,7 @@ impl Link {
 
 	/// Retrieves a link from the database, if it exists.
 	/// Calling this function also increments the invocations if the link exists in the database.
-	async fn from_id(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, LinkError> {
+	async fn from_id(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, ShortyError> {
 		let link = sqlx::query_as!(
 			Self,
 			r#"
@@ -157,6 +145,7 @@ impl Link {
 	}
 
 	/// Formats self, according to the options set in the config file.
+	#[must_use]
 	pub fn formatted(&self, config: &Config) -> String {
 		format!("{}/{}", config.public_url, self.id)
 	}
@@ -167,6 +156,7 @@ pub struct LinkStore {
 }
 
 impl LinkStore {
+	#[must_use]
 	pub fn new(db: Pool<Sqlite>) -> Self {
 		Self {
 			db,
@@ -188,18 +178,18 @@ impl LinkStore {
 		None
 	}
 
-	pub async fn create_link(&self, link: String) -> Result<Link, LinkError> {
+	pub async fn create_link(&self, link: String) -> Result<Link, ShortyError> {
 		Link::new(link, &self.db).await
 	}
 
 	pub async fn create_link_with_config(
 		&self,
 		link_config: LinkConfig,
-	) -> Result<Link, LinkError> {
+	) -> Result<Link, ShortyError> {
 		Link::new_with_config(link_config, &self.db).await
 	}
 
-	pub async fn clean(&self) -> Result<(), LinkError> {
+	pub async fn clean(&self) -> Result<(), ShortyError> {
 		debug!("Clearing stale links");
 
 		let res = sqlx::query!("SELECT COUNT(*) AS num_before FROM links").fetch_one(&self.db).await?;
@@ -225,19 +215,5 @@ impl LinkStore {
 
 
 		Ok(())
-	}
-}
-
-impl ResponseError for LinkError {
-	fn status_code(&self) -> StatusCode {
-		match self {
-			LinkError::Conflict => StatusCode::CONFLICT,
-			_ => StatusCode::INTERNAL_SERVER_ERROR,
-		}
-	}
-
-	fn error_response(&self) -> HttpResponse<BoxBody> {
-		HttpResponseBuilder::new(self.status_code())
-			.body(self.to_string())
 	}
 }

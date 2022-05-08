@@ -10,8 +10,8 @@ pub struct Config {
 }
 
 impl Config {
-	pub fn new(config: &str) -> Result<Self, Box<dyn std::error::Error>> {
-		Ok(toml::from_str(config)?)
+	pub fn new(config: &str) -> Result<Self, toml::de::Error> {
+		toml::from_str(config)
 	}
 }
 
