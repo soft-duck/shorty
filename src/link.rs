@@ -178,10 +178,12 @@ impl LinkStore {
 		None
 	}
 
+	/// Creates a shortened link with default settings.
 	pub async fn create_link(&self, link: String) -> Result<Link, ShortyError> {
 		Link::new(link, &self.db).await
 	}
 
+	/// Creates a shortened link with custom settings.
 	pub async fn create_link_with_config(
 		&self,
 		link_config: LinkConfig,
@@ -189,6 +191,7 @@ impl LinkStore {
 		Link::new_with_config(link_config, &self.db).await
 	}
 
+	/// This function deletes stale links from the database.
 	pub async fn clean(&self) -> Result<(), ShortyError> {
 		debug!("Clearing stale links");
 
