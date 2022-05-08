@@ -10,6 +10,8 @@ pub struct Config {
 }
 
 impl Config {
+	/// # Errors
+	/// Errors when the config couldn't be deserialized.
 	pub fn new(config: &str) -> Result<Self, toml::de::Error> {
 		toml::from_str(config)
 	}

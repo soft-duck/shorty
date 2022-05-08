@@ -46,7 +46,12 @@ impl Display for Link {
 }
 
 impl Link {
-	/// Creates a new link. Also inserts it into the database.
+	/// Creates a new link with a default configuration.
+	/// Just creates a default config and calls [Link::new_with_config] with it.
+	///
+	/// # Errors
+	///
+	/// Errors if the underlying [Link::new_with_config] errors.
 	pub async fn new(
 		link: String,
 		pool: &Pool<Sqlite>,
@@ -61,6 +66,12 @@ impl Link {
 		Link::new_with_config(link_config, pool).await
 	}
 
+	/// Creates a new link according to the config provided.
+	///
+	/// # Errors
+	///
+	/// Returns an error if the link with the requested ID already exists.
+	/// Also returns an error if there was a problem executing the SQL queries.
 	pub async fn new_with_config(
 		link_config: LinkConfig,
 		pool: &Pool<Sqlite>,
@@ -192,6 +203,10 @@ impl LinkStore {
 	}
 
 	/// This function deletes stale links from the database.
+	///
+	/// # Errors
+	///
+	/// Errors if theres a problem executing the SQL queries.
 	pub async fn clean(&self) -> Result<(), ShortyError> {
 		debug!("Clearing stale links");
 
