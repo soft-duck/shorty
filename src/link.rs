@@ -47,11 +47,11 @@ impl Display for Link {
 
 impl Link {
 	/// Creates a new link with a default configuration.
-	/// Just creates a default config and calls [Link::new_with_config] with it.
+	/// Just creates a default config and calls [`Link::new_with_config`] with it.
 	///
 	/// # Errors
 	///
-	/// Errors if the underlying [Link::new_with_config] errors.
+	/// Errors if the underlying [`Link::new_with_config`] errors.
 	pub async fn new(
 		link: String,
 		pool: &Pool<Sqlite>,
