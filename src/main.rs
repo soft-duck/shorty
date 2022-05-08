@@ -43,6 +43,7 @@ async fn get_shortened(
 	)
 }
 
+/// The simple create_shortened
 #[post("/{url:.*}")]
 #[instrument(skip_all)]
 async fn create_shortened(
@@ -64,6 +65,8 @@ async fn create_shortened(
 	Ok(HttpResponse::Ok().body(formatted))
 }
 
+/// Custom shortened URL, configured via Json.
+/// Also see [`LinkConfig`](crate::link::link::LinkConfig)
 #[post("/custom")]
 async fn create_shortened_custom(
 	link_store: web::Data<LinkStore>,
@@ -75,7 +78,7 @@ async fn create_shortened_custom(
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
-	Ok(HttpResponse::Ok().body(link.formatted(config.as_ref())))
+	Ok(HttpResponse::Ok().body(formatted))
 }
 
 #[get("/assets/{asset:.*}")]
