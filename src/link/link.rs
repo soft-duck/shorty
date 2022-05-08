@@ -29,11 +29,15 @@ pub enum LinkError {
 /// `valid_for` and `max_uses` default to 0, which means essentially infinite
 #[derive(Debug, Clone, Deserialize)]
 pub struct LinkConfig {
+	/// The link that should be shortened.
 	link: String,
+	/// Custom ID for the link (like when you want a word instead of random jumble of chars).
 	#[serde(alias = "id")]
 	custom_id: Option<String>,
+	/// How often the link may be used.
 	#[serde(default)]
 	max_uses: i64,
+	/// How long the link is valid for.
 	#[serde(default)]
 	valid_for: i64,
 }
@@ -58,7 +62,7 @@ impl Display for Link {
 
 impl Link {
 	/// Creates a new link. Also inserts it into the database.
-	async fn new(
+	pub async fn new(
 		link: String,
 		pool: &Pool<Sqlite>,
 	) -> Result<Self, LinkError> {
@@ -154,6 +158,7 @@ impl Link {
 		Ok(link)
 	}
 
+	/// Formats self, according to the options set in the config file.
 	pub fn formatted(&self, config: &Config) -> String {
 		format!("{}/{}", config.public_url, self.id)
 	}
