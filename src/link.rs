@@ -190,6 +190,10 @@ impl LinkStore {
 	}
 
 	/// Creates a shortened link with default settings.
+	///
+	/// # Errors
+	///
+	/// Returns an error if the underlying [`Link::new`] call fails.
 	pub async fn create_link(&self, link: String) -> Result<Link, ShortyError> {
 		Link::new(link, &self.db).await
 	}
