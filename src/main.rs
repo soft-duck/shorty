@@ -11,9 +11,8 @@ use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
-use crate::link::link::{LinkConfig, LinkStore};
 use crate::util::{generate_random_chars, check_url_http, uri_to_url};
-use crate::link::link::LinkError;
+use crate::link::{LinkConfig, LinkError, LinkStore};
 
 mod util;
 mod link;
