@@ -199,6 +199,10 @@ impl LinkStore {
 	}
 
 	/// Creates a shortened link with custom settings.
+	///
+	/// # Errors
+	///
+	/// Returns an error if the underlying [`Link::new_with_config`] call fails.
 	pub async fn create_link_with_config(
 		&self,
 		link_config: LinkConfig,
