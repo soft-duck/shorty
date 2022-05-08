@@ -153,7 +153,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	tokio::task::spawn(async move {
 		loop {
-			links_clone.clean().await;
+			if let Err(why) = links_clone.clean().await {
+				error!("{why}");
+			}
 			tokio::time::sleep(CLEAN_SLEEP_DURATION).await;
 		}
 	});

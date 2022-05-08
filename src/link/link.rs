@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, HttpResponseBuilder, ResponseError};
@@ -7,7 +6,6 @@ use actix_web::body::BoxBody;
 use chrono::Local;
 use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
-use tokio::sync::RwLock;
 use tracing::debug;
 use thiserror::Error;
 
@@ -165,14 +163,12 @@ impl Link {
 }
 
 pub struct LinkStore {
-	links: RwLock<HashMap<String, Link>>,
 	db: Pool<Sqlite>,
 }
 
 impl LinkStore {
 	pub fn new(db: Pool<Sqlite>) -> Self {
 		Self {
-			links: RwLock::new(HashMap::new()),
 			db,
 		}
 	}
@@ -203,15 +199,32 @@ impl LinkStore {
 		Link::new_with_config(link_config, &self.db).await
 	}
 
-	pub async fn clean(&self) {
+	pub async fn clean(&self) -> Result<(), LinkError> {
 		debug!("Clearing stale links");
-		let mut links = self.links.write().await;
-		let num_before = links.len();
 
-		links.retain(|_, link| !link.is_invalid());
-		let num_after = links.len();
+		let res = sqlx::query!("SELECT COUNT(*) AS num_before FROM links").fetch_one(&self.db).await?;
+		let num_before = res.num_before;
+
+		let now = time_now();
+		sqlx::query!(
+			r#"
+			DELETE FROM links
+			WHERE max_uses != 0 AND invocations > max_uses
+			OR created_at + valid_for < $1
+			"#,
+			now
+		)
+			.execute(&self.db)
+			.await?;
+
+		let res = sqlx::query!("SELECT COUNT(*) AS num_after FROM links").fetch_one(&self.db).await?;
+		let num_after = res.num_after;
+
 		let delta = num_before - num_after;
 		debug!("Size before cleaning: {num_before}. After cleaning: {num_after}. Removed elements: {delta}");
+
+
+		Ok(())
 	}
 }
 
