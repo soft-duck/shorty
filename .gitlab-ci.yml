@@ -28,20 +28,30 @@ stages:
 
 compile:
   stage: compile
+
   script:
-    - cd src
     - cargo build --release
-  artifacts:
+
+  cache:
+    key: "cache-target-folder"
     paths:
-      - src/target
-    expire_in: 24 hours
+      - target/
+
 
 test:
   stage: test
+
   needs: ["compile"]
+
   script:
-    - cd src
     - cargo test --release
+
   artifacts:
     paths:
-    - src/target/release/shorty
+      - target/release/shorty
+    expire_in: 48 hours
+
+  cache:
+    key: "cache-target-folder"
+    paths:
+      - target/ 

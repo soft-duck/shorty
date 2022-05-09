@@ -13,7 +13,8 @@ const BASE64_CONFIG: base64::Config = base64::Config::new(CharacterSet::UrlSafe,
 /// If it doesn't it prepends `http`.
 /// We have to do this because otherwise the browser will assume we are redirecting
 /// to a subpage on the same domain.
-pub fn check_url_http(url: String) -> String {
+#[must_use]
+pub fn ensure_http_prefix(url: String) -> String {
 	if url.starts_with("http://") || url.starts_with("https://") {
 		return url;
 	}
@@ -25,6 +26,7 @@ pub fn check_url_http(url: String) -> String {
 /// Generates some random chars.
 /// Used for the random ID.
 /// We generate a few random bytes (How many is defined by `URL_SIZE`.
+#[must_use]
 pub fn generate_random_chars() -> String {
 	let mut random_bytes: [u8; URL_SIZE] = [0; URL_SIZE];
 	rand::thread_rng().fill_bytes(&mut random_bytes);
@@ -36,6 +38,7 @@ pub fn generate_random_chars() -> String {
 /// If the URI is longer than 0 chars, it contains a `/` char at the first position.
 /// If it is longer than 0 chars, this removes the prepended `/` char.
 #[allow(clippy::similar_names)]
+#[must_use]
 pub fn uri_to_url(uri: &Uri) -> String {
 	let mut url = uri.to_string();
 	if url.len() > 1 {
@@ -47,6 +50,7 @@ pub fn uri_to_url(uri: &Uri) -> String {
 }
 
 /// Returns the current local time in milliseconds.
+#[must_use]
 pub fn time_now() -> i64 {
 	Local::now().timestamp_millis()
 }

@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+pub const SAMPLE_CONFIG: &str = include_str!("../config.toml.sample");
+
 #[derive(Deserialize)]
 pub struct Config {
 	pub listen_url: String,
@@ -10,8 +12,10 @@ pub struct Config {
 }
 
 impl Config {
-	pub fn new(config: &str) -> Result<Self, Box<dyn std::error::Error>> {
-		Ok(toml::from_str(config)?)
+	/// # Errors
+	/// Errors when the config couldn't be deserialized.
+	pub fn new(config: &str) -> Result<Self, toml::de::Error> {
+		toml::from_str(config)
 	}
 }
 
