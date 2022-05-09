@@ -1,7 +1,8 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::module_inception)]
 
-use std::io::Read;
+use std::io::{Read, Write};
+use std::path::Path;
 use std::time::Duration;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
@@ -10,6 +11,7 @@ use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
+use crate::config::SAMPLE_CONFIG;
 use crate::error::ShortyError;
 use crate::util::{generate_random_chars, ensure_http_prefix, uri_to_url};
 use crate::link::{LinkConfig, LinkStore};
@@ -117,7 +119,21 @@ async fn main() -> Result<(), ShortyError> {
 
 	let config;
 	{
-		let path = std::env::var("SHORTY_CONFIG").unwrap_or("./config.toml".to_owned());
+		let config_location = std::env::var("SHORTY_CONFIG")
+			.unwrap_or_else(|_| "./config.toml".to_owned());
+		let path = Path::new(&config_location);
+
+		if !path.exists() {
+			let mut file = std::fs::File::create(path).expect("Failed to create sample config file");
+			file.write_all(SAMPLE_CONFIG.as_bytes()).expect("Couldn't write the sample config file");
+
+			error!(
+				"You have to configure the config file. A sample config was created at {}",
+				config_location
+			);
+			std::process::exit(1);
+		}
+
 		let mut file = std::fs::File::open(path).expect("Failed to open config file.");
 		let mut content = String::new();
 		file.read_to_string(&mut content).expect("Failed to read config file.");

@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+pub const SAMPLE_CONFIG: &str = include_str!("../config.toml.sample");
+
 #[derive(Deserialize)]
 pub struct Config {
 	pub listen_url: String,
