@@ -117,7 +117,8 @@ async fn main() -> Result<(), ShortyError> {
 
 	let config;
 	{
-		let mut file = std::fs::File::open("./config.toml").expect("Failed to open config file.");
+		let path = std::env::var("SHORTY_CONFIG").unwrap_or("./config.toml".to_owned());
+		let mut file = std::fs::File::open(path).expect("Failed to open config file.");
 		let mut content = String::new();
 		file.read_to_string(&mut content).expect("Failed to read config file.");
 
