@@ -2,8 +2,9 @@
 #![allow(clippy::module_inception)]
 
 use std::io::{Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
+use actix_files::NamedFile;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use sqlx::sqlite::SqlitePoolOptions;
@@ -83,26 +84,20 @@ async fn create_shortened_custom(
 	Ok(HttpResponse::Ok().body(formatted))
 }
 
-#[get("/assets/{asset:.*}")]
-async fn serve_file(asset: web::Path<String>) -> Result<impl Responder, Box<dyn std::error::Error>> {
-	// let mut file = fs::File::open(format!()).await;
-	// let mut content = String::new();
-
-	debug!("Got request for file: {asset}");
-
-
-	Ok(HttpResponse::Ok())
-}
+// #[get("/assets/{asset:.*}")]
+// async fn serve_file(asset: web::Path<String>) -> Result<impl Responder, Box<dyn std::error::Error>> {
+//
+//
+// 	debug!("Got request for file: {asset}");
+//
+//
+// 	Ok(HttpResponse::Ok())
+// }
 
 #[get("/")]
 async fn index() -> Result<impl Responder, Box<dyn std::error::Error>> {
-	// let mut file = fs::File::open(format!()).await;
-	// let mut content = String::new();
-
-	debug!("Index");
-
-
-	Ok(HttpResponse::Ok())
+	debug!("Got request for Index");
+	Ok(NamedFile::open("website/index.html")?)
 }
 
 #[tokio::main]
@@ -177,7 +172,8 @@ async fn main() -> Result<(), ShortyError> {
 			.app_data(links.clone())
 			.app_data(pool.clone())
 			.service(index)
-			.service(serve_file)
+			.service(actix_files::Files::new("/assets", "./website"))
+			// .service(serve_file)
 			.service(get_shortened)
 			.service(create_shortened_custom)
 			.service(create_shortened)
