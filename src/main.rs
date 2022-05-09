@@ -2,11 +2,13 @@
 #![allow(clippy::module_inception)]
 
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Duration;
 use actix_files::NamedFile;
 
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
+use sqlx::migrate::MigrateDatabase;
+use sqlx::Sqlite;
 use sqlx::sqlite::SqlitePoolOptions;
 use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
@@ -138,6 +140,10 @@ async fn main() -> Result<(), ShortyError> {
 
 	let config = web::Data::new(config);
 	let config_clone = config.clone();
+
+	if !Sqlite::database_exists(config.database_url.as_str()).await? {
+		Sqlite::create_database(config.database_url.as_str()).await.expect("Couldn't create database file");
+	}
 
 	let pool = SqlitePoolOptions::new()
 		.max_connections(5)
