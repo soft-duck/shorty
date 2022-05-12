@@ -4,8 +4,8 @@
 use std::io::{Read, Write};
 use std::path::Path;
 use std::time::Duration;
-use actix_files::NamedFile;
 
+use actix_files::NamedFile;
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use sqlx::migrate::MigrateDatabase;
 use sqlx::Sqlite;
@@ -13,11 +13,13 @@ use sqlx::sqlite::SqlitePoolOptions;
 use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
+use actix_cors::Cors;
+
 use crate::config::Config;
 use crate::config::SAMPLE_CONFIG;
 use crate::error::ShortyError;
-use crate::util::{generate_random_chars, ensure_http_prefix, uri_to_url};
 use crate::link::{LinkConfig, LinkStore};
+use crate::util::{ensure_http_prefix, generate_random_chars, uri_to_url};
 
 pub mod util;
 pub mod link;
@@ -35,6 +37,7 @@ async fn get_shortened(
 ) -> Result<impl Responder, ShortyError> {
 	let shortened_url = params.into_inner();
 	debug!("Got request for {shortened_url}");
+
 
 	Ok(
 		if let Some(link) = link_store.get(shortened_url.as_str()).await {
@@ -172,7 +175,7 @@ async fn main() -> Result<(), ShortyError> {
 	let pool = web::Data::new(pool);
 	info!("Starting server at {}:{}", config.listen_url, config.port);
 
-	HttpServer::new(move ||
+	HttpServer::new(move || {
 		App::new()
 			.app_data(config_clone.clone())
 			.app_data(links.clone())
@@ -183,7 +186,7 @@ async fn main() -> Result<(), ShortyError> {
 			.service(get_shortened)
 			.service(create_shortened_custom)
 			.service(create_shortened)
-	)
+	})
 		.bind((config.listen_url.as_str(), config.port))
 		.expect("Failed to bind port or listen address.")
 		.run()
