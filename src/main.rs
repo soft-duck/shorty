@@ -61,7 +61,6 @@ async fn create_shortened(
 	info!("URI is {uri}");
 
 	let url = uri_to_url(uri);
-	let url = ensure_http_prefix(url);
 
 	let link = link_store.create_link(url).await?;
 	let formatted = link.formatted(config.as_ref());

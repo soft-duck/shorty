@@ -5,7 +5,7 @@ use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use tracing::debug;
 
-use crate::{Config, generate_random_chars};
+use crate::{Config, ensure_http_prefix, generate_random_chars};
 use crate::error::ShortyError;
 use crate::util::time_now;
 
@@ -82,15 +82,14 @@ impl Link {
 		} else {
 			generate_random_chars()
 		};
-		let redirect_to = link_config.link;
+		let redirect_to = ensure_http_prefix(link_config.link);
 		let max_uses = link_config.max_uses;
 		let invocations = 0;
 		let created_at = time_now();
 		let valid_for = link_config.valid_for;
 
 		// If a link with the same ID exists already, return a conflict error.
-		let existing_opt = Link::from_id(id.as_str(), pool).await?;
-		if let Some(link) = existing_opt {
+		if let Some(link) = Link::from_id(id.as_str(), pool).await?{
 			if !link.is_invalid() {
 				return Err(ShortyError::LinkConflict);
 			}
