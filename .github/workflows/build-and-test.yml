@@ -27,3 +27,4 @@ jobs:
 
       - name: Test
         run: cargo test --release --verbose
+
