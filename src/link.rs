@@ -22,7 +22,7 @@ pub struct LinkConfig {
 	/// How often the link may be used.
 	#[serde(default)]
 	max_uses: i64,
-	/// How long the link is valid for.
+	/// How long the link is valid for in milliseconds.
 	#[serde(default)]
 	valid_for: i64,
 }
