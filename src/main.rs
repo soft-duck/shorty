@@ -115,8 +115,7 @@ async fn main() -> Result<(), ShortyError> {
 		.with_file(true)
 		.init();
 
-	let config;
-	{
+	let config = {
 		let config_location = std::env::var("SHORTY_CONFIG")
 			.unwrap_or_else(|_| "./config.toml".to_owned());
 		let path = Path::new(&config_location);
@@ -136,8 +135,9 @@ async fn main() -> Result<(), ShortyError> {
 		let mut content = String::new();
 		file.read_to_string(&mut content).expect("Failed to read config file.");
 
-		config = Config::new(content.as_str()).expect("Failed to parse config");
-	}
+
+		Config::new(content.as_str()).expect("Failed to parse config")
+	};
 
 	let config = web::Data::new(config);
 	let config_clone = config.clone();

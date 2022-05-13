@@ -63,6 +63,7 @@ impl Link {
 			valid_for: 1000 * 60 * 60 * 24, // 24 hours
 		};
 
+
 		Link::new_with_config(link_config, pool).await
 	}
 
@@ -111,6 +112,7 @@ impl Link {
 		)
 			.execute(pool)
 			.await?;
+
 
 		Ok(Self {
 			id,
@@ -169,9 +171,7 @@ pub struct LinkStore {
 impl LinkStore {
 	#[must_use]
 	pub fn new(db: Pool<Sqlite>) -> Self {
-		Self {
-			db,
-		}
+		Self { db }
 	}
 
 	/// Retrieves a link with the provided ID, if it exists.
@@ -185,6 +185,7 @@ impl LinkStore {
 
 			debug!("{} got requested but is expired.", link.id);
 		}
+
 
 		None
 	}
