@@ -10,9 +10,18 @@
 <div class="centered">
 	<h1>WIP Link Shortener :)</h1>
 
-	<div id="shorten" class="shown">
-		<input type="text" id="shorten_textfield"> <br>
-		<input type="button" value="Shorten" id="shorten_button"> <br>
+	<div id="shorten">
+		<div>
+			<input class="input_field" type="text" id="shorten_textfield" placeholder="URL to shorten">
+			<input type="button" value="Shorten" id="shorten_button">
+		</div>
+
+		<!-- Begin advanced mode items -->
+		<label for="advanced_mode">Advanced mode</label><input type="checkbox" id="advanced_mode">
+
+		<input class="advanced_mode input_field" type="number" id="max_uses" placeholder="Number of uses before link expires"> <br>
+		<input class="advanced_mode" type="datetime-local" id="age_days"> <br>
+		<!-- End advanced mode items -->
 	</div>
 
 </div>
