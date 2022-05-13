@@ -13,8 +13,6 @@ use sqlx::sqlite::SqlitePoolOptions;
 use tracing::{debug, error, info, instrument, Level};
 use tracing_subscriber::EnvFilter;
 
-use actix_cors::Cors;
-
 use crate::config::Config;
 use crate::config::SAMPLE_CONFIG;
 use crate::error::ShortyError;
