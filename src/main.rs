@@ -157,6 +157,13 @@ async fn main() -> Result<(), ShortyError> {
 		.await
 		.expect("Failed db schema migration.");
 
+	// Gracefully close the database connection(s) on CTRL+C
+	let pool_clone = pool.clone();
+	tokio::task::spawn(async move {
+		tokio::signal::ctrl_c().await.expect("Error awaiting CTRL+C signal.");
+		pool_clone.close().await;
+	});
+
 	let links = web::Data::new(LinkStore::new(pool.clone()));
 	let links_clone = links.clone();
 
