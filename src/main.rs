@@ -161,7 +161,10 @@ async fn main() -> Result<(), ShortyError> {
 	let pool_clone = pool.clone();
 	tokio::task::spawn(async move {
 		tokio::signal::ctrl_c().await.expect("Error awaiting CTRL+C signal.");
+		info!("Received CTRL+C");
+		debug!("Closing Database pool.");
 		pool_clone.close().await;
+		debug!("Closed Database pool.");
 	});
 
 	let links = web::Data::new(LinkStore::new(pool.clone()));
