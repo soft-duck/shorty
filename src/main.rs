@@ -49,7 +49,7 @@ async fn get_shortened(
 	)
 }
 
-/// The simple create_shortened
+/// Creates a shortened link by taking the requested uri and turning it into a shortened link.
 #[post("/{url:.*}")]
 #[instrument(skip_all)]
 async fn create_shortened(
@@ -61,6 +61,10 @@ async fn create_shortened(
 	info!("URI is {uri}");
 
 	let url = uri_to_url(uri);
+
+	if url.len() > config.max_link_length {
+		return Err(ShortyError::LinkExceedsMaxLength);
+	}
 
 	let link = link_store.create_link(url).await?;
 	let formatted = link.formatted(config.as_ref());
@@ -78,7 +82,13 @@ async fn create_shortened_custom(
 	link_config: web::Json<LinkConfig>,
 	config: web::Data<Config>,
 ) -> Result<impl Responder, ShortyError> {
-	let link = link_store.create_link_with_config(link_config.into_inner()).await?;
+	let link_config = link_config.into_inner();
+
+	if link_config.link.len() > config.max_link_length {
+		return Err(ShortyError::LinkExceedsMaxLength);
+	}
+
+	let link = link_store.create_link_with_config(link_config).await?;
 	let formatted = link.formatted(config.as_ref());
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
@@ -139,7 +149,6 @@ async fn main() -> Result<(), ShortyError> {
 	};
 
 	let config = web::Data::new(config);
-	let config_clone = config.clone();
 
 	if !Sqlite::database_exists(config.database_url.as_str()).await? {
 		Sqlite::create_database(config.database_url.as_str()).await.expect("Couldn't create database file");
@@ -182,8 +191,13 @@ async fn main() -> Result<(), ShortyError> {
 	let pool = web::Data::new(pool);
 	info!("Starting server at {}:{}", config.listen_url, config.port);
 
+	let config_clone = config.clone();
 	HttpServer::new(move || {
+		let json_config = web::JsonConfig::default()
+			.limit(config_clone.max_json_size);
+
 		App::new()
+			.app_data(json_config)
 			.app_data(config_clone.clone())
 			.app_data(links.clone())
 			.app_data(pool.clone())

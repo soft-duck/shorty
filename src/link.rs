@@ -15,7 +15,7 @@ use crate::util::time_now;
 #[derive(Debug, Clone, Deserialize)]
 pub struct LinkConfig {
 	/// The link that should be shortened.
-	link: String,
+	pub link: String,
 	/// Custom ID for the link (like when you want a word instead of random jumble of chars).
 	#[serde(alias = "id")]
 	custom_id: Option<String>,
@@ -89,7 +89,7 @@ impl Link {
 		let valid_for = link_config.valid_for;
 
 		// If a link with the same ID exists already, return a conflict error.
-		if let Some(link) = Link::from_id(id.as_str(), pool).await?{
+		if let Some(link) = Link::from_id(id.as_str(), pool).await? {
 			if !link.is_invalid() {
 				return Err(ShortyError::LinkConflict);
 			}
