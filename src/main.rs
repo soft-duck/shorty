@@ -160,8 +160,8 @@ async fn main() -> Result<(), ShortyError> {
 	// Gracefully close the database connection(s) on CTRL+C
 	let pool_clone = pool.clone();
 	tokio::task::spawn(async move {
-		tokio::signal::ctrl_c().await.expect("Error awaiting CTRL+C signal.");
-		info!("Received CTRL+C");
+		tokio::signal::ctrl_c().await.expect("Error awaiting SIGINT.");
+		info!("Received SIGINT, shutting down...");
 		debug!("Closing Database pool.");
 		pool_clone.close().await;
 		debug!("Closed Database pool.");
