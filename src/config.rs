@@ -43,5 +43,5 @@ const fn max_link_length_default() -> usize {
 }
 
 const fn max_json_size_default() -> usize {
-	2_097_152 // 2 Mebibytes
+	2_097_152 // 2 Mebibyte
 }

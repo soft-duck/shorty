@@ -11,7 +11,7 @@ use crate::util::time_now;
 
 /// This struct holds configuration options for a custom link.
 /// Optional fields are: `custom_id`, `max_uses`, and `valid_for`.
-/// `valid_for` and `max_uses` default to 0, which means essentially infinite
+/// `valid_for` and `max_uses` default to 0, which means essentially infinite.
 #[derive(Debug, Clone, Deserialize)]
 pub struct LinkConfig {
 	/// The link that should be shortened.
