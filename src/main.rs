@@ -58,7 +58,7 @@ async fn create_shortened(
 	config: web::Data<Config>,
 ) -> Result<impl Responder, ShortyError> {
 	let uri = req.uri();
-	info!("URI is {uri}");
+	debug!("URI is {uri}");
 
 	let url = uri_to_url(uri);
 

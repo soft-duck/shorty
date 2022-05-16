@@ -82,11 +82,17 @@ impl Link {
 		} else {
 			generate_random_chars()
 		};
-		let redirect_to = ensure_http_prefix(link_config.link);
+		let redirect_to = link_config.link;
 		let max_uses = link_config.max_uses;
 		let invocations = 0;
 		let created_at = time_now();
 		let valid_for = link_config.valid_for;
+
+		if redirect_to.is_empty() {
+			return Err(ShortyError::LinkEmpty);
+		}
+
+		let redirect_to = ensure_http_prefix(redirect_to);
 
 		// If a link with the same ID exists already, return a conflict error.
 		if let Some(link) = Link::from_id(id.as_str(), pool).await? {

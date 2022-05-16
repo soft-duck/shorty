@@ -9,6 +9,8 @@ pub enum ShortyError {
 	LinkConflict,
 	#[error("Link exceeds maximum length allowed.")]
 	LinkExceedsMaxLength,
+	#[error("Link is empty.")]
+	LinkEmpty,
 	#[error(transparent)]
 	Database(#[from] sqlx::Error),
 	#[error(transparent)]
@@ -20,6 +22,7 @@ impl ResponseError for ShortyError {
 		match self {
 			ShortyError::LinkConflict => StatusCode::CONFLICT,
 			ShortyError::LinkExceedsMaxLength => StatusCode::BAD_REQUEST,
+			ShortyError::LinkEmpty => StatusCode::BAD_REQUEST,
 			_ => StatusCode::INTERNAL_SERVER_ERROR,
 		}
 	}

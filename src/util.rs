@@ -41,7 +41,7 @@ pub fn generate_random_chars() -> String {
 #[must_use]
 pub fn uri_to_url(uri: &Uri) -> String {
 	let mut url = uri.to_string();
-	if url.len() > 1 {
+	if url.len() >= 1 {
 		url.remove(0);
 	}
 
