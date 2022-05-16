@@ -5,6 +5,12 @@ let copy_clipboard = false;
 
 let hide_advanced = true;
 
+// sets the date input minimum date to exactly now
+let dateInput = document.getElementById("age_days");
+let date = new Date();
+date.setMilliseconds(date.getMilliseconds() - (date.getTimezoneOffset() * 1000 * 60));
+dateInput.min = date.toISOString().split(".")[0];
+
 // Add keylistener to the textfield so we can also submit on enter
 shorten_textfield.addEventListener("keypress", function (event) {
 	if (event.key === "Enter") {
@@ -52,7 +58,22 @@ function handle_shorten_click() {
 			}
 
 			const to_shorten = shorten_textfield.value;
-			const data = JSON.stringify({"link": to_shorten});
+			let data;
+			if (hide_advanced) {
+				data = JSON.stringify({"link": to_shorten});
+			} else {
+				let max_uses = document.getElementById("max_uses").value;
+				let now = new Date();
+				let target = document.getElementById("age_days").value;
+				let date = Date.parse(target);
+				let final_duration = date - now.getTime();
+				data = JSON.stringify({
+					link: to_shorten,
+					// casting to int, fuck you JS
+					max_uses: max_uses - 0,
+					valid_for: final_duration,
+				});
+			}
 			xhr.send(data);
 		}
 	}
