@@ -23,17 +23,17 @@ body {
     text-decoration: none;
     font-size: 20px;
     line-height: 1.11;
-    padding: 18px 30px;
+    padding: 10px;
     color: var(--text-color);
     text-decoration-color: initial;
     vertical-align: bottom;
     margin-bottom: 0;
     background: var(--accent-color);
-    min-width: 25%;
-    float: right;
+    min-width: 10%;
     position: relative;
     background-image: initial;
     background-color: var(--accent-color);
+    height: 5vh;
 }
 
 .input_field {
@@ -48,4 +48,17 @@ body {
     background-color: var(--background-color);
     border: 1px solid rgb(94, 101, 103);
     color: rgb(255, 255, 255);
+    height: 5vh;
+}
+
+/* Remove the increment/decrement buttons/arrows from numberfields */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox is a diva again */
+input[type=number] {
+    -moz-appearance: textfield;
 }
