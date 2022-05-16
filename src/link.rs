@@ -5,7 +5,7 @@ use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use tracing::debug;
 
-use crate::{Config, ensure_http_prefix, generate_random_chars};
+use crate::{CONFIG, ensure_http_prefix, generate_random_chars};
 use crate::error::ShortyError;
 use crate::util::time_now;
 
@@ -164,8 +164,8 @@ impl Link {
 
 	/// Formats self, according to the options set in the config file.
 	#[must_use]
-	pub fn formatted(&self, config: &Config) -> String {
-		format!("{}/{}", config.public_url, self.id)
+	pub fn formatted(&self) -> String {
+		format!("{}/{}", CONFIG.public_url, self.id)
 	}
 }
 

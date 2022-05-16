@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use actix_files::NamedFile;
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
+use lazy_static::lazy_static;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::Sqlite;
 use sqlx::sqlite::SqlitePoolOptions;
@@ -26,6 +27,31 @@ pub mod error;
 
 const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 
+lazy_static! {
+	static ref CONFIG: Config = {
+		let config_location = std::env::var("SHORTY_CONFIG")
+			.unwrap_or_else(|_| "./config.toml".to_owned());
+		let path = Path::new(&config_location);
+
+		if !path.exists() {
+			let mut file = std::fs::File::create(path).expect("Failed to create sample config file");
+			file.write_all(SAMPLE_CONFIG.as_bytes()).expect("Couldn't write the sample config file");
+
+			error!(
+				"You have to configure the config file. A sample config was created at {}",
+				config_location
+			);
+			std::process::exit(1);
+		}
+
+		let mut file = std::fs::File::open(path).expect("Failed to open config file.");
+		let mut content = String::new();
+		file.read_to_string(&mut content).expect("Failed to read config file.");
+
+
+		Config::new(content.as_str()).expect("Failed to parse config")
+	};
+}
 
 #[get("/{shortened_url:.*}")]
 #[instrument(skip_all)]
@@ -55,19 +81,18 @@ async fn get_shortened(
 async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
-	config: web::Data<Config>,
 ) -> Result<impl Responder, ShortyError> {
 	let uri = req.uri();
 	debug!("URI is {uri}");
 
 	let url = uri_to_url(uri);
 
-	if url.len() > config.max_link_length {
+	if url.len() > CONFIG.max_link_length {
 		return Err(ShortyError::LinkExceedsMaxLength);
 	}
 
 	let link = link_store.create_link(url).await?;
-	let formatted = link.formatted(config.as_ref());
+	let formatted = link.formatted();
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
@@ -80,16 +105,15 @@ async fn create_shortened(
 async fn create_shortened_custom(
 	link_store: web::Data<LinkStore>,
 	link_config: web::Json<LinkConfig>,
-	config: web::Data<Config>,
 ) -> Result<impl Responder, ShortyError> {
 	let link_config = link_config.into_inner();
 
-	if link_config.link.len() > config.max_link_length {
+	if link_config.link.len() > CONFIG.max_link_length {
 		return Err(ShortyError::LinkExceedsMaxLength);
 	}
 
 	let link = link_store.create_link_with_config(link_config).await?;
-	let formatted = link.formatted(config.as_ref());
+	let formatted = link.formatted();
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
@@ -124,41 +148,16 @@ async fn main() -> Result<(), ShortyError> {
 		.with_file(true)
 		.init();
 
-	let config = {
-		let config_location = std::env::var("SHORTY_CONFIG")
-			.unwrap_or_else(|_| "./config.toml".to_owned());
-		let path = Path::new(&config_location);
 
-		if !path.exists() {
-			let mut file = std::fs::File::create(path).expect("Failed to create sample config file");
-			file.write_all(SAMPLE_CONFIG.as_bytes()).expect("Couldn't write the sample config file");
-
-			error!(
-				"You have to configure the config file. A sample config was created at {}",
-				config_location
-			);
-			std::process::exit(1);
-		}
-
-		let mut file = std::fs::File::open(path).expect("Failed to open config file.");
-		let mut content = String::new();
-		file.read_to_string(&mut content).expect("Failed to read config file.");
-
-
-		Config::new(content.as_str()).expect("Failed to parse config")
-	};
-
-	let config = web::Data::new(config);
-
-	if !Sqlite::database_exists(config.database_url.as_str()).await? {
-		Sqlite::create_database(config.database_url.as_str()).await.expect("Couldn't create database file");
+	if !Sqlite::database_exists(CONFIG.database_url.as_str()).await? {
+		Sqlite::create_database(CONFIG.database_url.as_str()).await.expect("Couldn't create database file");
 	}
 
 	let pool = SqlitePoolOptions::new()
 		.max_connections(5)
 		.min_connections(1)
 		.max_lifetime(Some(Duration::from_secs(60 * 60)))
-		.connect(config.database_url.as_str())
+		.connect(CONFIG.database_url.as_str())
 		.await?;
 
 	sqlx::migrate!()
@@ -189,16 +188,14 @@ async fn main() -> Result<(), ShortyError> {
 	});
 
 	let pool = web::Data::new(pool);
-	info!("Starting server at {}:{}", config.listen_url, config.port);
+	info!("Starting server at {}:{}", CONFIG.listen_url, CONFIG.port);
 
-	let config_clone = config.clone();
 	HttpServer::new(move || {
 		let json_config = web::JsonConfig::default()
-			.limit(config_clone.max_json_size);
+			.limit(CONFIG.max_json_size);
 
 		App::new()
 			.app_data(json_config)
-			.app_data(config_clone.clone())
 			.app_data(links.clone())
 			.app_data(pool.clone())
 			.service(index)
@@ -208,7 +205,7 @@ async fn main() -> Result<(), ShortyError> {
 			.service(create_shortened_custom)
 			.service(create_shortened)
 	})
-		.bind((config.listen_url.as_str(), config.port))
+		.bind((CONFIG.listen_url.as_str(), CONFIG.port))
 		.expect("Failed to bind port or listen address.")
 		.run()
 		.await
