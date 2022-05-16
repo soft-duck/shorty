@@ -1,8 +1,51 @@
-h1 {
-    color: white;
+:root {
+    --text-color: #ffffff;
+    --background-color: #1c1c1c;
+    --accent-color: #dc143c;
 }
 
+
 body {
-    background-color: #1c1c1c;
-    color: white;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.advanced_mode {
+    display: none;
+}
+
+#shorten_button {
+    border: 1px solid transparent;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 100ms linear;
+    text-decoration: none;
+    font-size: 20px;
+    line-height: 1.11;
+    padding: 18px 30px;
+    color: var(--text-color);
+    text-decoration-color: initial;
+    vertical-align: bottom;
+    margin-bottom: 0;
+    background: var(--accent-color);
+    min-width: 25%;
+    float: right;
+    position: relative;
+    background-image: initial;
+    background-color: var(--accent-color);
+}
+
+.input_field {
+    font-family: inherit;
+    font-weight: 400;
+    line-height: 1.5;
+    transition: box-shadow .5s,border-color .25s ease-in-out,-webkit-box-shadow .5s;
+    box-shadow: rgba(24, 24, 24, 0.1) 0 1px 2px inset;
+    border-radius: 8px;
+    font-size: 20px;
+    padding: 0 20px;
+    background-color: var(--background-color);
+    border: 1px solid rgb(94, 101, 103);
+    color: rgb(255, 255, 255);
 }
