@@ -5,12 +5,12 @@ Small link shortener
 An instance is currently hosted at https://s.u-are.gay
 if you want to try it out :)
 
-## Self hosting
+## Self-hosting
 
 Currently shorty is intended to be run behind a reverse proxy to take advantage of multiple URLs and
 https. I personally use nginx, but you can use any reverse proxy you want.
 
-Theres multiple ways to run shorty, you can either grab a pre-compiled binary (from a release or recent
+There's multiple ways to run shorty, you can either grab a pre-compiled binary (from a release or recent
 pipeline run) or you can compile it yourself.
 
 ### Self compiling

@@ -1,7 +1,24 @@
-listen_url = "localhost"
-port = 7999
+# The URL where the server should bind to
+# Optional; default is '127.0.0.1'.
+# listen_url = "127.0.0.1"
+
+# The port where the server should bind to
+# Optional; default is '7999'.
+# port = 7999
+
 # This is the url that will be prefixed to the shortened ID.
 # The shortened link ajnIUh1H in the server response will look like `$public_url/ajnIUh1H`.
-# If the public url is `short.example.com` the link the server will respond with will be `http://short.example.com/ajnIUh1H`
+# If the public url is `short.example.com` the link the server will respond with will be `http://short.example.com/ajnIUh1H`.
+# It is different from the listen_url if shorty is run behind a reverse proxy.
 public_url = "http://localhost:7999"
+
+# Where the server should look for the database
 database_url = 'sqlite://database/database.db'
+
+# The maximum length a link may have.
+# Optional; default is 2500 chars length.
+# max_link_length = 2500
+
+# The maximum json payload size for custom links.
+# Optional; default is 2 MB
+# max_json_size = 2097152

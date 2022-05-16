@@ -1,0 +1,25 @@
+name: Rust
+on:
+  push:
+    branches:
+      - meister
+      - nächtlich
+  pull_request:
+    branches:
+      - meister
+      - nächtlich
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Compile
+        run: cargo build --release
+
+      - name: Test
+        run: cargo test --release --verbose
