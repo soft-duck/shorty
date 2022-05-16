@@ -92,6 +92,10 @@ impl Link {
 			return Err(ShortyError::LinkEmpty);
 		}
 
+		if redirect_to.len() > CONFIG.max_link_length {
+			return Err(ShortyError::LinkExceedsMaxLength);
+		}
+
 		let redirect_to = ensure_http_prefix(redirect_to);
 
 		// If a link with the same ID exists already, return a conflict error.

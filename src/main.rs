@@ -87,10 +87,6 @@ async fn create_shortened(
 
 	let url = uri_to_url(uri);
 
-	if url.len() > CONFIG.max_link_length {
-		return Err(ShortyError::LinkExceedsMaxLength);
-	}
-
 	let link = link_store.create_link(url).await?;
 	let formatted = link.formatted();
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
@@ -107,10 +103,6 @@ async fn create_shortened_custom(
 	link_config: web::Json<LinkConfig>,
 ) -> Result<impl Responder, ShortyError> {
 	let link_config = link_config.into_inner();
-
-	if link_config.link.len() > CONFIG.max_link_length {
-		return Err(ShortyError::LinkExceedsMaxLength);
-	}
 
 	let link = link_store.create_link_with_config(link_config).await?;
 	let formatted = link.formatted();
