@@ -5,17 +5,17 @@ use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use tracing::debug;
 
-use crate::{Config, generate_random_chars};
+use crate::{CONFIG, ensure_http_prefix, generate_random_chars};
 use crate::error::ShortyError;
 use crate::util::time_now;
 
 /// This struct holds configuration options for a custom link.
 /// Optional fields are: `custom_id`, `max_uses`, and `valid_for`.
-/// `valid_for` and `max_uses` default to 0, which means essentially infinite
+/// `valid_for` and `max_uses` default to 0, which means essentially infinite.
 #[derive(Debug, Clone, Deserialize)]
 pub struct LinkConfig {
 	/// The link that should be shortened.
-	link: String,
+	pub link: String,
 	/// Custom ID for the link (like when you want a word instead of random jumble of chars).
 	#[serde(alias = "id")]
 	custom_id: Option<String>,
@@ -88,10 +88,19 @@ impl Link {
 		let created_at = time_now();
 		let valid_for = link_config.valid_for;
 
+		if redirect_to.is_empty() {
+			return Err(ShortyError::LinkEmpty);
+		}
+
+		if redirect_to.len() > CONFIG.max_link_length {
+			return Err(ShortyError::LinkExceedsMaxLength);
+		}
+
+		let redirect_to = ensure_http_prefix(redirect_to);
+
 		// If a link with the same ID exists already, return a conflict error.
-		let existing_opt = Link::from_id(id.as_str(), pool).await?;
-		if let Some(link) = existing_opt {
-			if !link.is_invalid() {
+		if let Some(link) = Link::from_id(id.as_str(), pool).await? {
+			if !link.is_expired() {
 				return Err(ShortyError::LinkConflict);
 			}
 		}
@@ -125,7 +134,7 @@ impl Link {
 	}
 
 	#[must_use]
-	pub fn is_invalid(&self) -> bool {
+	pub fn is_expired(&self) -> bool {
 		let expired = self.valid_for != 0
 			&& (Local::now().timestamp_millis() - self.created_at) > self.valid_for;
 
@@ -159,8 +168,8 @@ impl Link {
 
 	/// Formats self, according to the options set in the config file.
 	#[must_use]
-	pub fn formatted(&self, config: &Config) -> String {
-		format!("{}/{}", config.public_url, self.id)
+	pub fn formatted(&self) -> String {
+		format!("{}/{}", CONFIG.public_url, self.id)
 	}
 }
 
@@ -179,7 +188,7 @@ impl LinkStore {
 		let link = Link::from_id(id, &self.db).await;
 
 		if let Ok(Some(link)) = link {
-			if !link.is_invalid() {
+			if !link.is_expired() {
 				return Some(link);
 			}
 

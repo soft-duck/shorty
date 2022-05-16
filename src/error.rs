@@ -7,6 +7,10 @@ use thiserror::Error;
 pub enum ShortyError {
 	#[error("Link with provided ID already exists")]
 	LinkConflict,
+	#[error("Link exceeds maximum length allowed.")]
+	LinkExceedsMaxLength,
+	#[error("Link is empty.")]
+	LinkEmpty,
 	#[error(transparent)]
 	Database(#[from] sqlx::Error),
 	#[error(transparent)]
@@ -17,6 +21,7 @@ impl ResponseError for ShortyError {
 	fn status_code(&self) -> StatusCode {
 		match self {
 			ShortyError::LinkConflict => StatusCode::CONFLICT,
+			ShortyError::LinkExceedsMaxLength | ShortyError::LinkEmpty => StatusCode::BAD_REQUEST,
 			_ => StatusCode::INTERNAL_SERVER_ERROR,
 		}
 	}
