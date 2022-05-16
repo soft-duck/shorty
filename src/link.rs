@@ -96,7 +96,7 @@ impl Link {
 
 		// If a link with the same ID exists already, return a conflict error.
 		if let Some(link) = Link::from_id(id.as_str(), pool).await? {
-			if !link.is_invalid() {
+			if !link.is_expired() {
 				return Err(ShortyError::LinkConflict);
 			}
 		}
@@ -130,7 +130,7 @@ impl Link {
 	}
 
 	#[must_use]
-	pub fn is_invalid(&self) -> bool {
+	pub fn is_expired(&self) -> bool {
 		let expired = self.valid_for != 0
 			&& (Local::now().timestamp_millis() - self.created_at) > self.valid_for;
 
@@ -184,7 +184,7 @@ impl LinkStore {
 		let link = Link::from_id(id, &self.db).await;
 
 		if let Ok(Some(link)) = link {
-			if !link.is_invalid() {
+			if !link.is_expired() {
 				return Some(link);
 			}
 
