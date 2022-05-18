@@ -92,7 +92,11 @@ async fn create_shortened(
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
-	Ok(HttpResponse::Ok().body(formatted))
+	Ok(
+		HttpResponse::Ok()
+			.content_type("text/plain; charset=utf-8")
+			.body(formatted)
+	)
 }
 
 /// Custom shortened URL, configured via Json.
