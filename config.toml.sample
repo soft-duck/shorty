@@ -22,3 +22,12 @@ database_url = 'sqlite://database/database.db'
 # The maximum json payload size for custom links.
 # Optional; default is 2 MB
 # max_json_size = 2097152
+
+
+# The link defaults that get used if they aren't specified.
+
+# How often a link is able to be used before it expires.
+# default_max_uses = 0 # Zero means unlimited uses.
+
+# How long a link (by default) is valid for, in milliseconds.
+# default_valid_for = 86400000 # 24 hours

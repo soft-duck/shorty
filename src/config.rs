@@ -20,6 +20,12 @@ pub struct Config {
 	/// The max size of accepted json.
 	#[serde(default = "max_json_size_default")]
 	pub max_json_size: usize,
+	/// Default max uses for a link.
+	#[serde(default = "max_uses_default")]
+	pub default_max_uses: i64,
+	/// Default duration a link is valid for.
+	#[serde(default = "valid_for_duration_default")]
+	pub default_valid_for: i64,
 }
 
 impl Config {
@@ -44,4 +50,14 @@ const fn max_link_length_default() -> usize {
 
 const fn max_json_size_default() -> usize {
 	2_097_152 // 2 Mebibyte
+}
+
+// Link configuration default values
+
+const fn max_uses_default() -> i64 {
+	0 // unlimited uses
+}
+
+const fn valid_for_duration_default() -> i64 {
+	1000 * 60 * 60 * 24 // 24 hours
 }
