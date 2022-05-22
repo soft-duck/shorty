@@ -12,14 +12,21 @@
 
 	<div id="shorten">
 		<div>
-			<input class="input_field" type="text" id="shorten_textfield" placeholder="URL to shorten">
+			<input class="input_field" type="text" id="shorten_textfield" placeholder="URL to shorten" required>
 			<input type="button" value="Shorten" id="shorten_button">
 		</div>
 
-		<!-- Begin advanced mode items -->
-		<label for="advanced_mode">Advanced mode</label><input type="checkbox" id="advanced_mode">
+		<div id="advanced_mode_outer">
+			<label for="advanced_mode">Advanced mode</label>
+			<label class="switch">
+				<input type="checkbox" id="advanced_mode">
+				<span class="slider"></span>
+			</label>
+		</div>
 
-		<input class="advanced_mode input_field" type="number" id="max_uses" placeholder="Number of uses before link expires"> <br>
+
+		<input class="advanced_mode input_field" type="number" id="max_uses"
+			   placeholder="Number of uses before link expires"> <br>
 		<input class="advanced_mode" type="datetime-local" id="age_days"> <br>
 		<!-- End advanced mode items -->
 	</div>

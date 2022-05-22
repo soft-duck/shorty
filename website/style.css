@@ -2,6 +2,9 @@
     --text-color: #ffffff;
     --background-color: #1c1c1c;
     --accent-color: #dc143c;
+    --success-color: #1dd320; /*Currently just here to be used later*/
+
+    accent-color: var(--accent-color);
 }
 
 
@@ -61,4 +64,75 @@ input::-webkit-inner-spin-button {
 /* Firefox is a diva again */
 input[type=number] {
     -moz-appearance: textfield;
+}
+
+#advanced_mode_outer {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+
+/* Round checkbox stuff */
+
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 17px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 13px;
+    width: 13px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--accent-color);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--accent-color);
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(13px);
+    -ms-transform: translateX(13px);
+    transform: translateX(13px);
+}
+
+/* Rounded sliders */
+.slider {
+    border-radius: 17px;
+}
+
+.slider:before {
+    border-radius: 50%;
 }
