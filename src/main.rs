@@ -54,7 +54,6 @@ lazy_static! {
 }
 
 #[get("/{shortened_url:.*}")]
-#[instrument(skip_all)]
 async fn get_shortened(
 	params: web::Path<String>,
 	link_store: web::Data<LinkStore>,
@@ -75,9 +74,15 @@ async fn get_shortened(
 	)
 }
 
+#[get("/config")]
+async fn get_config() -> impl Responder {
+	HttpResponse::Ok()
+		.content_type("application/json; charset=utf-8")
+		.body(CONFIG.json_string())
+}
+
 /// Creates a shortened link by taking the requested uri and turning it into a shortened link.
 #[post("/{url:.*}")]
-#[instrument(skip_all)]
 async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
@@ -198,6 +203,7 @@ async fn main() -> Result<(), ShortyError> {
 			.app_data(json_config)
 			.app_data(links.clone())
 			.app_data(pool.clone())
+			.service(get_config)
 			.service(index)
 			.service(actix_files::Files::new("/assets", "./website"))
 			// .service(serve_file)

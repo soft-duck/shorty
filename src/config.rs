@@ -1,18 +1,21 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
 pub const SAMPLE_CONFIG: &str = include_str!("../config.toml.sample");
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Config {
 	#[serde(default = "listen_url_default")]
+	#[serde(skip_serializing)]
 	pub listen_url: String,
 	/// The public URL that gets used for shortened links.
 	/// It is different from the listen_url if shorty is run behind a reverse proxy.
 	pub public_url: String,
 	/// The listen port.
 	#[serde(default = "port_default")]
+	#[serde(skip_serializing)]
 	pub port: u16,
 	/// The database connection String.
+	#[serde(skip_serializing)]
 	pub database_url: String,
 	/// The maximum length a link should be allowed to have.
 	#[serde(default = "max_link_length_default")]
@@ -33,6 +36,10 @@ impl Config {
 	/// Errors when the config couldn't be deserialized.
 	pub fn new(config: &str) -> Result<Self, toml::de::Error> {
 		toml::from_str(config)
+	}
+
+	pub fn json_string(&self) -> String {
+		serde_json::to_string(self).unwrap()
 	}
 }
 

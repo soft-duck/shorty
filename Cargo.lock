@@ -1327,6 +1327,7 @@ dependencies = [
  "lazy_static",
  "rand",
  "serde",
+ "serde_json",
  "sqlx",
  "thiserror",
  "tokio",
