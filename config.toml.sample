@@ -19,9 +19,13 @@ database_url = 'sqlite://database/database.db'
 # Optional; default is 2500 chars length.
 # max_link_length = 2500
 
-# The maximum json payload size for custom links.
+# The maximum json payload size for custom links in bytes.
 # Optional; default is 2 MB
 # max_json_size = 2097152
+
+# Maximum length for custom IDs.
+# Optional; default is 2500
+# max_custom_id_length = 500
 
 
 # The link defaults that get used if they aren't specified.

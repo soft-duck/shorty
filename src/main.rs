@@ -11,7 +11,7 @@ use lazy_static::lazy_static;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::Sqlite;
 use sqlx::sqlite::SqlitePoolOptions;
-use tracing::{debug, error, info, instrument, Level};
+use tracing::{debug, error, info, Level};
 use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;

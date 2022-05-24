@@ -23,6 +23,9 @@ pub struct Config {
 	/// The max size of accepted json.
 	#[serde(default = "max_json_size_default")]
 	pub max_json_size: usize,
+	/// Maximum allowed length of a custom ID.
+	#[serde(default = "max_custom_id_length_default")]
+	pub max_custom_id_length: usize,
 	/// Default max uses for a link.
 	#[serde(default = "max_uses_default")]
 	pub default_max_uses: i64,
@@ -57,6 +60,10 @@ const fn max_link_length_default() -> usize {
 
 const fn max_json_size_default() -> usize {
 	2_097_152 // 2 Mebibyte
+}
+
+const fn max_custom_id_length_default() -> usize {
+	500
 }
 
 // Link configuration default values
