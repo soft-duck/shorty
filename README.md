@@ -16,8 +16,8 @@ if you want to try it out :)
 Currently shorty is intended to be run behind a reverse proxy to take advantage of multiple URLs and
 https. I personally use nginx, but you can use any reverse proxy you want.
 
-There's multiple ways to run shorty, you can either grab a pre-compiled binary (from a release or recent
-pipeline run) or you can compile it yourself.
+There's multiple ways to run shorty, you can either grab a pre-compiled binary (from a release for example)
+or you can compile it yourself.
 
 ### Self compiling
 
