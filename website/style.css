@@ -3,7 +3,7 @@
     --background-color: #1c1c1c;
     --accent-color: #dc143c;
     --success-color: #1dd320; /*Currently just here to be used later*/
-
+    --copy-color: #2222ca;
     accent-color: var(--accent-color);
 }
 
@@ -55,6 +55,12 @@ body {
 }
 
 .copy {
+    color: var(--text-color);
+    background: var(--copy-color);
+    background-color: var(--copy-color);
+}
+
+.copied {
     color: var(--text-color);
     background: var(--success-color);
     background-color: var(--success-color);

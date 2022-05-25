@@ -1,5 +1,6 @@
 const shorten_class = "shorten";
 const copy_class = "copy";
+const copied_class = "copied";
 const validation_class = "validatable";
 
 const error = "error";
@@ -26,6 +27,8 @@ const shortenButtonText = shortenButton.value;
 	xhr.onload = () => {
 		if (xhr.status === 200) {
 			handleConfig(xhr.response)
+		} else {
+			message(xhr.status + ": " + xhr.responseText);
 		}
 	};
 	xhr.send();
@@ -56,6 +59,12 @@ function handleShortenClick(event) {
 
 	if (getButtonMode() === copy_class) {
 		navigator.clipboard.writeText(shortenField.value);
+		setButtonMode(copied_class);
+		setTimeout(() => {
+			if (getButtonMode() === copy_class) {
+				setButtonMode(copy_class);
+			}
+		}, 2000);
 		return;
 	}
 
@@ -95,6 +104,8 @@ function handleShortenClick(event) {
 			handleSuccess(xhr.responseText)
 		} else if (xhr.status === 409) { // Conflict
 			handleConflict();
+		} else {
+			message(xhr.status + ": " + xhr.responseText);
 		}
 	}
 
@@ -125,21 +136,29 @@ function advancedFieldsValid() {
 function getButtonMode() {
 	const classes = shortenButton.className.split(" ");
 
-	return classes.find((c) => {
-		return c === shorten_class || c === copy_class
-	})
+	let mode = classes.find((c) => {
+		return c === shorten_class || c === copy_class || c === copied_class;
+	});
+
+	if (mode === copied_class) {
+		mode = copy_class;
+	}
+
+	return mode;
 }
 
 function setButtonMode(mode) {
-	shortenButton.classList.remove(shorten_class, copy_class);
+	shortenButton.classList.remove(shorten_class, copy_class, copied_class);
 	shortenButton.classList.add(mode);
 
 	let text;
 
 	if (mode === copy_class) {
-		text = "Click to Copy";
+		text = "Copy";
 	} else if (mode === shorten_class) {
 		text = shortenButtonText;
+	} else if (mode === copied_class) {
+		text = "Copied!";
 	}
 
 	shortenButton.value = text;
