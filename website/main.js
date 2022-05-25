@@ -46,7 +46,7 @@ maxUses.min = 0;
 
 // Add keylistener to the textfield so we can also submit on enter
 shortenField.addEventListener("keypress", preventDefaultEnter);
-shortenField.oninput = () => {
+shortenField.oninput = shortenField.onfocus = () => {
 	shortenField.classList.add(validation_class);
 	setButtonMode(shorten_class);
 };
