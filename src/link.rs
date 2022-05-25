@@ -88,6 +88,11 @@ impl Link {
 		pool: &Pool<Sqlite>,
 	) -> Result<Self, ShortyError> {
 		let id = if let Some(id) = link_config.custom_id {
+			if id.len() > CONFIG.max_custom_id_length {
+				return Err(ShortyError::CustomIDExceedsMaxLength);
+			}
+
+
 			id
 		} else {
 			generate_random_chars()
@@ -104,10 +109,6 @@ impl Link {
 
 		if redirect_to.len() > CONFIG.max_link_length {
 			return Err(ShortyError::LinkExceedsMaxLength);
-		}
-
-		if id.len() > CONFIG.max_custom_id_length {
-			return Err(ShortyError::CustomIDExceedsMaxLength);
 		}
 
 		let redirect_to = ensure_http_prefix(redirect_to);
