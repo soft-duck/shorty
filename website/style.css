@@ -4,7 +4,7 @@
     --text-color: #ffffff;
     --background-color: #1c1c1c;
     --accent-color: #dc143c;
-    --success-color: #1dd320; /*Currently just here to be used later*/
+    --success-color: #1dd320; /*Currently just here to be used later */
     --copy-color: #2222ca;
     accent-color: var(--accent-color);
     font-family: 'Roboto Mono', monospace;
@@ -16,8 +16,8 @@
     left: 50%;
     top: 50%;
     -moz-transform: translate(-50%, -50%); /* Firefox */
-    -ms-transform: translate(-50%, -50%);  /* IE 9 */
-    -webkit-transform: translate(-50%, -50%); /* Safari and Chrome*/
+    -ms-transform: translate(-50%, -50%); /* IE 9 */
+    -webkit-transform: translate(-50%, -50%); /* Safari and Chrome */
     -o-transform: translate(-50%, -50%); /* Opera */
     transform: translate(-50%, -50%);
 }
@@ -27,9 +27,18 @@ body {
     color: var(--text-color);
 }
 
+
+/* Invisible elements */
+
 .invisible {
+    visibility: hidden;
+}
+
+/* We want to actually make the element disappear, not just invisible */
+.invisible.date_toggle {
     display: none;
 }
+
 
 #shorten_button {
     border: 1px solid transparent;
@@ -124,7 +133,7 @@ body {
     font-family: inherit;
     font-weight: 400;
     line-height: 1.5;
-    transition: box-shadow .5s,border-color .25s ease-in-out,-webkit-box-shadow .5s;
+    transition: box-shadow .5s, border-color .25s ease-in-out, -webkit-box-shadow .5s;
     box-shadow: rgba(24, 24, 24, 0.1) 0 1px 2px inset;
     border-radius: 8px;
     font-size: 20px;

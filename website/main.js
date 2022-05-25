@@ -206,7 +206,12 @@ function getEndpointUrl(endpoint) {
 function advancedModeSwitchHandler(event) {
 	for (let i = 0; i < advancedInputs.length; i++) {
 		if (advancedMode.checked) {
-			if (advancedInputs[i] === ageDays && !dateToggle.checked || advancedInputs[i] === duration  && dateToggle.checked) {
+			if (
+				advancedInputs[i] === ageDays
+				&& !dateToggle.checked
+				|| advancedInputs[i] === duration
+				&& dateToggle.checked
+			) {
 				continue
 			}
 			advancedInputs[i].classList.remove("invisible");
