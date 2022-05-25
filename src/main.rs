@@ -4,6 +4,7 @@
 use std::io::{Read, Write};
 use std::path::Path;
 use std::time::Duration;
+use actix_cors::Cors;
 
 use actix_files::NamedFile;
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
@@ -89,7 +90,6 @@ async fn create_shortened(
 ) -> Result<impl Responder, ShortyError> {
 	let uri = req.uri();
 	debug!("URI is {uri}");
-
 	let url = uri_to_url(uri);
 
 	let link = link_store.create_link(url).await?;
@@ -199,7 +199,12 @@ async fn main() -> Result<(), ShortyError> {
 		let json_config = web::JsonConfig::default()
 			.limit(CONFIG.max_json_size);
 
+		let cors = Cors::default()
+			.allow_any_origin()
+			.allowed_methods(vec!["GET", "POST"]);
+
 		App::new()
+			.wrap(cors)
 			.app_data(json_config)
 			.app_data(links.clone())
 			.app_data(pool.clone())
