@@ -52,12 +52,30 @@ shortenButton.addEventListener("click", handleShortenClick);
 advancedMode.addEventListener("click", advancedModeSwitchHandler);
 
 function handleShortenClick(event) {
+	shortenField.classList.add(validation_class);
+
 	if (getButtonMode() === copy_class) {
 		navigator.clipboard.writeText(shortenField.value);
 		return;
 	}
 
-	if (!(advancedFieldsValid() || !advancedMode.checked) && shortenField.checkValidity()) {
+	if (!((advancedFieldsValid() || !advancedMode.checked) && shortenField.checkValidity())) {
+		let invalidFields = "";
+		let numberWords = ["is", "it"];
+
+		if (!shortenField.checkValidity()) {
+			invalidFields += "url ";
+		}
+		// invalidFields = invalidFields.charAt(0).toUpperCase() + invalidFields.slice(1);
+		// invalidFields = invalidFields.slice(0, -2);
+
+		if (!maxUses.checkValidity() && advancedMode.checked) {
+			invalidFields += "and max usages";
+			numberWords = ["are", "them"]
+		}
+
+		message(invalidFields + " " + numberWords[0] + " invalid, check " + numberWords[1] + " and try again.", error);
+
 		return;
 	}
 
@@ -149,7 +167,7 @@ function advancedModeSwitchHandler(event) {
 }
 
 function message(message, type) {
-	const box = messageBox.content.cloneNode(true);
+	const box = messageBox.content.firstElementChild.cloneNode(true);
 	box.classList.add(type)
 	box.innerText = message;
 	boxList.appendChild(box)
@@ -170,5 +188,5 @@ function handleSuccess(response) {
 }
 
 function handleConflict() {
-	message("Custom Id already used.", error);
+	message("Custom Id:" + customIdField.value + " already used. Try something different", error);
 }
