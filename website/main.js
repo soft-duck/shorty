@@ -16,7 +16,13 @@ const advancedInputs = document.getElementsByClassName('advanced_mode');
 const customIdField = document.getElementById("custom_id");
 const boxList = document.getElementById("box_list");
 const messageBox = document.getElementById("message_box");
+const duration = document.getElementById("duration");
+const dateToggle = document.getElementById("date_toggle");
 const shortenButtonText = shortenButton.value;
+
+duration.value = "00:00:00:00";
+// ageDays.style.display = "inherit";
+// duration.style.display = "none";
 
 // set constraints on field
 {
@@ -56,6 +62,19 @@ shortenField.onfocus = () => {
 //shortenField.addEventListener("paste", () => { setButtonMode(shorten_class); });
 shortenButton.addEventListener("click", handleShortenClick);
 advancedMode.addEventListener("click", advancedModeSwitchHandler);
+
+dateToggle.addEventListener("click", (event) => {
+	if (dateToggle.checked) {
+		ageDays.classList.remove("invisible");
+		duration.classList.add("invisible");
+	} else {
+		ageDays.classList.add("invisible");
+		duration.classList.remove("invisible");
+	}
+})
+
+duration.addEventListener("keydown", durationControl)
+duration.addEventListener("paste", (event) => { event.preventDefault(); })
 
 function handleShortenClick(event) {
 	shortenField.classList.add(validation_class);
@@ -120,9 +139,15 @@ function handleShortenClick(event) {
 	}
 
 	if (ageDays.value !== '') {
-		let now = new Date();
-		let date = Date.parse(ageDays.value);
-		data["valid_for"] = date - now.getTime();
+		let validFor;
+		if (dateToggle.checked) {
+			let now = new Date();
+			let date = Date.parse(ageDays.value);
+			validFor = date - now.getTime();
+		} else {
+			validFor = getDurationSeconds() * 1000;
+		}
+		data["valid_for"] = validFor;
 	}
 
 	if (customIdField.value !== '') {
@@ -181,9 +206,12 @@ function getEndpointUrl(endpoint) {
 function advancedModeSwitchHandler(event) {
 	for (let i = 0; i < advancedInputs.length; i++) {
 		if (advancedMode.checked) {
-			advancedInputs[i].style.display = "inherit";
+			if (advancedInputs[i] === ageDays && !dateToggle.checked || advancedInputs[i] === duration  && dateToggle.checked) {
+				continue
+			}
+			advancedInputs[i].classList.remove("invisible");
 		} else {
-			advancedInputs[i].style.display = "none";
+			advancedInputs[i].classList.add("invisible");
 		}
 	}
 }
@@ -211,4 +239,41 @@ function handleSuccess(response) {
 
 function handleConflict() {
 	message("Custom Id:" + customIdField.value + " already used. Try something different", error);
+}
+
+function durationControl(event) {
+	event.preventDefault();
+
+	let newValue = duration.value;
+
+
+	if (event.keyCode > 47 && event.keyCode < 58 && newValue[0] === "0") {
+		newValue = newValue.substring(1) + event.key;
+		newValue = swapChar(newValue, 1, 2);
+		newValue = swapChar(newValue, 4, 5);
+		newValue = swapChar(newValue, 7, 8);
+		duration.value = newValue;
+	}
+
+	if (event.keyCode === 8) {
+		newValue = "0" + newValue.substring(0, newValue.length - 1);
+		newValue = swapChar(newValue, 2, 3);
+		newValue = swapChar(newValue, 5, 6);
+		newValue = swapChar(newValue, 8, 9);
+		duration.value = newValue;
+	}
+}
+
+function getDurationSeconds() {
+	let durations = duration.value.split(":");
+	return durations[0] * 86400 + durations[1] * 3600 + durations[2] * 60 + durations[3];
+}
+
+// https://stackoverflow.com/a/25345121
+function swapChar(str, first, last){
+	return str.substr(0, first)
+		+ str[last]
+		+ str.substring(first+1, last)
+		+ str[first]
+		+ str.substr(last+1);
 }

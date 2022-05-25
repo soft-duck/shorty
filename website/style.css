@@ -24,7 +24,7 @@ body {
     color: var(--text-color);
 }
 
-.advanced_mode {
+.invisible {
     display: none;
 }
 
@@ -45,6 +45,30 @@ body {
     position: relative;
     background-image: initial;
     height: 5vh;
+}
+
+#date_toggle {
+    border: 1px solid transparent;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 100ms linear;
+    text-decoration: none;
+    font-size: 20px;
+    line-height: 1.11;
+    padding: 10px;
+    text-decoration-color: initial;
+    vertical-align: bottom;
+    margin-bottom: 0;
+    min-width: 10%;
+    position: relative;
+    background-image: initial;
+    height: 5vh;
+}
+
+#duration {
+    text-align: right;
+    /* caret-color: transparent; */
 }
 
 /* shortening mode colors */

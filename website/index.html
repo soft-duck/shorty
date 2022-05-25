@@ -12,15 +12,6 @@
 		<template id="message_box">
 			<div class="message_box"></div>
 		</template>
-<!--		<div class="warning">-->
-<!--			test warning-->
-<!--		</div>-->
-<!--		<div class="error">-->
-<!--			test error-->
-<!--		</div>-->
-<!--		<div class="info">-->
-<!--			test info-->
-<!--		</div>-->
 	</div>
 
 	<h1>WIP Link Shortener :)</h1>
@@ -41,19 +32,27 @@
 
 
 		<input
-				class="advanced_mode input_field validatable"
+				class="advanced_mode input_field validatable invisible"
 				type="number"
 				id="max_uses"
 				placeholder="Max usages"
 				title="Number of uses before link expires"
 		> <br>
 		<input
-				class="advanced_mode input_field validatable"
+				class="advanced_mode input_field validatable invisible"
 				type="text"
 				id="custom_id"
 				placeholder="Custom Id"
 				title="Macht Jakob"> <br>
-		<input class="advanced_mode validatable" type="datetime-local" id="age_days"> <br>
+		<div id="time_selection">
+			<input class="advanced_mode validatable invisible" type="datetime-local" id="age_days">
+			<input class="advanced_mode input_field validatable invisible"
+				   type="text"
+				   id="duration"
+				   title="Macht Jakob"
+			>
+			<input type="checkbox" class="advanced_mode invisible" id="date_toggle">
+		</div> <br>
 		<!-- End advanced mode items -->
 	</div>
 
