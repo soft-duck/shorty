@@ -8,12 +8,27 @@
 </head>
 <body>
 <div class="centered">
+	<div id="box_list">
+		<template id="message_box">
+			<div class="message_box"></div>
+		</template>
+<!--		<div class="warning">-->
+<!--			test warning-->
+<!--		</div>-->
+<!--		<div class="error">-->
+<!--			test error-->
+<!--		</div>-->
+<!--		<div class="info">-->
+<!--			test info-->
+<!--		</div>-->
+	</div>
+
 	<h1>WIP Link Shortener :)</h1>
 
 	<div id="shorten">
 		<div>
 			<input class="input_field" type="text" id="shorten_textfield" placeholder="URL to shorten" required>
-			<input type="button" value="Shorten" id="shorten_button">
+			<input class="shorten" type="button" value="Shorten" id="shorten_button">
 		</div>
 
 		<div id="advanced_mode_outer">
@@ -26,13 +41,19 @@
 
 
 		<input
-				class="advanced_mode input_field"
+				class="advanced_mode input_field validatable"
 				type="number"
 				id="max_uses"
 				placeholder="Max usages"
 				title="Number of uses before link expires"
 		> <br>
-		<input class="advanced_mode" type="datetime-local" id="age_days"> <br>
+		<input
+				class="advanced_mode input_field validatable"
+				type="text"
+				id="custom_id"
+				placeholder="Custom Id"
+				title="Macht Jakob"> <br>
+		<input class="advanced_mode validatable" type="datetime-local" id="age_days"> <br>
 		<!-- End advanced mode items -->
 	</div>
 

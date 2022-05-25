@@ -1,95 +1,174 @@
-const shorten_textfield = document.getElementById("shorten_textfield");
-const shorten_button = document.getElementById("shorten_button");
+const shorten_class = "shorten";
+const copy_class = "copy";
+const validation_class = "validatable";
 
-let copy_clipboard = false;
+const error = "error";
+const warning = "warning";
+const info = "info";
 
-let hide_advanced = true;
+const shortenField = document.getElementById("shorten_textfield");
+const shortenButton = document.getElementById("shorten_button");
+const advancedMode = document.getElementById("advanced_mode");
+const maxUses = document.getElementById("max_uses");
+const ageDays = document.getElementById("age_days");
+const advancedInputs = document.getElementsByClassName('advanced_mode');
+const customIdField = document.getElementById("custom_id");
+const boxList = document.getElementById("box_list");
+const messageBox = document.getElementById("message_box");
+const shortenButtonText = shortenButton.value;
+
+// set constraints on field
+{
+	let xhr = new XMLHttpRequest();
+	let configLocation = getEndpointUrl("/config");
+	xhr.open('GET', configLocation, true);
+	xhr.responseType = 'json';
+	xhr.onload = () => {
+		if (xhr.status === 200) {
+			handleConfig(xhr.response)
+		}
+	};
+	xhr.send();
+}
+
+maxUses.max = 2 ** 63 - 1;
+maxUses.min = 0;
 
 // sets the date input minimum date to exactly now
-let dateInput = document.getElementById("age_days");
-let date = new Date();
-date.setMilliseconds(date.getMilliseconds() - (date.getTimezoneOffset() * 1000 * 60));
-dateInput.min = date.toISOString().split(".")[0];
+{
+	const date = new Date();
+	date.setMilliseconds(date.getMilliseconds() - (date.getTimezoneOffset() * 1000 * 60));
+	ageDays.min = date.toISOString().split(".")[0];
+}
 
 // Add keylistener to the textfield so we can also submit on enter
-shorten_textfield.addEventListener("keypress", function (event) {
+shortenField.addEventListener("keypress", preventDefaultEnter);
+shortenField.oninput = () => {
+	shortenField.classList.add(validation_class);
+	setButtonMode(shorten_class);
+};
+//shortenField.addEventListener("paste", () => { setButtonMode(shorten_class); });
+shortenButton.addEventListener("click", handleShortenClick);
+advancedMode.addEventListener("click", advancedModeSwitchHandler);
+
+function handleShortenClick(event) {
+	if (getButtonMode() === copy_class) {
+		navigator.clipboard.writeText(shortenField.value);
+		return;
+	}
+
+	if (!(advancedFieldsValid() || !advancedMode.checked) && shortenField.checkValidity()) {
+		return;
+	}
+
+	clearMessages();
+
+	const xhr = new XMLHttpRequest();
+	const url = getEndpointUrl("/custom");
+	xhr.open("POST", url, true);
+	xhr.setRequestHeader("Content-Type", "application/json");
+	xhr.onreadystatechange = () => {
+		// Check if request is completed
+		if (xhr.readyState !== 4) {
+			return;
+		}
+		// Response successful
+		if (xhr.status === 200) {
+			handleSuccess(xhr.responseText)
+		} else if (xhr.status === 409) { // Conflict
+			handleConflict();
+		}
+	}
+
+	const data = {};
+	data["link"] = shortenField.value;
+
+	if (maxUses.value !== '') {
+		data["max_uses"] =  - 0;
+	}
+
+	if (ageDays.value !== '') {
+		let now = new Date();
+		let date = Date.parse(ageDays.value);
+		data["valid_for"] = date - now.getTime();
+	}
+
+	if (customIdField.value !== '') {
+		data["custom_id"] = customIdField.value;
+	}
+
+	xhr.send(JSON.stringify(data))
+}
+
+function advancedFieldsValid() {
+	return ageDays.checkValidity() && maxUses.checkValidity() && customIdField.checkValidity();
+}
+
+function getButtonMode() {
+	const classes = shortenButton.className.split(" ");
+
+	return classes.find((c) => {
+		return c === shorten_class || c === copy_class
+	})
+}
+
+function setButtonMode(mode) {
+	shortenButton.classList.remove(shorten_class, copy_class);
+	shortenButton.classList.add(mode);
+
+	let text;
+
+	if (mode === copy_class) {
+		text = "Click to Copy";
+	} else if (mode === shorten_class) {
+		text = shortenButtonText;
+	}
+
+	shortenButton.value = text;
+}
+
+function preventDefaultEnter(event) {
 	if (event.key === "Enter") {
 		event.preventDefault();
+		return;
 	}
-});
+}
 
-shorten_button.onclick = handle_shorten_click;
+function getEndpointUrl(endpoint) {
+	return window.location.origin + endpoint;
+}
 
-document.getElementById("advanced_mode").addEventListener("click", function () {
-	let inputs = document.getElementsByClassName('advanced_mode');
-	hide_advanced = !hide_advanced;
-	for (let i = 0; i < inputs.length; i++) {
-		if (hide_advanced) {
-			inputs[i].style.display = "none";
+function advancedModeSwitchHandler(event) {
+	for (let i = 0; i < advancedInputs.length; i++) {
+		if (advancedMode.checked) {
+			advancedInputs[i].style.display = "inherit";
 		} else {
-			inputs[i].style.display = "inherit";
+			advancedInputs[i].style.display = "none";
 		}
 	}
-});
-
-function handle_shorten_click() {
-	if (copy_clipboard === true) {
-		navigator.clipboard.writeText(shorten_textfield.value);
-		shorten_textfield.value = "";
-		shorten_button.value = "Shorten"
-	} else {
-		if (shorten_textfield.value !== "") {
-			const xhr = new XMLHttpRequest();
-			const url = "http://localhost:7999/custom";
-			xhr.open("POST", url, true);
-			xhr.setRequestHeader("Content-Type", "application/json");
-			xhr.onreadystatechange = function () {
-				// Check if request is completed
-				if (xhr.readyState !== 4) {
-					return;
-				}
-
-				// Response successful
-				if (xhr.status === 200) {
-					handle_success(xhr.responseText)
-				} else if (xhr.status === 409) { // Conflict
-					handle_conflict();
-				}
-			}
-
-			const to_shorten = shorten_textfield.value;
-			let data;
-			if (hide_advanced) {
-				data = JSON.stringify({"link": to_shorten});
-			} else {
-				let max_uses = document.getElementById("max_uses").value;
-				let now = new Date();
-				let target = document.getElementById("age_days").value;
-				let date = Date.parse(target);
-				let final_duration = date - now.getTime();
-				data = JSON.stringify({
-					link: to_shorten,
-					// casting to int, fuck you JS
-					max_uses: max_uses - 0,
-					valid_for: final_duration,
-				});
-			}
-			xhr.send(data);
-		}
-	}
-
-	copy_clipboard = !copy_clipboard;
 }
 
-
-function handle_success(response) {
-	// console.log(response);
-	let shorten_btn = document.getElementById("shorten_button");
-	shorten_btn.value = "Copy to clipboard";
-	copy_clipboard = true;
-	shorten_textfield.value = response;
+function message(message, type) {
+	const box = messageBox.content.cloneNode(true);
+	box.classList.add(type)
+	box.innerText = message;
+	boxList.appendChild(box)
 }
 
-function handle_conflict() {
+function clearMessages() {
+	boxList.replaceChildren();
+}
 
+function handleConfig(config) {
+	shortenField.maxLength = config.max_link_length;
+	customIdField.maxLength = config.max_custom_id_length;
+}
+
+function handleSuccess(response) {
+	setButtonMode(copy_class);
+	shortenField.value = response;
+}
+
+function handleConflict() {
+	message("Custom Id already used.", error);
 }

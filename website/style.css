@@ -7,6 +7,17 @@
     accent-color: var(--accent-color);
 }
 
+/* from https://stackoverflow.com/a/16299904 */
+.centered {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    -moz-transform: translate(-50%, -50%); /* Firefox */
+    -ms-transform: translate(-50%, -50%);  /* IE 9 */
+    -webkit-transform: translate(-50%, -50%); /* Safari and Chrome*/
+    -o-transform: translate(-50%, -50%); /* Opera */
+    transform: translate(-50%, -50%);
+}
 
 body {
     background-color: var(--background-color);
@@ -27,16 +38,72 @@ body {
     font-size: 20px;
     line-height: 1.11;
     padding: 10px;
-    color: var(--text-color);
     text-decoration-color: initial;
     vertical-align: bottom;
     margin-bottom: 0;
-    background: var(--accent-color);
     min-width: 10%;
     position: relative;
     background-image: initial;
-    background-color: var(--accent-color);
     height: 5vh;
+}
+
+/* shortening mode colors */
+.shorten {
+    color: var(--text-color);
+    background: var(--accent-color);
+    background-color: var(--accent-color);
+}
+
+.copy {
+    color: var(--text-color);
+    background: var(--success-color);
+    background-color: var(--success-color);
+}
+
+.validatable:invalid {
+    border-color: crimson;
+}
+
+#box_list > div {
+    height: 2vh;
+    width: 100%;
+    margin: 3% 0 3% 0;
+    padding: 5px 5px 5px 5px;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
+    transform: scale(1);
+    animation: pulse 2s infinite;
+}
+
+.warning {
+    background: #ffbf1d;
+    color: black;
+}
+
+.error {
+    background: #d10723;
+}
+
+.info {
+    background: #c0c0c0;
+    color: black;
+}
+
+/* from https://www.florin-pop.com/blog/2019/03/css-pulse-effect/ */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+    }
+
+    70% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
 }
 
 .input_field {
