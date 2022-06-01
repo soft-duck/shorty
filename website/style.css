@@ -35,7 +35,7 @@ body {
 }
 
 /* We want to actually make the element disappear, not just invisible */
-.invisible.date_toggle {
+.invisible.disappear {
     display: none;
 }
 

@@ -71,6 +71,9 @@ dateToggle.addEventListener("click", (event) => {
 		ageDays.classList.add("invisible");
 		duration.classList.remove("invisible");
 	}
+
+	ageDays.classList.toggle("disappear");
+	duration.classList.toggle("disappear");
 })
 
 duration.addEventListener("keydown", durationControl)
