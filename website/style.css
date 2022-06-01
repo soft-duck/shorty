@@ -207,6 +207,22 @@ input[type=number] {
     transition: .4s;
 }
 
+/*
+*   Remove transition for invisible slider parts.
+*   This was a problem because the invisible slider would be visible for 0.4 seconds
+*   and then disappear.
+*/
+.invisible.slider {
+    -webkit-transition: 0s;
+    transition: 0s;
+}
+
+.invisible.slider:before {
+    -webkit-transition: 0s;
+    transition: 0s;
+}
+
+
 input:checked + .slider {
     background-color: var(--accent-color);
 }
