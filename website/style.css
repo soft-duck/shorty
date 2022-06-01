@@ -10,6 +10,7 @@
     font-family: 'Roboto Mono', monospace;
 }
 
+
 /* from https://stackoverflow.com/a/16299904 */
 .centered {
     position: absolute;
@@ -64,6 +65,7 @@ body {
     text-align: left;
 }
 
+
 /* shortening mode colors */
 .shorten {
     color: var(--text-color);
@@ -111,6 +113,7 @@ body {
     color: black;
 }
 
+
 /* from https://www.florin-pop.com/blog/2019/03/css-pulse-effect/ */
 @keyframes pulse {
     0% {
@@ -129,6 +132,7 @@ body {
     }
 }
 
+
 .input_field {
     font-family: inherit;
     font-weight: 400;
@@ -146,6 +150,7 @@ body {
     min-width: 250px;
     width: 12.5vw;
 }
+
 
 /* Remove the increment/decrement buttons/arrows from numberfields */
 input::-webkit-outer-spin-button,
@@ -236,6 +241,7 @@ input:checked + .slider:before {
     -ms-transform: translateX(13px);
     transform: translateX(13px);
 }
+
 
 /* Rounded sliders */
 .slider {

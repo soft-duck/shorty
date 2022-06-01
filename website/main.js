@@ -77,7 +77,9 @@ dateToggle.addEventListener("click", (event) => {
 })
 
 duration.addEventListener("keydown", durationControl)
-duration.addEventListener("paste", (event) => { event.preventDefault(); })
+duration.addEventListener("paste", (event) => {
+	event.preventDefault();
+})
 
 function handleShortenClick(event) {
 	shortenField.classList.add(validation_class);
@@ -138,7 +140,7 @@ function handleShortenClick(event) {
 	data["link"] = shortenField.value;
 
 	if (maxUses.value !== '') {
-		data["max_uses"] =  - 0;
+		data["max_uses"] = -0;
 	}
 
 	if (ageDays.value !== '') {
@@ -278,10 +280,10 @@ function getDurationSeconds() {
 }
 
 // https://stackoverflow.com/a/25345121
-function swapChar(str, first, last){
+function swapChar(str, first, last) {
 	return str.substr(0, first)
 		+ str[last]
-		+ str.substring(first+1, last)
+		+ str.substring(first + 1, last)
 		+ str[first]
-		+ str.substr(last+1);
+		+ str.substr(last + 1);
 }
