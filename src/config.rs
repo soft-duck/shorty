@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use tracing::error;
 
 pub const SAMPLE_CONFIG: &str = include_str!("../config.toml.sample");
 
@@ -32,15 +33,31 @@ pub struct Config {
 	/// Default duration a link is valid for.
 	#[serde(default = "valid_for_duration_default")]
 	pub default_valid_for: i64,
+	/// Location for custom frontend.
+	#[serde(default)]
+	#[serde(skip_serializing)]
+	pub frontend_location: Option<String>,
 }
 
 impl Config {
 	/// # Errors
 	/// Errors when the config couldn't be deserialized.
 	pub fn new(config: &str) -> Result<Self, toml::de::Error> {
-		toml::from_str(config)
+		let mut config: Config = toml::from_str(config)?;
+
+		if config.frontend_location.is_none() {
+			match std::env::var("SHORTY_WEBSITE") {
+				Ok(path) => { config.frontend_location = Some(path) }
+				Err(why) => { error!("{why}") }
+			}
+		}
+
+
+		Ok(config)
 	}
 
+	#[allow(clippy::missing_panics_doc)]
+	#[must_use]
 	pub fn json_string(&self) -> String {
 		serde_json::to_string(self).unwrap()
 	}

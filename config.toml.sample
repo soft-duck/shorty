@@ -1,6 +1,6 @@
 # The URL where the server should bind to
 # Optional; default is '127.0.0.1'.
-# listen_url = "127.0.0.1"
+# listen_url = '127.0.0.1'
 
 # The port where the server should bind to
 # Optional; default is '7999'.
@@ -10,7 +10,7 @@
 # The shortened link ajnIUh1H in the server response will look like `$public_url/ajnIUh1H`.
 # If the public url is `short.example.com` the link the server will respond with will be `http://short.example.com/ajnIUh1H`.
 # It is different from the listen_url if shorty is run behind a reverse proxy.
-public_url = "http://localhost:7999"
+public_url = 'http://localhost:7999'
 
 # Where the server should look for the database
 database_url = 'sqlite://database/database.db'
@@ -31,7 +31,13 @@ database_url = 'sqlite://database/database.db'
 # The link defaults that get used if they aren't specified.
 
 # How often a link is able to be used before it expires.
+# Optional, default is 0.
 # default_max_uses = 0 # Zero means unlimited uses.
 
 # How long a link (by default) is valid for, in milliseconds.
+# Optional, default is 24 hours.
 # default_valid_for = 86400000 # 24 hours
+
+# Location of custom frontend.
+# If set, files in the folder will be served instead of the embedded frontend.
+# frontend_location = '/var/www/shorty_frontend'

@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Small self hosted link shortener">
 	<title>Shorty</title>
 	<link rel="stylesheet" href="assets/style.css">
 	<script src="assets/main.js" type="module"></script>
@@ -18,11 +20,18 @@
 
 	<div id="shorten">
 		<div>
-			<input class="input_field" type="text" id="shorten_textfield" placeholder="URL to shorten" required>
+			<input
+					class="input_field"
+					type="text"
+					id="shorten_textfield"
+					placeholder="URL to shorten"
+					title="The link to be shortened"
+					required
+			>
 			<input class="shorten" type="button" value="Shorten" id="shorten_button">
 		</div>
 
-		<div id="advanced_mode_outer">
+		<div id="advanced_mode_toggle_outer">
 			<label for="advanced_mode">Advanced mode</label>
 			<label class="switch">
 				<input type="checkbox" id="advanced_mode">
@@ -31,6 +40,7 @@
 		</div>
 
 
+		<!-- Begin advanced mode items -->
 		<input
 				class="advanced_mode input_field validatable invisible"
 				type="number"
@@ -42,17 +52,27 @@
 				class="advanced_mode input_field validatable invisible"
 				type="text"
 				id="custom_id"
-				placeholder="Custom Id"
-				title="Macht Jakob"> <br>
+				placeholder="Custom ID"
+				title="Custom ID for the shortened link"
+		> <br>
 		<div id="time_selection">
-			<input class="advanced_mode validatable invisible" type="datetime-local" id="age_days">
-			<input class="advanced_mode input_field validatable invisible"
+			<input class="advanced_mode validatable invisible input_field date_toggle disappear"
+				   type="datetime-local"
+				   id="age_days"
+				   title="A date until the link should be valid"
+			>
+			<input class="advanced_mode input_field validatable invisible date_toggle"
 				   type="text"
 				   id="duration"
-				   title="Macht Jakob"
+				   title="dd:hh:mm:ss"
 			>
-			<input type="checkbox" class="advanced_mode invisible" id="date_toggle">
-		</div> <br>
+			<label class="switch invisible advanced_mode">
+				<input type="checkbox" class="advanced_mode invisible" id="date_toggle">
+				<span class="slider advanced_mode invisible"></span>
+			</label>
+			<label for="date_toggle" class="invisible advanced_mode">Duration/Date</label>
+		</div>
+		<br>
 		<!-- End advanced mode items -->
 	</div>
 

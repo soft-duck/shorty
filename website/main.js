@@ -71,6 +71,9 @@ dateToggle.addEventListener("click", (event) => {
 		ageDays.classList.add("invisible");
 		duration.classList.remove("invisible");
 	}
+
+	ageDays.classList.toggle("disappear");
+	duration.classList.toggle("disappear");
 })
 
 duration.addEventListener("keydown", durationControl)
@@ -136,7 +139,7 @@ function handleShortenClick(event) {
 	data["link"] = shortenField.value;
 
 	if (maxUses.value !== '') {
-		data["max_uses"] =  - 0;
+		data["max_uses"] = -0;
 	}
 
 	if (ageDays.value !== '') {
@@ -207,7 +210,12 @@ function getEndpointUrl(endpoint) {
 function advancedModeSwitchHandler(event) {
 	for (let i = 0; i < advancedInputs.length; i++) {
 		if (advancedMode.checked) {
-			if (advancedInputs[i] === ageDays && !dateToggle.checked || advancedInputs[i] === duration  && dateToggle.checked) {
+			if (
+				advancedInputs[i] === ageDays
+				&& !dateToggle.checked
+				|| advancedInputs[i] === duration
+				&& dateToggle.checked
+			) {
 				continue
 			}
 			advancedInputs[i].classList.remove("invisible");
