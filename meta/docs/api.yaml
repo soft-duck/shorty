@@ -1,9 +1,10 @@
 swagger: "2.0"
 info:
   description: "Small link shortener"
-  version: "0.5.0"
+  version: "0.6.0"
   title: "shorty"
   contact:
+    name: "flamion"
     email: "flamion@protonmail.com"
   license:
     name: "Apache 2.0"
@@ -11,48 +12,48 @@ info:
 host: "s.u-are.gay"
 basePath: "/"
 tags:
-- name: "/"
-  description: ""
-- name: "custom"
-  description: "Allows advanced configuration."
+  - name: "/"
+    description: ""
+  - name: "custom"
+    description: "Allows advanced configuration."
 schemes:
-- "https"
-- "http"
+  - "https"
 paths:
   # better parameter name
   /{url}:
     post:
       tags:
-      - "/"
+        - "/"
       summary: "Create a simple, unconfigured shortened link."
       description: "Creates a shortened link with the configuration specifics chosen by the server."
       produces:
-      - "text/plain; charset=utf-8"
+        - "text/plain; charset=utf-8"
       parameters:
-      - in: "path"
-        name: "url"
-        description: "The url to shorten"
-        required: true
-        type: "string"
+        - in: "path"
+          name: "url"
+          description: "The url to shorten"
+          required: true
+          type: "string"
       responses:
         "200":
           description: "The url was successfully shortened"
     get:
       tags:
-      - "/"
+        - "/"
       summary: "Redirect to the aliased url"
       description: "Redirect to the aliased url"
       parameters:
-      - in: "path"
-        name: "url"
-        description: "The id of the aliased url"
-        required: true
-        type: "string"
+        - in: "path"
+          name: "url"
+          description: "The id of the aliased url"
+          required: true
+          type: "string"
       responses:
         "307":
           description: "Redirection to aliased url"
         "404":
           description: "Shortened ID couldn't be found or was expired"
+
   /custom:
     post:
       tags:
@@ -60,8 +61,8 @@ paths:
       summary: "Advanced url shortening"
       description: "Shortens a URL, allowing for advanced configuration."
       produces:
-      - "text/plain; charset=utf-8"
-      
+        - "text/plain; charset=utf-8"
+
       parameters:
         - in: body
           name: user
@@ -69,6 +70,7 @@ paths:
           description: "The settings for the url to alias"
           schema:
             $ref: "#/definitions/LinkConfig"
+
       responses:
         "200":
           description: "The url was successfully registered as an alias and is now retrievable with at the get endpoint"
@@ -76,19 +78,67 @@ paths:
           description: "Json is malformed, the link exceeds the max length allowed by the server or the link was empty"
         "409":
           description: "The specified ID is already in use"
+
+  /config:
+    get:
+      tags:
+        - "config"
+      summary: "Retrieve server config"
+      description: "Retrieves the servers configuration details."
+      produces:
+        - "application/json; charset=utf-8"
+
+      responses:
+        "200":
+          description: "The server config as json"
+          schema:
+            $ref: "#/definitions/Config"
+
+
 definitions:
   LinkConfig:
     type: "object"
     properties:
       link:
         type: "string"
+        description: "The link that should be shortened."
       id:
         type: "string"
+        description: "Custom ID for a link."
       max_uses:
         type: "integer"
         format: "int64"
+        description: "Maximum uses before the link expires."
       valid_for:
         type: "integer"
         format: "int64"
+        description: "How long in milliseconds the link should be valid for."
     required:
       - link
+
+  Config:
+    type: "object"
+    properties:
+      public_url:
+        type: "string"
+        description: "The URL the server prefixes to shortened link IDs."
+      max_link_length:
+        type: "integer"
+        format: "int64"
+        description: "Maximum length allowed for a link in chars."
+      max_json_size:
+        type: "integer"
+        format: "int64"
+        description: "Maximum allowed Json size in bytes."
+      max_custom_id_length:
+        type: "integer"
+        format: "int64"
+        description: "Maximum custom ID length in chars."
+      default_max_uses:
+        type: "integer"
+        format: "int64"
+        description: "The default maximum uses for a link."
+      default_valid_for:
+        type: "integer"
+        format: "int64"
+        description: "The default duration a link is valid for in milliseconds."
