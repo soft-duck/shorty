@@ -259,15 +259,11 @@ function getDurationSeconds() {
 
 function durationControl(event) {
 	// permit arrow keys
-	if ((event.keyCode > 40 || event.keyCode < 37) && !(event.ctrlKey && [86, 67, 88].includes(event.keyCode))) {
+	if (![35, 36].includes(event.keyCode) && (event.keyCode > 40 || event.keyCode < 37) && !(event.ctrlKey && [86, 67, 88, 65].includes(event.keyCode))) {
 		event.preventDefault();
 	}
 
 	let cursor = duration.selectionStart;
-
-	if (cursor === 0 && event.keyCode !== 46) {
-		return;
-	}
 
 	let newValue = duration.value;
 	let key = "0";
@@ -284,6 +280,13 @@ function durationControl(event) {
 		return;
 	}
 
+	if (duration.selectionEnd !== cursor) {
+		deleteDurationSelection(offset === -1);
+		return;
+	} else if (cursor === 0 && event.keyCode !== 46) {
+		return;
+	}
+
 	if (newValue[cursor + Math.min(offset, 0)] === ":") {
 		cursor += offset;
 	}
@@ -295,18 +298,27 @@ function durationControl(event) {
 	duration.selectionStart = duration.selectionEnd = cursor;
 }
 
-function durationCut(event) {
-	event.preventDefault();
-
+function deleteDurationSelection(backspace = false) {
 	let end = duration.selectionEnd;
 	let text = duration.value;
 	let selected = text.slice(duration.selectionStart, end);
-	navigator.clipboard.writeText(selected);
 
 	text = text.slice(0, duration.selectionStart) + selected.replaceAll(/\d/g, '0') + text.slice(end)
 
+	if (backspace) {
+		end = duration.selectionStart;
+	}
+
 	duration.value = text;
 	duration.selectionStart = duration.selectionEnd = end;
+
+	return selected;
+}
+
+function durationCut(event) {
+	event.preventDefault();
+
+	navigator.clipboard.writeText(deleteDurationSelection());
 }
 
 function durationPaste(event) {
@@ -337,4 +349,5 @@ function durationPaste(event) {
 	}
 
 	duration.value = text;
+	duration.selectionStart = duration.selectionEnd = cursor;
 }
