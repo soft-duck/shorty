@@ -56,6 +56,8 @@ impl Config {
 		Ok(config)
 	}
 
+	#[allow(clippy::missing_panics_doc)]
+	#[must_use]
 	pub fn json_string(&self) -> String {
 		serde_json::to_string(self).unwrap()
 	}

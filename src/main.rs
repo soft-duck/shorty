@@ -76,7 +76,9 @@ async fn get_shortened(
 	)
 }
 
+// The function is async because the actix-web macro requires it.
 #[get("/config")]
+#[allow(clippy::unused_async)]
 async fn get_config() -> impl Responder {
 	HttpResponse::Ok()
 		.content_type("application/json; charset=utf-8")
@@ -85,6 +87,7 @@ async fn get_config() -> impl Responder {
 
 /// Creates a shortened link by taking the requested uri and turning it into a shortened link.
 #[post("/{url:.*}")]
+#[allow(clippy::similar_names)]
 async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
