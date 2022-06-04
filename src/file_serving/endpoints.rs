@@ -3,9 +3,9 @@ use actix_web::{get, HttpRequest, HttpResponse, Responder, web};
 use tracing::{debug, trace};
 use crate::CONFIG;
 
-const INDEX_HTML: &'static str = include_str!("../../website/index.html");
-const MAIN_JS: &'static str = include_str!("../../website/main.js");
-const STYLE_CSS: &'static str = include_str!("../../website/style.css");
+const INDEX_HTML: &str = include_str!("../../website/index.html");
+const MAIN_JS: &str = include_str!("../../website/main.js");
+const STYLE_CSS: &str = include_str!("../../website/style.css");
 const ROBOTO_MONO_TTF: &[u8] = include_bytes!("../../website/roboto_mono.ttf");
 
 // The function is async because the actix-web macro requires it.
