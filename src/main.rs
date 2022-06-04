@@ -198,7 +198,6 @@ async fn main() -> Result<(), ShortyError> {
 			.app_data(pool.clone())
 			.service(get_config)
 			.service(index)
-			// .service(actix_files::Files::new("/assets", "./website"))
 			.service(serve_file)
 			.service(get_shortened)
 			.service(create_shortened_custom)
