@@ -21,8 +21,8 @@ pub async fn index(req: HttpRequest) -> Result<impl Responder, Box<dyn std::erro
 	let response = get_embedded_file("index.html").unwrap();
 	Ok(
 		HttpResponse::Ok()
-		.content_type(response.0)
-		.body(response.1)
+			.content_type(response.0)
+			.body(response.1)
 	)
 }
 
