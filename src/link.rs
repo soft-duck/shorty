@@ -181,6 +181,24 @@ impl Link {
 		Ok(link)
 	}
 
+	/// Retrieves a link from the database, if it exists.
+	/// This function **does not** increment the invocation counter of a link.
+	async fn from_id_no_invocation(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, ShortyError> {
+		let link = sqlx::query_as!(
+			Self,
+			r#"
+			SELECT * FROM links
+			WHERE id = $1;
+			"#,
+			id,
+		)
+			.fetch_optional(pool)
+			.await?;
+
+
+		Ok(link)
+	}
+
 	/// Formats self, according to the options set in the config file.
 	#[must_use]
 	pub fn formatted(&self) -> String {
