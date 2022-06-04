@@ -88,15 +88,23 @@ impl Link {
 		pool: &Pool<Sqlite>,
 	) -> Result<Self, ShortyError> {
 		let id = if let Some(id) = link_config.custom_id {
-			if id.len() > CONFIG.max_custom_id_length {
-				return Err(ShortyError::CustomIDExceedsMaxLength);
-			}
-
+			Self::validate_id(&id, &pool).await?;
 
 			id
 		} else {
-			generate_random_chars()
+			let mut tries = 5;
+
+			loop {
+				let random_id = generate_random_chars();
+				tries -= 1;
+
+				match Self::validate_id(&random_id, &pool).await {
+					Ok(_) => break random_id,
+					Err(e) => if tries < 1 { return Err(e) },
+				}
+			}
 		};
+
 		let redirect_to = link_config.link;
 		let max_uses = link_config.max_uses;
 		let invocations = 0;
@@ -112,13 +120,6 @@ impl Link {
 		}
 
 		let redirect_to = ensure_http_prefix(redirect_to);
-
-		// If a link with the same ID exists already, return a conflict error.
-		if let Some(link) = Link::from_id(id.as_str(), pool).await? {
-			if !link.is_expired() {
-				return Err(ShortyError::LinkConflict);
-			}
-		}
 
 		// We checked if the link exists already and is valid.
 		// If it exists it has to be stale and can be replaced.
@@ -146,6 +147,20 @@ impl Link {
 			created_at,
 			valid_for,
 		})
+	}
+
+	async fn validate_id(id: &str, pool: &Pool<Sqlite>) -> Result<(), ShortyError> {
+		if id.len() > CONFIG.max_custom_id_length {
+			return Err(ShortyError::CustomIDExceedsMaxLength);
+		}
+
+		if let Some(link) = Link::from_id(id, pool).await? {
+			if !link.is_expired() {
+				return Err(ShortyError::LinkConflict);
+			}
+		}
+
+		Ok(())
 	}
 
 	#[must_use]
