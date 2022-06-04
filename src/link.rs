@@ -20,11 +20,21 @@ pub struct LinkConfig {
 	#[serde(alias = "id")]
 	custom_id: Option<String>,
 	/// How often the link may be used.
-	#[serde(default)]
+	#[serde(default = "default_max_uses")]
 	max_uses: i64,
 	/// How long the link is valid for in milliseconds.
-	#[serde(default)]
+	#[serde(default = "default_valid_for")]
 	valid_for: i64,
+}
+
+/// This function exists only because serde's default can't take values or a value from a struct.
+fn default_max_uses() -> i64 {
+	CONFIG.default_max_uses
+}
+
+/// This function exists only because serde's default can't take values or a value from a struct.
+fn default_valid_for() -> i64 {
+	CONFIG.default_valid_for
 }
 
 /// Struct representing a (shortened) Link.
@@ -59,8 +69,8 @@ impl Link {
 		let link_config = LinkConfig {
 			link,
 			custom_id: None,
-			max_uses: 0, // unlimited uses
-			valid_for: 1000 * 60 * 60 * 24, // 24 hours
+			max_uses: CONFIG.default_max_uses,
+			valid_for: CONFIG.default_valid_for,
 		};
 
 
@@ -78,6 +88,11 @@ impl Link {
 		pool: &Pool<Sqlite>,
 	) -> Result<Self, ShortyError> {
 		let id = if let Some(id) = link_config.custom_id {
+			if id.len() > CONFIG.max_custom_id_length {
+				return Err(ShortyError::CustomIDExceedsMaxLength);
+			}
+
+
 			id
 		} else {
 			generate_random_chars()

@@ -1,7 +1,8 @@
 [package]
 name = "shorty"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
+rust-version =  "1.60"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,6 +11,7 @@ tokio = { version = "1.16.1", features = ["full"] }
 
 actix-web = "4.0.1"
 actix-files = "0.6.0"
+actix-cors = "0.6.1"
 
 base64 = "0.13.0"
 rand = "0.8.5"
@@ -19,6 +21,7 @@ tracing-subscriber = { version = "0.3.11", features = [ "env-filter" ] }
 tracing-core = "0.1.26"
 
 serde = "1.0.137"
+serde_json = "1.0.79"
 toml = "0.5.9"
 
 chrono = "0.4.19"

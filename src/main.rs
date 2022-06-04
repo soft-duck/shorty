@@ -4,19 +4,20 @@
 use std::io::{Read, Write};
 use std::path::Path;
 use std::time::Duration;
+use actix_cors::Cors;
 
-use actix_files::NamedFile;
 use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
 use lazy_static::lazy_static;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::Sqlite;
 use sqlx::sqlite::SqlitePoolOptions;
-use tracing::{debug, error, info, instrument, Level};
+use tracing::{debug, error, info, Level};
 use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
 use crate::config::SAMPLE_CONFIG;
 use crate::error::ShortyError;
+use crate::file_serving::endpoints::{index, serve_file};
 use crate::link::{LinkConfig, LinkStore};
 use crate::util::{ensure_http_prefix, generate_random_chars, uri_to_url};
 
@@ -24,6 +25,7 @@ pub mod util;
 pub mod link;
 pub mod config;
 pub mod error;
+mod file_serving;
 
 const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 
@@ -54,7 +56,6 @@ lazy_static! {
 }
 
 #[get("/{shortened_url:.*}")]
-#[instrument(skip_all)]
 async fn get_shortened(
 	params: web::Path<String>,
 	link_store: web::Data<LinkStore>,
@@ -75,16 +76,21 @@ async fn get_shortened(
 	)
 }
 
+#[get("/config")]
+async fn get_config() -> impl Responder {
+	HttpResponse::Ok()
+		.content_type("application/json; charset=utf-8")
+		.body(CONFIG.json_string())
+}
+
 /// Creates a shortened link by taking the requested uri and turning it into a shortened link.
 #[post("/{url:.*}")]
-#[instrument(skip_all)]
 async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
 ) -> Result<impl Responder, ShortyError> {
 	let uri = req.uri();
 	debug!("URI is {uri}");
-
 	let url = uri_to_url(uri);
 
 	let link = link_store.create_link(url).await?;
@@ -92,11 +98,15 @@ async fn create_shortened(
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
-	Ok(HttpResponse::Ok().body(formatted))
+	Ok(
+		HttpResponse::Ok()
+			.content_type("text/plain; charset=utf-8")
+			.body(formatted)
+	)
 }
 
 /// Custom shortened URL, configured via Json.
-/// Also see [`LinkConfig`]
+/// Also see [`LinkConfig`].
 #[post("/custom")]
 async fn create_shortened_custom(
 	link_store: web::Data<LinkStore>,
@@ -109,23 +119,11 @@ async fn create_shortened_custom(
 	info!("Shortening URL {} to {}", link.redirect_to, formatted);
 
 
-	Ok(HttpResponse::Ok().body(formatted))
-}
-
-// #[get("/assets/{asset:.*}")]
-// async fn serve_file(asset: web::Path<String>) -> Result<impl Responder, Box<dyn std::error::Error>> {
-//
-//
-// 	debug!("Got request for file: {asset}");
-//
-//
-// 	Ok(HttpResponse::Ok())
-// }
-
-#[get("/")]
-async fn index() -> Result<impl Responder, Box<dyn std::error::Error>> {
-	debug!("Got request for Index");
-	Ok(NamedFile::open("website/index.html")?)
+	Ok(
+		HttpResponse::Ok()
+			.content_type("text/plain; charset=utf-8")
+			.body(formatted)
+	)
 }
 
 #[tokio::main]
@@ -186,13 +184,19 @@ async fn main() -> Result<(), ShortyError> {
 		let json_config = web::JsonConfig::default()
 			.limit(CONFIG.max_json_size);
 
+		let cors = Cors::default()
+			.allow_any_origin()
+			.allowed_methods(vec!["GET", "POST"]);
+
 		App::new()
+			.wrap(cors)
 			.app_data(json_config)
 			.app_data(links.clone())
 			.app_data(pool.clone())
+			.service(get_config)
 			.service(index)
-			.service(actix_files::Files::new("/assets", "./website"))
-			// .service(serve_file)
+			// .service(actix_files::Files::new("/assets", "./website"))
+			.service(serve_file)
 			.service(get_shortened)
 			.service(create_shortened_custom)
 			.service(create_shortened)

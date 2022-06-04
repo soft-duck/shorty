@@ -1,0 +1,94 @@
+swagger: "2.0"
+info:
+  description: "Small link shortener"
+  version: "0.5.0"
+  title: "shorty"
+  contact:
+    email: "flamion@protonmail.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "s.u-are.gay"
+basePath: "/"
+tags:
+- name: "/"
+  description: ""
+- name: "custom"
+  description: "Allows advanced configuration."
+schemes:
+- "https"
+- "http"
+paths:
+  # better parameter name
+  /{url}:
+    post:
+      tags:
+      - "/"
+      summary: "Create a simple, unconfigured shortened link."
+      description: "Creates a shortened link with the configuration specifics chosen by the server."
+      produces:
+      - "text/plain; charset=utf-8"
+      parameters:
+      - in: "path"
+        name: "url"
+        description: "The url to shorten"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "The url was successfully shortened"
+    get:
+      tags:
+      - "/"
+      summary: "Redirect to the aliased url"
+      description: "Redirect to the aliased url"
+      parameters:
+      - in: "path"
+        name: "url"
+        description: "The id of the aliased url"
+        required: true
+        type: "string"
+      responses:
+        "307":
+          description: "Redirection to aliased url"
+        "404":
+          description: "Shortened ID couldn't be found or was expired"
+  /custom:
+    post:
+      tags:
+        - "custom"
+      summary: "Advanced url shortening"
+      description: "Shortens a URL, allowing for advanced configuration."
+      produces:
+      - "text/plain; charset=utf-8"
+      
+      parameters:
+        - in: body
+          name: user
+          required: true
+          description: "The settings for the url to alias"
+          schema:
+            $ref: "#/definitions/LinkConfig"
+      responses:
+        "200":
+          description: "The url was successfully registered as an alias and is now retrievable with at the get endpoint"
+        "400":
+          description: "Json is malformed, the link exceeds the max length allowed by the server or the link was empty"
+        "409":
+          description: "The specified ID is already in use"
+definitions:
+  LinkConfig:
+    type: "object"
+    properties:
+      link:
+        type: "string"
+      id:
+        type: "string"
+      max_uses:
+        type: "integer"
+        format: "int64"
+      valid_for:
+        type: "integer"
+        format: "int64"
+    required:
+      - link

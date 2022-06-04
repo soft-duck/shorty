@@ -9,6 +9,8 @@ pub enum ShortyError {
 	LinkConflict,
 	#[error("Link exceeds maximum length allowed.")]
 	LinkExceedsMaxLength,
+	#[error("Custom ID exceeds maximum length allowed")]
+	CustomIDExceedsMaxLength,
 	#[error("Link is empty.")]
 	LinkEmpty,
 	#[error(transparent)]
@@ -21,7 +23,9 @@ impl ResponseError for ShortyError {
 	fn status_code(&self) -> StatusCode {
 		match self {
 			ShortyError::LinkConflict => StatusCode::CONFLICT,
-			ShortyError::LinkExceedsMaxLength | ShortyError::LinkEmpty => StatusCode::BAD_REQUEST,
+			ShortyError::LinkExceedsMaxLength
+			| ShortyError::LinkEmpty
+			| ShortyError::CustomIDExceedsMaxLength => StatusCode::BAD_REQUEST,
 			_ => StatusCode::INTERNAL_SERVER_ERROR,
 		}
 	}
