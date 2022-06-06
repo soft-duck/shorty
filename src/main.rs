@@ -129,6 +129,13 @@ async fn create_shortened_custom(
 	)
 }
 
+#[get("/favicon.ico")]
+async fn get_favicon() -> Result<impl Responder, ShortyError> {
+	debug!("Got request for favicon");
+	Ok(HttpResponse::NotFound().finish())
+}
+
+
 #[tokio::main]
 async fn main() -> Result<(), ShortyError> {
 	let env_filter = EnvFilter::from_default_env()
@@ -199,6 +206,7 @@ async fn main() -> Result<(), ShortyError> {
 			.service(get_config)
 			.service(index)
 			.service(serve_file)
+			.service(get_favicon)
 			.service(get_shortened)
 			.service(create_shortened_custom)
 			.service(create_shortened)
