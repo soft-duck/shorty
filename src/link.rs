@@ -5,9 +5,9 @@ use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use tracing::debug;
 
-use crate::{CONFIG, ensure_http_prefix, generate_random_chars};
+use crate::{CONFIG, ensure_http_prefix};
 use crate::error::ShortyError;
-use crate::util::time_now;
+use crate::util::{get_random_id, time_now};
 
 /// This struct holds configuration options for a custom link.
 /// Optional fields are: `custom_id`, `max_uses`, and `valid_for`.
@@ -95,7 +95,7 @@ impl Link {
 
 			id
 		} else {
-			generate_random_chars()
+			get_random_id(pool).await?
 		};
 		let redirect_to = link_config.link;
 		let max_uses = link_config.max_uses;
@@ -197,6 +197,24 @@ impl Link {
 
 
 		Ok(link)
+	}
+
+	/// Checks if the link exists in the database.
+	///
+	/// # Errors
+	///
+	/// Errors if there is some problem communicating with the database.
+	pub async fn link_exists(id: &str, pool: &Pool<Sqlite>) -> Result<bool, ShortyError> {
+		let link_row = sqlx::query!(r#"
+			SELECT id FROM links WHERE id = ?;
+		"#,
+		id
+		)
+			.fetch_optional(pool)
+			.await?;
+
+
+		Ok(link_row.is_some())
 	}
 
 	/// Formats self, according to the options set in the config file.

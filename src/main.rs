@@ -19,7 +19,7 @@ use crate::config::SAMPLE_CONFIG;
 use crate::error::ShortyError;
 use crate::file_serving::endpoints::{index, serve_file};
 use crate::link::{LinkConfig, LinkStore};
-use crate::util::{ensure_http_prefix, generate_random_chars, uri_to_url};
+use crate::util::{ensure_http_prefix, uri_to_url};
 
 pub mod util;
 pub mod link;
@@ -129,6 +129,7 @@ async fn create_shortened_custom(
 	)
 }
 
+#[allow(clippy::unused_async)]
 #[get("/favicon.ico")]
 async fn get_favicon() -> Result<impl Responder, ShortyError> {
 	debug!("Got request for favicon");

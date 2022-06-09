@@ -1,5 +1,23 @@
 {
   "db": "SQLite",
+  "126052b96468e8daa947d335de164f90d6863d7acf324c4e87e0368a85938455": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "\n\t\t\tSELECT id FROM links WHERE id = ?;\n\t\t"
+  },
   "14894e6aa9a3b0bb61fc40fe0104f17bc8106bcfde4c670c42401be994e0c36f": {
     "describe": {
       "columns": [

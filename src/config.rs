@@ -1,3 +1,4 @@
+use std::env::VarError;
 use serde::{Serialize, Deserialize};
 use tracing::error;
 
@@ -48,6 +49,7 @@ impl Config {
 		if config.frontend_location.is_none() {
 			match std::env::var("SHORTY_WEBSITE") {
 				Ok(path) => { config.frontend_location = Some(path) }
+				Err(VarError::NotPresent) => {},
 				Err(why) => { error!("{why}") }
 			}
 		}
