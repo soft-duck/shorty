@@ -65,7 +65,7 @@ paths:
 
       parameters:
         - in: body
-          name: user
+          name: LinkConfig
           required: true
           description: "The settings for the url to alias"
           schema:
