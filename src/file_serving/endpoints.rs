@@ -1,6 +1,6 @@
 use actix_files::NamedFile;
 use actix_web::{get, HttpRequest, HttpResponse, Responder, web};
-use tracing::{debug, trace};
+use tracing::debug;
 use crate::CONFIG;
 
 const INDEX_HTML: &str = include_str!("../../website/index.html");
@@ -33,15 +33,10 @@ pub async fn serve_file(asset: web::Path<String>, req: HttpRequest) -> Result<im
 	let asset = asset.into_inner();
 	debug!("Got request for file: {asset}");
 
-	match std::env::var("SHORTY_WEBSITE") {
-		Ok(path) => {
-			let path = format!("{}/{}", path, asset);
-			return Ok(NamedFile::open(path)?.into_response(&req));
-		}
-		_ => {
-			trace!("SHORTY_WEBSITE env var not set or other error occurred trying to read it.");
-		}
-	};
+	if let Some(ref path) = CONFIG.frontend_location {
+		let path = format!("{path}/{asset}");
+		return Ok(NamedFile::open(path)?.into_response(&req));
+	}
 
 	// Tuple of MIME Type and Content.
 	let response_opt: Option<(&str, &[u8])> = get_embedded_file(asset.as_str());
