@@ -1,6 +1,6 @@
 use actix_files::NamedFile;
 use actix_web::{get, HttpRequest, HttpResponse, Responder, web};
-use tracing::debug;
+use tracing::{debug, warn};
 use crate::CONFIG;
 
 const INDEX_HTML: &str = include_str!("../../website/index.html");
@@ -61,7 +61,7 @@ fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
 		"main.js" => { Some(("text/javascript", MAIN_JS.as_bytes())) }
 		"style.css" => { Some(("text/css", STYLE_CSS.as_bytes())) }
 		"roboto_mono.ttf" => { Some(("font/ttf", ROBOTO_MONO_TTF)) }
-		_ => { None }
+		_ => { warn!("Got request for {file} but couldn't find embedded asset."); None }
 	}
 }
 
