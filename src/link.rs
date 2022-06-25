@@ -116,7 +116,7 @@ impl Link {
 		let redirect_to = ensure_http_prefix(redirect_to);
 
 		// If a link with the same ID exists already, return a conflict error.
-		if let Some(link) = Link::from_id(id.as_str(), pool).await? {
+		if let Some(link) = Link::from_id_no_invocation(id.as_str(), pool).await? {
 			if !link.is_expired() {
 				return Err(ShortyError::LinkConflict);
 			}
@@ -185,7 +185,7 @@ impl Link {
 
 	/// Retrieves a link from the database, if it exists.
 	/// This function **does not** increment the invocation counter of a link.
-	async fn _from_id_no_invocation(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, ShortyError> {
+	async fn from_id_no_invocation(id: &str, pool: &Pool<Sqlite>) -> Result<Option<Self>, ShortyError> {
 		let link = sqlx::query_as!(
 			Self,
 			r#"
