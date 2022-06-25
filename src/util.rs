@@ -29,6 +29,12 @@ pub fn ensure_http_prefix(url: String) -> String {
 	format!("http://{url}")
 }
 
+/// This function replaces illegal URL chars with ones that can be used in urls.
+/// Currently it just replaces spaces with underscores, additions might happen in the future.
+pub fn replace_illegal_url_chars(s: impl AsRef<str>) -> String {
+	s.as_ref().replace(" ", "_")
+}
+
 /// Generates some random chars.
 /// Used for the random ID.
 /// We generate a few random bytes (How many is defined by `URL_SIZE`.

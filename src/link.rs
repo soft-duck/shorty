@@ -7,7 +7,7 @@ use tracing::debug;
 
 use crate::{CONFIG, ensure_http_prefix};
 use crate::error::ShortyError;
-use crate::util::{get_random_id, time_now};
+use crate::util::{get_random_id, replace_illegal_url_chars, time_now};
 
 /// This struct holds configuration options for a custom link.
 /// Optional fields are: `custom_id`, `max_uses`, and `valid_for`.
@@ -91,6 +91,8 @@ impl Link {
 			if id.len() > CONFIG.max_custom_id_length {
 				return Err(ShortyError::CustomIDExceedsMaxLength);
 			}
+
+			let id = replace_illegal_url_chars(&id);
 
 
 			id
