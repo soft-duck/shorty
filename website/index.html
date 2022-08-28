@@ -20,7 +20,14 @@
 
 	<div id="shorten">
 		<div>
-			<input class="input_field" type="text" id="shorten_textfield" placeholder="URL to shorten" required>
+			<input
+					class="input_field"
+					type="text"
+					id="shorten_textfield"
+					placeholder="URL to shorten"
+					title="The link to be shortened"
+					required
+			>
 			<input class="shorten" type="button" value="Shorten" id="shorten_button">
 		</div>
 
@@ -52,6 +59,7 @@
 			<input class="advanced_mode validatable invisible input_field date_toggle disappear"
 				   type="datetime-local"
 				   id="age_days"
+				   title="A date until the link should be valid"
 			>
 			<input class="advanced_mode input_field validatable invisible date_toggle"
 				   type="text"

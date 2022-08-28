@@ -77,9 +77,8 @@ dateToggle.addEventListener("click", (event) => {
 })
 
 duration.addEventListener("keydown", durationControl)
-duration.addEventListener("paste", (event) => {
-	event.preventDefault();
-})
+duration.addEventListener("cut", durationCut)
+duration.addEventListener("paste", durationPaste)
 
 function handleShortenClick(event) {
 	shortenField.classList.add(validation_class);
@@ -251,39 +250,104 @@ function handleConflict() {
 	message("Custom Id:" + customIdField.value + " already used. Try something different", error);
 }
 
-function durationControl(event) {
-	event.preventDefault();
-
-	let newValue = duration.value;
-
-
-	if (event.keyCode > 47 && event.keyCode < 58 && newValue[0] === "0") {
-		newValue = newValue.substring(1) + event.key;
-		newValue = swapChar(newValue, 1, 2);
-		newValue = swapChar(newValue, 4, 5);
-		newValue = swapChar(newValue, 7, 8);
-		duration.value = newValue;
-	}
-
-	if (event.keyCode === 8) {
-		newValue = "0" + newValue.substring(0, newValue.length - 1);
-		newValue = swapChar(newValue, 2, 3);
-		newValue = swapChar(newValue, 5, 6);
-		newValue = swapChar(newValue, 8, 9);
-		duration.value = newValue;
-	}
-}
-
 function getDurationSeconds() {
 	let durations = duration.value.split(":");
 	return durations[0] * 86400 + durations[1] * 3600 + durations[2] * 60 + durations[3];
 }
 
-// https://stackoverflow.com/a/25345121
-function swapChar(str, first, last) {
-	return str.substr(0, first)
-		+ str[last]
-		+ str.substring(first + 1, last)
-		+ str[first]
-		+ str.substr(last + 1);
+// Duration field
+
+function durationControl(event) {
+	// permit arrow keys
+	if (![35, 36].includes(event.keyCode) && (event.keyCode > 40 || event.keyCode < 37) && !(event.ctrlKey && [86, 67, 88, 65].includes(event.keyCode))) {
+		event.preventDefault();
+	}
+
+	let cursor = duration.selectionStart;
+
+	let newValue = duration.value;
+	let key = "0";
+	let offset = -1;
+
+	// numbers 0 - 9
+	if (event.keyCode > 47 && event.keyCode < 59) {
+		key = event.key;
+	// delete key
+	} else if (event.keyCode === 46 && cursor !== 11) {
+		offset = 1;
+	// backspace
+	} else if (event.keyCode !== 8) {
+		return;
+	}
+
+	if (duration.selectionEnd !== cursor) {
+		deleteDurationSelection(offset === -1);
+		return;
+	} else if (cursor === 0 && event.keyCode !== 46) {
+		return;
+	}
+
+	if (newValue[cursor + Math.min(offset, 0)] === ":") {
+		cursor += offset;
+	}
+
+	newValue = newValue.substring(0, cursor + Math.min(offset, 0)) + key + newValue.substring(cursor + Math.max(offset, 0), newValue.length);
+	cursor += offset;
+
+	duration.value = newValue;
+	duration.selectionStart = duration.selectionEnd = cursor;
+}
+
+function deleteDurationSelection(backspace = false) {
+	let end = duration.selectionEnd;
+	let text = duration.value;
+	let selected = text.slice(duration.selectionStart, end);
+
+	text = text.slice(0, duration.selectionStart) + selected.replaceAll(/\d/g, '0') + text.slice(end)
+
+	if (backspace) {
+		end = duration.selectionStart;
+	}
+
+	duration.value = text;
+	duration.selectionStart = duration.selectionEnd = end;
+
+	return selected;
+}
+
+function durationCut(event) {
+	event.preventDefault();
+
+	navigator.clipboard.writeText(deleteDurationSelection());
+}
+
+function durationPaste(event) {
+	event.preventDefault();
+
+	let paste = (event.clipboardData || window.clipboardData).getData('text');
+
+	if (!/^[\d:]+$/.test(paste)) {
+		return
+	}
+
+	paste = paste.replaceAll(":", "");
+
+	let cursor = duration.selectionEnd
+
+	paste = paste.split("").reverse().join("").slice(0, cursor - Math.floor(cursor / 3));
+
+	let text = duration.value;
+
+	for (let char of paste) {
+		if (text[cursor - 1] === ':') {
+			cursor--;
+		}
+
+		text = text.slice(0, cursor - 1) + char + text.slice(cursor);
+
+		cursor--;
+	}
+
+	duration.value = text;
+	duration.selectionStart = duration.selectionEnd = cursor;
 }

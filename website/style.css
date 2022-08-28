@@ -145,6 +145,11 @@ body {
     margin: 1px 0;
     background-color: var(--background-color);
     border: 1px solid rgb(94, 101, 103);
+    /*
+    setting the accent color to the same color as the border color is needed for firefox, as it otherwise
+    uses the the global accent color as border color.
+     */
+    accent-color: rgb(94, 101, 103);
     color: rgb(255, 255, 255);
     height: 5vh;
     min-width: 250px;

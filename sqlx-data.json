@@ -1,5 +1,23 @@
 {
   "db": "SQLite",
+  "126052b96468e8daa947d335de164f90d6863d7acf324c4e87e0368a85938455": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "\n\t\t\tSELECT id FROM links WHERE id = ?;\n\t\t"
+  },
   "14894e6aa9a3b0bb61fc40fe0104f17bc8106bcfde4c670c42401be994e0c36f": {
     "describe": {
       "columns": [
@@ -93,6 +111,54 @@
       }
     },
     "query": "SELECT COUNT(*) AS num_after FROM links"
+  },
+  "7665d4546ee05e45bbc0328179635162c0f0a70038a3c3a1b3f77d49cb5a69b6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "redirect_to",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "max_uses",
+          "ordinal": 2,
+          "type_info": "Int64"
+        },
+        {
+          "name": "invocations",
+          "ordinal": 3,
+          "type_info": "Int64"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 4,
+          "type_info": "Int64"
+        },
+        {
+          "name": "valid_for",
+          "ordinal": 5,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "\n\t\t\tSELECT * FROM links\n\t\t\tWHERE id = $1;\n\t\t\t"
   },
   "faf5fa247c55cd95f7dcec50b6ec85c3641cfa57d32fa052e4dfb3687c517c5c": {
     "describe": {

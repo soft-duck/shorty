@@ -9,10 +9,12 @@ pub enum ShortyError {
 	LinkConflict,
 	#[error("Link exceeds maximum length allowed.")]
 	LinkExceedsMaxLength,
-	#[error("Custom ID exceeds maximum length allowed")]
+	#[error("Custom ID exceeds maximum length allowed.")]
 	CustomIDExceedsMaxLength,
 	#[error("Link is empty.")]
 	LinkEmpty,
+	#[error("Maximum retries to generate a random link ID were exceeded.")]
+	RandomIDMaxRetriesExceeded,
 	#[error(transparent)]
 	Database(#[from] sqlx::Error),
 	#[error(transparent)]

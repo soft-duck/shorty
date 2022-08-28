@@ -19,7 +19,7 @@ use crate::config::SAMPLE_CONFIG;
 use crate::error::ShortyError;
 use crate::file_serving::endpoints::{index, serve_file};
 use crate::link::{LinkConfig, LinkStore};
-use crate::util::{ensure_http_prefix, generate_random_chars, uri_to_url};
+use crate::util::{ensure_http_prefix, uri_to_url};
 
 pub mod util;
 pub mod link;
@@ -76,7 +76,9 @@ async fn get_shortened(
 	)
 }
 
+// The function is async because the actix-web macro requires it.
 #[get("/config")]
+#[allow(clippy::unused_async)]
 async fn get_config() -> impl Responder {
 	HttpResponse::Ok()
 		.content_type("application/json; charset=utf-8")
@@ -85,6 +87,7 @@ async fn get_config() -> impl Responder {
 
 /// Creates a shortened link by taking the requested uri and turning it into a shortened link.
 #[post("/{url:.*}")]
+#[allow(clippy::similar_names)]
 async fn create_shortened(
 	req: HttpRequest,
 	link_store: web::Data<LinkStore>,
@@ -125,6 +128,14 @@ async fn create_shortened_custom(
 			.body(formatted)
 	)
 }
+
+#[allow(clippy::unused_async)]
+#[get("/favicon.ico")]
+async fn get_favicon() -> Result<impl Responder, ShortyError> {
+	debug!("Got request for favicon");
+	Ok(HttpResponse::NotFound().finish())
+}
+
 
 #[tokio::main]
 async fn main() -> Result<(), ShortyError> {
@@ -195,8 +206,8 @@ async fn main() -> Result<(), ShortyError> {
 			.app_data(pool.clone())
 			.service(get_config)
 			.service(index)
-			// .service(actix_files::Files::new("/assets", "./website"))
 			.service(serve_file)
+			.service(get_favicon)
 			.service(get_shortened)
 			.service(create_shortened_custom)
 			.service(create_shortened)
