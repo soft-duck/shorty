@@ -64,16 +64,16 @@ async fn get_shortened(
 	debug!("Got request for {shortened_url}");
 
 
-	Ok(
-		if let Some(link) = link_store.get(shortened_url.as_str()).await {
-			info!("Return url for {shortened_url} is {link}");
+	if let Some(link) = link_store.get(shortened_url.as_str()).await {
+		info!("Return url for {shortened_url} is {link}");
+		Ok(
 			HttpResponse::TemporaryRedirect()
 				.append_header(("Location", link.redirect_to.as_str()))
 				.finish()
-		} else {
-			HttpResponse::NotFound().finish()
-		}
-	)
+		)
+	} else {
+		Ok(HttpResponse::NotFound().finish())
+	}
 }
 
 // The function is async because the actix-web macro requires it.

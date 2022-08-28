@@ -50,7 +50,7 @@ maxUses.min = 0;
 	ageDays.min = date.toISOString().split(".")[0];
 }
 
-// Add keylistener to the textfield so we can also submit on enter
+// Add keylistener to the textfield, so we can also submit on enter
 shortenField.addEventListener("keypress", preventDefaultEnter);
 shortenField.oninput = () => {
 	shortenField.classList.add(validation_class);
@@ -138,8 +138,8 @@ function handleShortenClick(event) {
 	const data = {};
 	data["link"] = shortenField.value;
 
-	if (maxUses.value !== '') {
-		data["max_uses"] = -0;
+	if (maxUses.value !== '' && isNumber(maxUses.value)) {
+		data["max_uses"] = parseInt(maxUses.value);
 	}
 
 	if (ageDays.value !== '') {
@@ -199,7 +199,6 @@ function setButtonMode(mode) {
 function preventDefaultEnter(event) {
 	if (event.key === "Enter") {
 		event.preventDefault();
-		return;
 	}
 }
 
@@ -350,4 +349,16 @@ function durationPaste(event) {
 
 	duration.value = text;
 	duration.selectionStart = duration.selectionEnd = cursor;
+}
+
+
+
+/*
+ *
+ *  Util functions
+ *
+ */
+
+function isNumber(potential_number) {
+	return !isNaN(potential_number);
 }
