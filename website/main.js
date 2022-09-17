@@ -1,7 +1,7 @@
-const shorten_class = "shorten";
-const copy_class = "copy";
-const copied_class = "copied";
-const validation_class = "validatable";
+const shortenClass = "shorten";
+const copyClass = "copy";
+const copiedClass = "copied";
+const validationClass = "validatable";
 
 const error = "error";
 const warning = "warning";
@@ -21,8 +21,6 @@ const dateToggle = document.getElementById("date_toggle");
 const shortenButtonText = shortenButton.value;
 
 duration.value = "00:00:00:00";
-// ageDays.style.display = "inherit";
-// duration.style.display = "none";
 
 // set constraints on field
 {
@@ -53,13 +51,13 @@ maxUses.min = 0;
 // Add keylistener to the textfield, so we can also submit on enter
 shortenField.addEventListener("keypress", preventDefaultEnter);
 shortenField.oninput = () => {
-	shortenField.classList.add(validation_class);
-	setButtonMode(shorten_class);
+	shortenField.classList.add(validationClass);
+	setButtonMode(shortenClass);
 };
 shortenField.onfocus = () => {
-	shortenField.classList.add(validation_class);
+	shortenField.classList.add(validationClass);
 }
-//shortenField.addEventListener("paste", () => { setButtonMode(shorten_class); });
+//shortenField.addEventListener("paste", () => { setButtonMode(shortenClass); });
 shortenButton.addEventListener("click", handleShortenClick);
 advancedMode.addEventListener("click", advancedModeSwitchHandler);
 
@@ -81,14 +79,14 @@ duration.addEventListener("cut", durationCut)
 duration.addEventListener("paste", durationPaste)
 
 function handleShortenClick(event) {
-	shortenField.classList.add(validation_class);
+	shortenField.classList.add(validationClass);
 
-	if (getButtonMode() === copy_class) {
+	if (getButtonMode() === copyClass) {
 		navigator.clipboard.writeText(shortenField.value);
-		setButtonMode(copied_class);
+		setButtonMode(copiedClass);
 		setTimeout(() => {
-			if (getButtonMode() === copy_class) {
-				setButtonMode(copy_class);
+			if (getButtonMode() === copyClass) {
+				setButtonMode(copyClass);
 			}
 		}, 2000);
 		return;
@@ -101,8 +99,6 @@ function handleShortenClick(event) {
 		if (!shortenField.checkValidity()) {
 			invalidFields += "url ";
 		}
-		// invalidFields = invalidFields.charAt(0).toUpperCase() + invalidFields.slice(1);
-		// invalidFields = invalidFields.slice(0, -2);
 
 		if (!maxUses.checkValidity() && advancedMode.checked) {
 			invalidFields += "and max usages";
@@ -169,27 +165,27 @@ function getButtonMode() {
 	const classes = shortenButton.className.split(" ");
 
 	let mode = classes.find((c) => {
-		return c === shorten_class || c === copy_class || c === copied_class;
+		return c === shortenClass || c === copyClass || c === copiedClass;
 	});
 
-	if (mode === copied_class) {
-		mode = copy_class;
+	if (mode === copiedClass) {
+		mode = copyClass;
 	}
 
 	return mode;
 }
 
 function setButtonMode(mode) {
-	shortenButton.classList.remove(shorten_class, copy_class, copied_class);
+	shortenButton.classList.remove(shortenClass, copyClass, copiedClass);
 	shortenButton.classList.add(mode);
 
 	let text;
 
-	if (mode === copy_class) {
+	if (mode === copyClass) {
 		text = "Copy";
-	} else if (mode === shorten_class) {
+	} else if (mode === shortenClass) {
 		text = shortenButtonText;
-	} else if (mode === copied_class) {
+	} else if (mode === copiedClass) {
 		text = "Copied!";
 	}
 
@@ -243,7 +239,7 @@ function handleConfig(config) {
 }
 
 function handleSuccess(response) {
-	setButtonMode(copy_class);
+	setButtonMode(copyClass);
 	shortenField.value = response;
 }
 
@@ -273,10 +269,10 @@ function durationControl(event) {
 	// numbers 0 - 9
 	if (event.keyCode > 47 && event.keyCode < 59) {
 		key = event.key;
-	// delete key
+		// delete key
 	} else if (event.keyCode === 46 && cursor !== 11) {
 		offset = 1;
-	// backspace
+		// backspace
 	} else if (event.keyCode !== 8) {
 		return;
 	}
@@ -352,7 +348,6 @@ function durationPaste(event) {
 	duration.value = text;
 	duration.selectionStart = duration.selectionEnd = cursor;
 }
-
 
 
 /*
