@@ -199,6 +199,8 @@ function setButtonMode(mode) {
 function preventDefaultEnter(event) {
 	if (event.key === "Enter") {
 		event.preventDefault();
+
+		shortenButton.click();
 	}
 }
 
