@@ -30,6 +30,7 @@ thiserror = "1.0.31"
 anyhow = "1.0.57"
 
 lazy_static = "1.4.0"
+dotenv = "0.15.0"
 
 [dependencies.sqlx]
 version = "0.5.13"

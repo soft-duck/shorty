@@ -139,6 +139,8 @@ async fn get_favicon() -> Result<impl Responder, ShortyError> {
 
 #[tokio::main]
 async fn main() -> Result<(), ShortyError> {
+	dotenv::dotenv()?;
+
 	let env_filter = EnvFilter::from_default_env()
 		.add_directive(Level::INFO.into())
 		.add_directive("shorty=debug".parse().unwrap());
