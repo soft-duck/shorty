@@ -18,6 +18,8 @@ pub enum ShortyError {
 	#[error(transparent)]
 	Database(#[from] sqlx::Error),
 	#[error(transparent)]
+	Dotenv(#[from] dotenv::Error),
+	#[error(transparent)]
 	Other(#[from] anyhow::Error),
 }
 

@@ -39,6 +39,7 @@ environment variable.
 #### Environment Variables
 A few things can also be configured via environment variables.
 Generally most things that can be configured via an environment variable can also be configured via the config file.
+Shorty will also look for a .env file in the same directory it's executed from and pull environment variables from there.
 
 `SHORTY_CONFIG` was mentioned before. With it you can set a custom location for the config file. 
 By default shorty will look for the config file in the current folder. This can obviously not be configured 

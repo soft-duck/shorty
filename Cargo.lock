@@ -1340,6 +1340,7 @@ dependencies = [
  "anyhow",
  "base64",
  "chrono",
+ "dotenv",
  "lazy_static",
  "rand",
  "serde",
