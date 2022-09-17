@@ -244,7 +244,7 @@ function handleSuccess(response) {
 }
 
 function handleConflict() {
-	message("Custom Id:" + customIdField.value + " already used. Try something different", error);
+	message("Custom ID:" + customIdField.value + " already used. Try something different", error);
 }
 
 function getDurationSeconds() {
