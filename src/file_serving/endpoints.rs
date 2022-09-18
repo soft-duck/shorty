@@ -3,10 +3,6 @@ use actix_web::{get, HttpRequest, HttpResponse, Responder, web};
 use tracing::{debug, warn};
 use crate::CONFIG;
 
-const INDEX_HTML: &str = include_str!("../../website/index.html");
-const MAIN_JS: &str = include_str!("../../website/main.js");
-const STYLE_CSS: &str = include_str!("../../website/style.css");
-const ROBOTO_MONO_TTF: &[u8] = include_bytes!("../../website/roboto_mono.ttf");
 
 // The function is async because the actix-web macro requires it.
 #[allow(clippy::unused_async)]
@@ -24,6 +20,15 @@ pub async fn index(req: HttpRequest) -> Result<impl Responder, Box<dyn std::erro
 			.content_type(response.0)
 			.body(response.1)
 	)
+}
+
+#[get("/documentation")]
+pub async fn api_docs() -> impl Responder {
+	const DOCUMENTATION_YAML: &str = include_str!("../../meta/docs/api.yaml");
+
+	HttpResponse::Ok()
+		.content_type("application/x-yaml")
+		.body(DOCUMENTATION_YAML)
 }
 
 // The function is async because the actix-web macro requires it.
@@ -55,13 +60,22 @@ pub async fn serve_file(asset: web::Path<String>, req: HttpRequest) -> Result<im
 
 /// Returns a Tuple of Mime Type (as &str) and file content (as &[u8]).
 fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
+	const INDEX_HTML: &str = include_str!("../../website/index.html");
+	const MAIN_JS: &str = include_str!("../../website/main.js");
+	const STYLE_CSS: &str = include_str!("../../website/style.css");
+	const ROBOTO_MONO_TTF: &[u8] = include_bytes!("../../website/roboto_mono.ttf");
+
 	debug!("Getting embedded file: {file}");
+
 	match file {
 		"index.html" => { Some(("text/html", INDEX_HTML.as_bytes())) }
 		"main.js" => { Some(("text/javascript", MAIN_JS.as_bytes())) }
 		"style.css" => { Some(("text/css", STYLE_CSS.as_bytes())) }
 		"roboto_mono.ttf" => { Some(("font/ttf", ROBOTO_MONO_TTF)) }
-		_ => { warn!("Got request for {file} but couldn't find embedded asset."); None }
+		_ => {
+			warn!("Got request for {file} but couldn't find embedded asset.");
+			None
+		}
 	}
 }
 
