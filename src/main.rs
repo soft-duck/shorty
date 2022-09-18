@@ -4,9 +4,9 @@
 use std::io::{Read, Write};
 use std::path::Path;
 use std::time::Duration;
-use actix_cors::Cors;
 
-use actix_web::{App, get, HttpRequest, HttpResponse, HttpServer, post, Responder, web};
+use actix_cors::Cors;
+use actix_web::{App, HttpServer, web};
 use lazy_static::lazy_static;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::Sqlite;
@@ -16,16 +16,16 @@ use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
 use crate::config::SAMPLE_CONFIG;
+use crate::endpoints::{api_docs, create_shortened, create_shortened_custom, get_config, get_favicon, get_shortened, index, serve_file};
 use crate::error::ShortyError;
-use crate::file_serving::endpoints::{api_docs, index, serve_file};
 use crate::link::{LinkConfig, LinkStore};
-use crate::util::{ensure_http_prefix, uri_to_url};
+use crate::util::{ensure_http_prefix};
 
 pub mod util;
 pub mod link;
 pub mod config;
 pub mod error;
-mod file_serving;
+pub mod endpoints;
 
 const CLEAN_SLEEP_DURATION: Duration = Duration::from_secs(60 * 60);
 
@@ -54,88 +54,6 @@ lazy_static! {
 		Config::new(content.as_str()).expect("Failed to parse config")
 	};
 }
-
-#[get("/{shortened_url:.*}")]
-async fn get_shortened(
-	params: web::Path<String>,
-	link_store: web::Data<LinkStore>,
-) -> Result<impl Responder, ShortyError> {
-	let shortened_url = params.into_inner();
-	debug!("Got request for {shortened_url}");
-
-
-	if let Some(link) = link_store.get(shortened_url.as_str()).await {
-		info!("Return url for {shortened_url} is {link}");
-		Ok(
-			HttpResponse::TemporaryRedirect()
-				.append_header(("Location", link.redirect_to.as_str()))
-				.finish()
-		)
-	} else {
-		Ok(HttpResponse::NotFound().finish())
-	}
-}
-
-// The function is async because the actix-web macro requires it.
-#[get("/config")]
-#[allow(clippy::unused_async)]
-async fn get_config() -> impl Responder {
-	HttpResponse::Ok()
-		.content_type("application/json; charset=utf-8")
-		.body(CONFIG.json_string())
-}
-
-/// Creates a shortened link by taking the requested uri and turning it into a shortened link.
-#[post("/{url:.*}")]
-#[allow(clippy::similar_names)]
-async fn create_shortened(
-	req: HttpRequest,
-	link_store: web::Data<LinkStore>,
-) -> Result<impl Responder, ShortyError> {
-	let uri = req.uri();
-	debug!("URI is {uri}");
-	let url = uri_to_url(uri);
-
-	let link = link_store.create_link(url).await?;
-	let formatted = link.formatted();
-	info!("Shortening URL {} to {}", link.redirect_to, formatted);
-
-
-	Ok(
-		HttpResponse::Ok()
-			.content_type("text/plain; charset=utf-8")
-			.body(formatted)
-	)
-}
-
-/// Custom shortened URL, configured via Json.
-/// Also see [`LinkConfig`].
-#[post("/custom")]
-async fn create_shortened_custom(
-	link_store: web::Data<LinkStore>,
-	link_config: web::Json<LinkConfig>,
-) -> Result<impl Responder, ShortyError> {
-	let link_config = link_config.into_inner();
-
-	let link = link_store.create_link_with_config(link_config).await?;
-	let formatted = link.formatted();
-	info!("Shortening URL {} to {}", link.redirect_to, formatted);
-
-
-	Ok(
-		HttpResponse::Ok()
-			.content_type("text/plain; charset=utf-8")
-			.body(formatted)
-	)
-}
-
-#[allow(clippy::unused_async)]
-#[get("/favicon.ico")]
-async fn get_favicon() -> Result<impl Responder, ShortyError> {
-	debug!("Got request for favicon");
-	Ok(HttpResponse::NotFound().finish())
-}
-
 
 #[tokio::main]
 async fn main() -> Result<(), ShortyError> {
@@ -208,12 +126,12 @@ async fn main() -> Result<(), ShortyError> {
 			.app_data(pool.clone())
 			.service(get_config)
 			.service(index)
+			.service(api_docs)
 			.service(serve_file)
 			.service(get_favicon)
 			.service(get_shortened)
 			.service(create_shortened_custom)
 			.service(create_shortened)
-			.service(api_docs)
 	})
 		.bind((CONFIG.listen_url.as_str(), CONFIG.port))
 		.expect("Failed to bind port or listen address.")

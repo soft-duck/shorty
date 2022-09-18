@@ -27,7 +27,6 @@ toml = "0.5.9"
 chrono = "0.4.19"
 
 thiserror = "1.0.31"
-anyhow = "1.0.57"
 
 lazy_static = "1.4.0"
 dotenv = "0.15.0"

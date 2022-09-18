@@ -48,7 +48,7 @@ maxUses.min = 0;
 	ageDays.min = date.toISOString().split(".")[0];
 }
 
-// Add keylistener to the textfield, so we can also submit on enter
+// Add keylistener to the textfield, so that we can also submit on enter
 shortenField.addEventListener("keypress", preventDefaultEnter);
 shortenField.oninput = () => {
 	shortenField.classList.add(validationClass);
@@ -251,8 +251,6 @@ function getDurationSeconds() {
 	let durations = duration.value.split(":");
 	return durations[0] * 86400 + durations[1] * 3600 + durations[2] * 60 + durations[3];
 }
-
-// Duration field
 
 function durationControl(event) {
 	// permit arrow keys
