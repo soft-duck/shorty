@@ -17,7 +17,7 @@ use tracing_subscriber::EnvFilter;
 use crate::config::Config;
 use crate::config::SAMPLE_CONFIG;
 use crate::error::ShortyError;
-use crate::file_serving::endpoints::{index, serve_file};
+use crate::file_serving::endpoints::{api_docs, index, serve_file};
 use crate::link::{LinkConfig, LinkStore};
 use crate::util::{ensure_http_prefix, uri_to_url};
 
@@ -213,6 +213,7 @@ async fn main() -> Result<(), ShortyError> {
 			.service(get_shortened)
 			.service(create_shortened_custom)
 			.service(create_shortened)
+			.service(api_docs)
 	})
 		.bind((CONFIG.listen_url.as_str(), CONFIG.port))
 		.expect("Failed to bind port or listen address.")
