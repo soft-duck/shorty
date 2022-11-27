@@ -2,7 +2,7 @@
 
 Small link shortener
 
-An instance is currently hosted at https://s.u-are.gay
+An instance is currently hosted at https://s.flamion.dev
 if you want to try it out :)
 
 - [Self hosting](#self-hosting)
