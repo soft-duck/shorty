@@ -147,17 +147,17 @@ pub async fn serve_file(asset: web::Path<String>, req: HttpRequest) -> Result<im
 
 /// Returns a Tuple of Mime Type (as &str) and file content (as &[u8]).
 fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
-	const INDEX_HTML: &str = include_str!("../website/index.html");
-	const MAIN_JS: &str = include_str!("../website/main.js");
-	const STYLE_CSS: &str = include_str!("../website/style.css");
+	const INDEX_HTML: &[u8] = include_bytes!("../website/index.html");
+	const MAIN_JS: &[u8] = include_bytes!("../website/main.js");
+	const STYLE_CSS: &[u8] = include_bytes!("../website/style.css");
 	const ROBOTO_MONO_TTF: &[u8] = include_bytes!("../website/roboto_mono.ttf");
 
 	debug!("Getting embedded file: {file}");
 
 	match file {
-		"index.html" => { Some(("text/html", INDEX_HTML.as_bytes())) }
-		"main.js" => { Some(("text/javascript", MAIN_JS.as_bytes())) }
-		"style.css" => { Some(("text/css", STYLE_CSS.as_bytes())) }
+		"index.html" => { Some(("text/html", INDEX_HTML)) }
+		"main.js" => { Some(("text/javascript", MAIN_JS)) }
+		"style.css" => { Some(("text/css", STYLE_CSS)) }
 		"roboto_mono.ttf" => { Some(("font/ttf", ROBOTO_MONO_TTF)) }
 		_ => {
 			warn!("Got request for {file} but couldn't find embedded asset.");
