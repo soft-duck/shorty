@@ -69,7 +69,6 @@ async fn main() -> Result<(), ShortyError> {
 		.with_file(true)
 		.init();
 
-
 	if !Sqlite::database_exists(CONFIG.database_url.as_str()).await? {
 		Sqlite::create_database(CONFIG.database_url.as_str()).await.expect("Couldn't create database file");
 	}
