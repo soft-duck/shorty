@@ -10,7 +10,7 @@ use actix_web::{App, HttpServer, web};
 use lazy_static::lazy_static;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::Sqlite;
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::sqlite::{SqliteAutoVacuum, SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
 use tracing::{debug, error, info, Level};
 use tracing_subscriber::EnvFilter;
 
@@ -19,7 +19,7 @@ use crate::config::SAMPLE_CONFIG;
 use crate::endpoints::{api_docs, create_shortened, create_shortened_custom, get_config, get_favicon, get_shortened, index, serve_file};
 use crate::error::ShortyError;
 use crate::link::{LinkConfig, LinkStore};
-use crate::util::{ensure_http_prefix};
+use crate::util::ensure_http_prefix;
 
 pub mod util;
 pub mod link;
@@ -73,11 +73,16 @@ async fn main() -> Result<(), ShortyError> {
 		Sqlite::create_database(CONFIG.database_url.as_str()).await.expect("Couldn't create database file");
 	}
 
+	let db_options = SqliteConnectOptions::new()
+		.auto_vacuum(SqliteAutoVacuum::Full)
+		.journal_mode(SqliteJournalMode::Wal)
+		.filename(CONFIG.database_url.as_str());
+
 	let pool = SqlitePoolOptions::new()
 		.max_connections(5)
 		.min_connections(1)
 		.max_lifetime(Some(Duration::from_secs(60 * 60)))
-		.connect(CONFIG.database_url.as_str())
+		.connect_with(db_options)
 		.await?;
 
 	sqlx::migrate!()
