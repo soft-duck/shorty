@@ -92,10 +92,8 @@ impl Link {
 				return Err(ShortyError::CustomIDExceedsMaxLength);
 			}
 
-			let id = replace_illegal_url_chars(&id);
 
-
-			id
+			replace_illegal_url_chars(&id)
 		} else {
 			get_random_id(pool).await?
 		};

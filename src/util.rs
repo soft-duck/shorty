@@ -32,7 +32,7 @@ pub fn ensure_http_prefix(url: String) -> String {
 /// This function replaces illegal URL chars with ones that can be used in urls.
 /// Currently it just replaces spaces with underscores, additions might happen in the future.
 pub fn replace_illegal_url_chars(s: impl AsRef<str>) -> String {
-	s.as_ref().replace(" ", "_")
+	s.as_ref().replace(' ', "_")
 }
 
 /// Generates some random chars.
@@ -44,7 +44,7 @@ pub fn generate_random_chars() -> String {
 	rand::thread_rng().fill_bytes(&mut random_bytes);
 
 
-	base64::encode_config(&random_bytes, BASE64_CONFIG)
+	base64::encode_config(random_bytes, BASE64_CONFIG)
 }
 
 /// Calls [`generate_random_chars`] and looks if the id already exists in the database.
