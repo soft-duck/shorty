@@ -57,7 +57,9 @@ lazy_static! {
 
 #[tokio::main]
 async fn main() -> Result<(), ShortyError> {
-	dotenv::dotenv()?;
+	if Path::new(".env").exists() {
+		dotenv::dotenv()?;
+	}
 
 	let env_filter = EnvFilter::from_default_env()
 		.add_directive(Level::INFO.into())
