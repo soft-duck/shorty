@@ -8,12 +8,12 @@
 
 # This is the url that will be prefixed to the shortened ID.
 # The shortened link ajnIUh1H in the server response will look like `$public_url/ajnIUh1H`.
-# If the public url is `short.example.com` the link the server will respond with will be `http://short.example.com/ajnIUh1H`.
+# If the public url is `short.example.com` the link the server will respond with will be `http://shorty.example.com/ajnIUh1H`.
 # It is different from the listen_url if shorty is run behind a reverse proxy.
 public_url = 'http://localhost:7999'
 
 # Where the server should look for the database
-database_url = 'sqlite://database/database.db'
+database_location = 'database.db'
 
 # The maximum length a link may have.
 # Optional; default is 2500 chars length.

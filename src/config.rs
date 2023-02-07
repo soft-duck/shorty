@@ -18,7 +18,7 @@ pub struct Config {
 	pub port: u16,
 	/// The database connection String.
 	#[serde(skip_serializing)]
-	pub database_url: String,
+	pub database_location: String,
 	/// The maximum length a link should be allowed to have.
 	#[serde(default = "max_link_length_default")]
 	pub max_link_length: usize,

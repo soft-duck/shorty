@@ -69,14 +69,14 @@ async fn main() -> Result<(), ShortyError> {
 		.with_file(true)
 		.init();
 
-	if !Sqlite::database_exists(CONFIG.database_url.as_str()).await? {
-		Sqlite::create_database(CONFIG.database_url.as_str()).await.expect("Couldn't create database file");
+	if !Sqlite::database_exists(CONFIG.database_location.as_str()).await? {
+		Sqlite::create_database(CONFIG.database_location.as_str()).await.expect("Couldn't create database file");
 	}
 
 	let db_options = SqliteConnectOptions::new()
 		.auto_vacuum(SqliteAutoVacuum::Full)
 		.journal_mode(SqliteJournalMode::Wal)
-		.filename(CONFIG.database_url.as_str());
+		.filename(CONFIG.database_location.as_str());
 
 	let pool = SqlitePoolOptions::new()
 		.max_connections(5)
