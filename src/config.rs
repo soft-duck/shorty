@@ -92,5 +92,5 @@ const fn max_uses_default() -> i64 {
 }
 
 const fn valid_for_duration_default() -> i64 {
-	1000 * 60 * 60 * 24 // 24 hours
+	7 * 1000 * 60 * 60 * 24 // 7 days
 }

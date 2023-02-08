@@ -35,7 +35,7 @@ database_location = 'database.db'
 # default_max_uses = 0 # Zero means unlimited uses.
 
 # How long a link (by default) is valid for, in milliseconds.
-# Optional, default is 24 hours.
+# Optional, default is 7 days.
 # default_valid_for = 86400000 # 24 hours
 
 # Location of custom frontend.
