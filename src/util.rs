@@ -44,7 +44,7 @@ pub fn replace_illegal_url_chars(s: impl AsRef<str>) -> String {
 
 /// Generates some random chars.
 /// Used for the random ID.
-/// We generate a few random bytes (How many is defined by `URL_SIZE`.
+/// We generate a few random bytes (How many is defined by `URL_SIZE`).
 #[must_use]
 pub fn generate_random_chars() -> String {
 	let mut random_bytes: [u8; URL_SIZE] = [0; URL_SIZE];
