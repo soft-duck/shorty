@@ -1,9 +1,11 @@
 use actix_web::http::Uri;
-use base64::CharacterSet;
+use base64::{engine, Engine};
+use base64::engine::{DecodePaddingMode, GeneralPurpose, GeneralPurposeConfig};
 use chrono::Local;
 use rand::RngCore;
 use sqlx::{Pool, Sqlite};
 use tracing::error;
+
 use crate::link::Link;
 use crate::ShortyError;
 
@@ -11,7 +13,12 @@ use crate::ShortyError;
 /// They are then URL encoded, so a `URL_SIZE` of 4 corresponds to 6 chars without padding.
 const URL_SIZE: usize = 4;
 
-const BASE64_CONFIG: base64::Config = base64::Config::new(CharacterSet::UrlSafe, false);
+const BASE64_ENGINE: GeneralPurpose = engine::GeneralPurpose::new(
+	&base64::alphabet::URL_SAFE,
+	GeneralPurposeConfig::new()
+		.with_encode_padding(false)
+		.with_decode_padding_mode(DecodePaddingMode::Indifferent),
+);
 
 const RANDOM_ID_RETRIES: u32 = 3;
 
@@ -44,7 +51,7 @@ pub fn generate_random_chars() -> String {
 	rand::thread_rng().fill_bytes(&mut random_bytes);
 
 
-	base64::encode_config(random_bytes, BASE64_CONFIG)
+	BASE64_ENGINE.encode(random_bytes)
 }
 
 /// Calls [`generate_random_chars`] and looks if the id already exists in the database.
