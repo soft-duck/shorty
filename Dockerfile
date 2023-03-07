@@ -1,11 +1,10 @@
-FROM docker.io/rust:1.67-alpine as builder
-RUN apk add --no-cache musl-dev
+FROM docker.io/clux/muslrust:stable as builder
 WORKDIR /build
 COPY . ./
-RUN cargo build
+RUN cargo build --profile production
 
 
-FROM docker.io/alpine
+FROM scratch
 WORKDIR /root
-COPY --from=builder /build/target/debug/shorty .
+COPY --from=builder /build/target/x86_64-unknown-linux-musl/production/shorty .
 CMD ["./shorty"]
