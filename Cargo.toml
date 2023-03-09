@@ -38,3 +38,4 @@ features = ["runtime-tokio-rustls", "chrono", "migrate", "offline", "macros", "s
 [profile.production]
 inherits = "release"
 lto = "fat"
+strip = true
