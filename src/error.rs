@@ -18,7 +18,7 @@ pub enum ShortyError {
 	#[error(transparent)]
 	Database(#[from] sqlx::Error),
 	#[error(transparent)]
-	Dotenv(#[from] dotenv::Error),
+	Dotenvy(#[from] dotenvy::Error),
 }
 
 impl ResponseError for ShortyError {
