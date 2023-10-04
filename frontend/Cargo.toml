@@ -1,0 +1,54 @@
+[package]
+name = "frontend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gloo-net = "0.4"
+wasm-bindgen = "0.2"
+enclose = "1.1"
+tracing-web = "0.1"
+tracing = "0.1"
+strum_macros = "0.25"
+gloo-timers = "0.3"
+linked_hash_set = "0.1"
+thiserror = "1.0"
+
+# TODO decide which to use
+#color-eyre = "0.6"
+console_error_panic_hook = "0.1"
+
+[dependencies.strum]
+version = "0.25"
+features = ["derive"]
+
+[dependencies.reqwest]
+version = "0.11"
+features = ["json"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+# needed for UtcTime in tracing_subscriber
+[dependencies.time]
+version = "0.3"
+features = ["wasm-bindgen", "parsing", "local-offset", "macros"]
+
+[dependencies.tracing-subscriber]
+version = "0.3"
+features = ["time"]
+
+[dependencies.web-sys]
+version = "0.3"
+features = ["HtmlInputElement", "SubmitEvent", "Navigator", "Clipboard", "KeyboardEvent"]
+
+[dependencies.tiny_id]
+version = "0.1"
+features = ["js"]
+
+[dependencies.yew]
+version = "0.20"
+features = ["csr"]

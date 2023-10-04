@@ -7,3 +7,4 @@ database.db
 /database.db-wal
 .idea
 /.fleet/
+/frontend/dist
