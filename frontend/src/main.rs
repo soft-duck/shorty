@@ -1,11 +1,12 @@
-use crate::app::App;
-use crate::util::{fetch_server_config, setup_tracing_subscriber};
+use crate::{
+    app::App,
+    util::{fetch_server_config, setup_tracing_subscriber},
+};
 
-mod util;
-mod components;
 mod app;
+mod components;
 mod types;
-
+mod util;
 
 /*
     TODO:
@@ -18,7 +19,6 @@ mod types;
         - add server config params to html elements
         - css styling of the page
             - this includes redoing the message format or rephrasing error messages
-        - migrate to yew 0.21.0
         - rework build process (this includes changing the dockerfile)
     TODO less important:
         - decide between console_error_panic_hook and color_eyre and decide if any of these is needed at all

@@ -1,13 +1,11 @@
 use serde::Serialize;
-use time::{Date, OffsetDateTime};
-use time::format_description::well_known::Iso8601;
-use time::macros::time;
+use time::{format_description::well_known::Iso8601, macros::time, Date, OffsetDateTime};
 use web_sys::HtmlInputElement;
 
-use crate::components::expiration_mode::ExpirationType;
-use crate::components::link_form::LinkFormRefs;
-use crate::components::toggle::ToggleState;
-use crate::util::try_get_local_offset;
+use crate::{
+    components::{expiration_mode::ExpirationType, link_form::LinkFormRefs, toggle_input::ToggleInputState},
+    util::try_get_local_offset,
+};
 
 #[derive(Debug, Serialize)]
 pub struct LinkConfig {
@@ -46,7 +44,7 @@ impl LinkConfig {
                 if value > 0 {
                     max_uses = Some(value)
                 } else {
-                    return Err(())
+                    return Err(());
                 }
             }
         }
@@ -126,11 +124,14 @@ impl TryFrom<&LinkFormRefs> for LinkConfig {
                 id = LinkConfig::parse_id(refs).unwrap();
                 max_uses = LinkConfig::parse_max_uses(refs).unwrap();
 
-
                 if let Some(expiration_input) = refs.expiration_input.cast::<HtmlInputElement>() {
-                    if let Some(expiration_type_input) = refs.expiration_type.cast::<HtmlInputElement>() {
+                    if let Some(expiration_type_input) =
+                        refs.expiration_type.cast::<HtmlInputElement>()
+                    {
                         // TODO make this more concise
-                        if ExpirationType::from(ToggleState::from(expiration_type_input.checked())) == ExpirationType::Date {
+                        if ExpirationType::from(ToggleInputState::from(expiration_type_input.checked()))
+                            == ExpirationType::Date
+                        {
                             valid_for = LinkConfig::parse_date(refs).unwrap();
                         } else {
                             valid_for = LinkConfig::parse_duration(refs).unwrap();

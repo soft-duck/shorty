@@ -1,14 +1,113 @@
-use std::fmt::{Display, Formatter};
-use std::mem;
+use std::{
+    fmt::{Display, Formatter},
+    mem,
+};
 
 use strum::FromRepr;
 use web_sys::{DragEvent, Event, FocusEvent, HtmlInputElement, KeyboardEvent, MouseEvent};
-use yew::{AttrValue, Callback, Component, Context, Html, html, NodeRef, Properties};
+use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
 
-pub struct DurationInput {
-    duration: Duration,
-    selection: Option<Selection>,
-    backspace: bool,
+fn cursor_location(input: &HtmlInputElement) -> u32 {
+    let direction = input.selection_direction().unwrap().unwrap();
+
+    let mut start = input.selection_start().unwrap().unwrap();
+    let mut end = input.selection_end().unwrap().unwrap();
+
+    if direction == "forward" {
+        mem::swap(&mut start, &mut end);
+    }
+
+    start
+}
+
+struct Duration {
+    seconds: u32,
+    sub_cursor: bool,
+}
+
+impl Duration {
+    const MAX_SECONDS: i32 = 99 * 60 * 60 + 59 * 60 + 59;
+
+    fn to_parts(&self) -> Parts {
+        let hours = self.seconds as i32 / Parts::SECONDS_HOUR;
+        let reminder = self.seconds as i32 % Parts::SECONDS_HOUR;
+        let minutes = reminder / Parts::SECONDS_MINUTES;
+        let seconds = reminder % Parts::SECONDS_MINUTES;
+
+        Parts {
+            hours,
+            minutes,
+            seconds,
+        }
+    }
+
+    fn from_parts(parts: Parts) -> Self {
+        Self {
+            seconds: parts.to_seconds(),
+            sub_cursor: false,
+        }
+    }
+
+    fn add_parts(&mut self, parts: Parts) {
+        self.sub_cursor = false;
+
+        let seconds = self.seconds as i32
+            + parts.seconds
+            + parts.minutes * Parts::SECONDS_MINUTES
+            + parts.hours * Parts::SECONDS_HOUR;
+
+        if seconds > Self::MAX_SECONDS || seconds < 0 {
+            return;
+        }
+
+        self.seconds = seconds as u32;
+    }
+
+    fn reset(&mut self) {
+        self.seconds = 0;
+        self.sub_cursor = false;
+    }
+}
+
+impl Display for Duration {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let parts = self.to_parts();
+
+        write!(
+            f,
+            "{:02}:{:02}:{:02}",
+            parts.hours, parts.minutes, parts.seconds
+        )
+    }
+}
+
+#[derive(Copy, Clone)]
+struct Parts {
+    hours: i32,
+    minutes: i32,
+    seconds: i32,
+}
+
+impl Parts {
+    const SECONDS_HOUR: i32 = 60 * 60;
+    const SECONDS_MINUTES: i32 = 60;
+
+    fn zero_selection(&mut self, selection: Selection) {
+        match selection {
+            Selection::Hours => self.hours = 0,
+            Selection::Minutes => self.minutes = 0,
+            Selection::Seconds => self.seconds = 0,
+        }
+    }
+
+    fn to_seconds(&self) -> u32 {
+        (self.hours * Self::SECONDS_HOUR + self.minutes * Self::SECONDS_MINUTES + self.seconds)
+            as u32
+    }
+
+    fn valid(&self) -> bool {
+        self.seconds < 60 && self.minutes < 60 && self.hours < 100
+    }
 }
 
 #[derive(FromRepr, Copy, Clone, PartialEq)]
@@ -55,7 +154,7 @@ impl Selection {
             minutes: 0,
             seconds: 0,
         };
-        
+
         match self {
             Selection::Hours => parts.hours = n,
             Selection::Minutes => parts.minutes = n,
@@ -66,113 +165,11 @@ impl Selection {
     }
 }
 
-struct Duration {
-    seconds: u32,
-    sub_cursor: bool,
-}
-
-#[derive(Copy, Clone)]
-struct Parts {
-    hours: i32,
-    minutes: i32,
-    seconds: i32,
-}
-
-impl Parts {
-    const SECONDS_HOUR: i32 = 60 * 60;
-    const SECONDS_MINUTES: i32 = 60;
-
-    fn zero_selection(&mut self, selection: Selection) {
-        match selection {
-            Selection::Hours => self.hours = 0,
-            Selection::Minutes => self.minutes = 0,
-            Selection::Seconds => self.seconds = 0,
-        }
-    }
-
-    fn to_seconds(&self) -> u32 {
-        (self.hours * Self::SECONDS_HOUR + self.minutes * Self::SECONDS_MINUTES + self.seconds) as u32
-    }
-
-    fn valid(&self) -> bool {
-        self.seconds < 60 && self.minutes < 60 && self.hours < 100
-    }
-}
-
-impl Duration {
-    const MAX_SECONDS: i32 = 99 * 60 * 60 + 59 * 60 + 59;
-
-    fn to_parts(&self) -> Parts {
-        let hours = self.seconds as i32 / Parts::SECONDS_HOUR;
-        let reminder = self.seconds as i32 % Parts::SECONDS_HOUR;
-        let minutes = reminder / Parts::SECONDS_MINUTES;
-        let seconds = reminder % Parts::SECONDS_MINUTES;
-
-        Parts {
-            hours,
-            minutes,
-            seconds,
-        }
-    }
-
-    fn from_parts(parts: Parts) -> Self {
-        Self {
-            seconds: parts.to_seconds(),
-            sub_cursor: false,
-        }
-    }
-
-    fn add_parts(&mut self, parts: Parts) {
-        self.sub_cursor = false;
-
-        let seconds = self.seconds as i32 + parts.seconds +
-            parts.minutes * Parts::SECONDS_MINUTES +
-            parts.hours * Parts::SECONDS_HOUR;
-
-        if seconds > Self::MAX_SECONDS || seconds < 0 {
-            return;
-        }
-
-        self.seconds = seconds as u32;
-    }
-
-    fn reset(&mut self) {
-        self.seconds = 0;
-        self.sub_cursor = false;
-    }
-}
-
-impl Display for Duration {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let parts = self.to_parts();
-
-        write!(f, "{:02}:{:02}:{:02}", parts.hours, parts.minutes, parts.seconds)
-    }
-}
-
-#[derive(Properties, PartialEq)]
-pub struct DurationInputProps {
-    pub input_ref: NodeRef,
-}
-
-fn cursor_location(input: &HtmlInputElement) -> u32 {
-    let direction = input.selection_direction().unwrap().unwrap();
-
-    let mut start = input.selection_start().unwrap().unwrap();
-    let mut end = input.selection_end().unwrap().unwrap();
-
-    if direction == "forward" {
-        mem::swap(&mut start, &mut end);
-    }
-
-    start
-}
-
 #[derive(PartialEq)]
 pub enum DurationInputMessage {
     Key(Key),
     MouseUp,
-    Focus(bool)
+    Focus(bool),
 }
 
 #[derive(PartialEq)]
@@ -188,6 +185,18 @@ enum Arrow {
     Left,
     Up,
     Down,
+}
+
+#[derive(Properties, PartialEq)]
+pub struct DurationInputProps {
+    pub input_ref: NodeRef,
+}
+
+
+pub struct DurationInput {
+    duration: Duration,
+    selection: Option<Selection>,
+    backspace: bool,
 }
 
 impl DurationInput {
@@ -296,7 +305,7 @@ impl Component for DurationInput {
         Self {
             duration: Duration {
                 seconds: 0,
-                sub_cursor: false
+                sub_cursor: false,
             },
             selection: None,
             backspace: false,
@@ -329,9 +338,7 @@ impl Component for DurationInput {
                 - add up/down buttons
         */
 
-        let send_key = ctx.link().callback(|key| {
-            DurationInputMessage::Key(key)
-        });
+        let send_key = ctx.link().callback(|key| DurationInputMessage::Key(key));
 
         // TODO allow numpad and other numbers
         let onkeydown = Callback::from(move |event: KeyboardEvent| {
@@ -360,13 +367,13 @@ impl Component for DurationInput {
             event.prevent_default();
         });
 
-        let onfocus = ctx.link().callback(|event: FocusEvent| {
-            DurationInputMessage::Focus(true)
-        });
+        let onfocus = ctx
+            .link()
+            .callback(|event: FocusEvent| DurationInputMessage::Focus(true));
 
-        let onblur = ctx.link().callback(|event: FocusEvent| {
-            DurationInputMessage::Focus(false)
-        });
+        let onblur = ctx
+            .link()
+            .callback(|event: FocusEvent| DurationInputMessage::Focus(false));
 
         let ondrop = Callback::from(|event: DragEvent| {
             event.prevent_default();

@@ -1,6 +1,6 @@
-use yew::{AttrValue, Children, Component, Context, Html, html, NodeRef, Properties};
+use yew::{html, AttrValue, Children, Component, Context, Html, NodeRef, Properties};
 
-use super::toggle::{LabelPosition, Toggle, ToggleState};
+use super::toggle_input::{LabelPosition, ToggleInput, ToggleInputState};
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum AdvancedModeVisibility {
@@ -12,13 +12,18 @@ impl AdvancedModeVisibility {
     fn style(&self) -> AttrValue {
         match self {
             AdvancedModeVisibility::Collapsed => AttrValue::from("visibility: collapse;"),
-            AdvancedModeVisibility::Expanded => AttrValue::from("visibility: visible;")
+            AdvancedModeVisibility::Expanded => AttrValue::from("visibility: visible;"),
         }
     }
 }
 
-pub struct AdvancedMode {
-    visibility: AdvancedModeVisibility,
+impl From<ToggleInputState> for AdvancedModeVisibility {
+    fn from(value: ToggleInputState) -> Self {
+        match value {
+            ToggleInputState::On => AdvancedModeVisibility::Expanded,
+            ToggleInputState::Off => AdvancedModeVisibility::Collapsed,
+        }
+    }
 }
 
 #[derive(Properties, PartialEq)]
@@ -28,15 +33,9 @@ pub struct AdvancedModeProps {
     pub toggle_ref: NodeRef,
 }
 
-impl From<ToggleState> for AdvancedModeVisibility {
-    fn from(value: ToggleState) -> Self {
-        match value {
-            ToggleState::On => AdvancedModeVisibility::Expanded,
-            ToggleState::Off => AdvancedModeVisibility::Collapsed,
-        }
-    }
+pub struct AdvancedMode {
+    visibility: AdvancedModeVisibility,
 }
-
 
 impl Component for AdvancedMode {
     type Message = AdvancedModeVisibility;
@@ -44,7 +43,7 @@ impl Component for AdvancedMode {
 
     fn create(_: &Context<Self>) -> Self {
         Self {
-            visibility: AdvancedModeVisibility::Collapsed
+            visibility: AdvancedModeVisibility::Collapsed,
         }
     }
 
@@ -59,23 +58,27 @@ impl Component for AdvancedMode {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let callback = ctx.link()
-            .callback(AdvancedModeVisibility::from);
+        let callback = ctx.link().callback(AdvancedModeVisibility::from);
 
-        let elements = ctx.props().children.iter().map(|f| {
-            html! {
-                <>
-                    <div>
-                        { f.clone() }
-                    </div>
-                </>
-            }
-        }).collect::<Html>();
+        let elements = ctx
+            .props()
+            .children
+            .iter()
+            .map(|f| {
+                html! {
+                    <>
+                        <div>
+                            { f.clone() }
+                        </div>
+                    </>
+                }
+            })
+            .collect::<Html>();
 
         html! {
             <>
                 <div>
-                    <Toggle checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" position={ LabelPosition::Left } { callback }/>
+                    <ToggleInput checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" position={ LabelPosition::Left } { callback }/>
                 </div>
                 <div style={ self.visibility.style() }>
                     { elements }

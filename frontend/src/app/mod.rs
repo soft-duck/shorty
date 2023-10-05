@@ -1,8 +1,7 @@
 mod index;
 
-use yew::{Component, Context, Html, html};
-
 use index::Index;
+use yew::{html, Component, Context, Html};
 
 pub struct App;
 

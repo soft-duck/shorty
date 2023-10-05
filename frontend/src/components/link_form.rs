@@ -2,21 +2,15 @@ use reqwest::Client;
 use tracing::debug;
 use wasm_bindgen::JsCast;
 use web_sys::SubmitEvent;
-use yew::{AttrValue, Callback, Component, Context, Html, html, NodeRef, Properties};
+use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
 
-use crate::endpoint;
-use crate::types::link_config::LinkConfig;
-
-use super::advanced_mode::AdvancedMode;
-use super::expiration_mode::ExpirationMode;
-use super::link_input::{LinkInput, LinkInputMessage};
-use super::message_box::Message;
-
-#[derive(Default)]
-pub struct LinkForm {
-    state: LinkFormMessage,
-    refs: LinkFormRefs,
-}
+use super::{
+    advanced_mode::AdvancedMode,
+    expiration_mode::ExpirationMode,
+    link_input::{LinkInput, LinkInputMessage},
+    message_box::Message,
+};
+use crate::{endpoint, types::link_config::LinkConfig};
 
 #[derive(Default, Clone)]
 pub struct LinkFormRefs {
@@ -28,16 +22,22 @@ pub struct LinkFormRefs {
     pub expiration_type: NodeRef,
 }
 
-#[derive(Properties, PartialEq)]
-pub struct LinkFormPros {
-    pub callback: Callback<Message>,
-}
-
 #[derive(Clone, Debug, Default)]
 pub enum LinkFormMessage {
     #[default]
     Input,
     Display(AttrValue),
+}
+
+#[derive(Properties, PartialEq)]
+pub struct LinkFormPros {
+    pub callback: Callback<Message>,
+}
+
+#[derive(Default)]
+pub struct LinkForm {
+    state: LinkFormMessage,
+    refs: LinkFormRefs,
 }
 
 impl Component for LinkForm {
@@ -70,7 +70,8 @@ impl Component for LinkForm {
 
             scope.send_future(async move {
                 let client = Client::new();
-                let result = client.post(endpoint!("custom"))
+                let result = client
+                    .post(endpoint!("custom"))
                     .json(&link_config)
                     .send()
                     .await;
@@ -81,12 +82,20 @@ impl Component for LinkForm {
 
                 let text = response.text().await.unwrap();
 
-                debug!("Received: {:#?}\n from /custom with code {}", text, status.as_u16());
+                debug!(
+                    "Received: {:#?}\n from /custom with code {}",
+                    text,
+                    status.as_u16()
+                );
 
                 if status.is_success() {
                     LinkFormMessage::Display(AttrValue::from(text))
                 } else {
-                    d.emit(Message::Error(AttrValue::from(format!("[Temporary] Got '{}' with code {}", text, status.as_u16()))));
+                    d.emit(Message::Error(AttrValue::from(format!(
+                        "[Temporary] Got '{}' with code {}",
+                        text,
+                        status.as_u16()
+                    ))));
                     LinkFormMessage::Input
                 }
             });
@@ -94,9 +103,7 @@ impl Component for LinkForm {
             event.prevent_default();
         });
 
-        let clear_callback = ctx.link().callback(|_| {
-            LinkFormMessage::Input
-        });
+        let clear_callback = ctx.link().callback(|_| LinkFormMessage::Input);
 
         html! {
             <>

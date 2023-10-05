@@ -1,26 +1,14 @@
 use gloo_timers::callback::Timeout;
 use tracing::debug;
 use web_sys::HtmlInputElement;
-use yew::{AttrValue, Callback, Component, Context, Html, html, NodeRef, Properties};
+use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
 
 use super::link_form::LinkFormMessage;
-
-pub struct LinkInput {
-    state: LinkInputState,
-    input_ref: NodeRef,
-}
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum LinkInputState {
     Copied,
     Copy,
-}
-
-#[derive(Properties, PartialEq)]
-pub struct LinkInputProps {
-    pub message: LinkInputMessage,
-    pub clear_callback: Callback<()>,
-    pub input_ref: NodeRef,
 }
 
 #[derive(Default, PartialEq, Debug)]
@@ -37,11 +25,21 @@ impl From<LinkFormMessage> for LinkInputMessage {
     fn from(value: LinkFormMessage) -> Self {
         match value {
             LinkFormMessage::Input => Self::Clear,
-            LinkFormMessage::Display(m) => Self::Update {
-                link: m,
-            }
+            LinkFormMessage::Display(m) => Self::Update { link: m },
         }
     }
+}
+
+#[derive(Properties, PartialEq)]
+pub struct LinkInputProps {
+    pub message: LinkInputMessage,
+    pub clear_callback: Callback<()>,
+    pub input_ref: NodeRef,
+}
+
+pub struct LinkInput {
+    state: LinkInputState,
+    input_ref: NodeRef,
 }
 
 impl Component for LinkInput {
@@ -86,26 +84,24 @@ impl Component for LinkInput {
         if let LinkInputMessage::Update { link } = &ctx.props().message {
             button_type = "button";
             content = Some(link.clone());
-            oninput = Some(ctx.link().callback(|_| {
-                LinkInputMessage::Clear
-            }));
+            oninput = Some(ctx.link().callback(|_| LinkInputMessage::Clear));
 
             match self.state {
                 LinkInputState::Copy => {
                     text = "Copy";
-                    onclick = Some(ctx.link().callback(|_| {
-                        LinkInputMessage::UpdateState(LinkInputState::Copied)
-                    }));
-
+                    onclick = Some(
+                        ctx.link()
+                            .callback(|_| LinkInputMessage::UpdateState(LinkInputState::Copied)),
+                    );
                 },
                 LinkInputState::Copied => {
                     text = "Copied";
-                    let reset = ctx.link().callback(|_| {
-                        LinkInputMessage::UpdateState(LinkInputState::Copy)
-                    });
+                    let reset = ctx
+                        .link()
+                        .callback(|_| LinkInputMessage::UpdateState(LinkInputState::Copy));
 
                     let timeout = Timeout::new(1_000, move || {
-                       reset.emit(());
+                        reset.emit(());
                     });
 
                     timeout.forget();

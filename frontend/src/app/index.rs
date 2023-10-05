@@ -1,9 +1,11 @@
 use gloo_timers::callback::Timeout;
 use linked_hash_set::LinkedHashSet;
-use yew::{Component, Context, html, Html};
-use crate::components::message_box::Message;
-use crate::components::link_form::LinkForm;
-use crate::components::message_box::MessageBox;
+use yew::{html, Component, Context, Html};
+
+use crate::components::{
+    link_form::LinkForm,
+    message_box::{Message, MessageBox},
+};
 
 pub enum IndexMessage {
     AddMessage(Message),
@@ -36,16 +38,16 @@ impl Component for Index {
 
                 timeout.forget();
             },
-            IndexMessage::ClearMessage(m) => { self.messages.remove(&m); },
+            IndexMessage::ClearMessage(m) => {
+                self.messages.remove(&m);
+            },
         }
 
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let callback = ctx.link().callback(|m| {
-            IndexMessage::AddMessage(m)
-        });
+        let callback = ctx.link().callback(|m| IndexMessage::AddMessage(m));
 
         html! {
             <>

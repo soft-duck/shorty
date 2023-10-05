@@ -1,11 +1,10 @@
 use enclose::enclose;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlInputElement;
-use yew::{AttrValue, Callback, Component, Context, Html, html, InputEvent, NodeRef, Properties};
-
-use crate::util::generate_id;
+use yew::{html, AttrValue, Callback, Component, Context, Html, InputEvent, NodeRef, Properties};
 
 use super::advanced_mode::AdvancedModeVisibility;
+use crate::util::generate_id;
 
 #[derive(Copy, Clone, PartialEq, Default)]
 pub enum LabelPosition {
@@ -15,18 +14,18 @@ pub enum LabelPosition {
 }
 
 #[derive(Copy, Clone, PartialEq)]
-pub enum ToggleState {
+pub enum ToggleInputState {
     On = 1,
     Off = 0,
 }
 
-impl ToggleState {
+impl ToggleInputState {
     pub fn checked(&self) -> bool {
         *self == Self::On
     }
 }
 
-impl From<bool> for ToggleState {
+impl From<bool> for ToggleInputState {
     fn from(value: bool) -> Self {
         match value {
             true => Self::On,
@@ -36,36 +35,36 @@ impl From<bool> for ToggleState {
 }
 
 // could be replaced with a cast if the enum values are assigned the same values
-impl From<AdvancedModeVisibility> for ToggleState {
+impl From<AdvancedModeVisibility> for ToggleInputState {
     fn from(value: AdvancedModeVisibility) -> Self {
         match value {
-            AdvancedModeVisibility::Expanded => ToggleState::On,
-            AdvancedModeVisibility::Collapsed => ToggleState::Off,
+            AdvancedModeVisibility::Expanded => ToggleInputState::On,
+            AdvancedModeVisibility::Collapsed => ToggleInputState::Off,
         }
     }
 }
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct ToggleProps {
+pub struct ToggleInputProps {
     pub label: AttrValue,
     #[prop_or_default]
     pub position: LabelPosition,
-    pub callback: Option<Callback<ToggleState>>,
+    pub callback: Option<Callback<ToggleInputState>>,
     pub checkbox_ref: NodeRef,
 }
 
-pub struct Toggle {
-    state: ToggleState,
+pub struct ToggleInput {
+    state: ToggleInputState,
     id: AttrValue,
 }
 
-impl Component for Toggle {
-    type Message = ToggleState;
-    type Properties = ToggleProps;
+impl Component for ToggleInput {
+    type Message = ToggleInputState;
+    type Properties = ToggleInputProps;
 
     fn create(_: &Context<Self>) -> Self {
         Self {
-            state: ToggleState::Off,
+            state: ToggleInputState::Off,
             id: AttrValue::from(generate_id()),
         }
     }

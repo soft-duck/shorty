@@ -1,36 +1,17 @@
 use strum_macros::Display;
-use time::format_description::well_known::Iso8601;
-use time::OffsetDateTime;
-use yew::{Component, Context, Html, html, NodeRef, Properties};
+use time::{format_description::well_known::Iso8601, OffsetDateTime};
+use yew::{html, Component, Context, Html, NodeRef, Properties};
 
+use super::{
+    duration_input::DurationInput,
+    toggle_input::{LabelPosition, ToggleInput, ToggleInputState},
+};
 use crate::util::try_get_local_offset;
-
-use super::duration_input::DurationInput;
-use super::toggle::{LabelPosition, Toggle, ToggleState};
-
-pub struct ExpirationMode {
-    input_type: ExpirationType,
-}
-
-#[derive(Properties, PartialEq)]
-pub struct ExpirationModeProps {
-    pub input_ref: NodeRef,
-    pub toggle_ref: NodeRef,
-}
 
 #[derive(Copy, Clone, PartialEq, Display)]
 pub enum ExpirationType {
     Date,
     Duration,
-}
-
-impl From<ToggleState> for ExpirationType {
-    fn from(value: ToggleState) -> Self {
-        match value {
-            ToggleState::On => ExpirationType::Date,
-            ToggleState::Off => ExpirationType::Duration,
-        }
-    }
 }
 
 impl ExpirationType {
@@ -42,13 +23,32 @@ impl ExpirationType {
     }
 }
 
+impl From<ToggleInputState> for ExpirationType {
+    fn from(value: ToggleInputState) -> Self {
+        match value {
+            ToggleInputState::On => ExpirationType::Date,
+            ToggleInputState::Off => ExpirationType::Duration,
+        }
+    }
+}
+
+#[derive(Properties, PartialEq)]
+pub struct ExpirationModeProps {
+    pub input_ref: NodeRef,
+    pub toggle_ref: NodeRef,
+}
+
+pub struct ExpirationMode {
+    input_type: ExpirationType,
+}
+
 impl Component for ExpirationMode {
     type Message = ExpirationType;
     type Properties = ExpirationModeProps;
 
     fn create(_: &Context<Self>) -> Self {
         Self {
-            input_type: ExpirationType::from(ToggleState::Off),
+            input_type: ExpirationType::from(ToggleInputState::Off),
         }
     }
 
@@ -74,7 +74,7 @@ impl Component for ExpirationMode {
                     <DurationInput input_ref={ ctx.props().input_ref.clone() }/>
                 }
 
-                <Toggle checkbox_ref={ ctx.props().toggle_ref.clone() } label={ self.input_type.flipped().to_string() } position={ LabelPosition::Right } { callback }/>
+                <ToggleInput checkbox_ref={ ctx.props().toggle_ref.clone() } label={ self.input_type.flipped().to_string() } position={ LabelPosition::Right } { callback }/>
             </>
         }
     }

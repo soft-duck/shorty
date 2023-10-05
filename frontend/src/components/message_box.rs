@@ -1,12 +1,5 @@
 use linked_hash_set::LinkedHashSet;
-use yew::{AttrValue, Component, Context, Html, html, Properties};
-
-pub struct MessageBox;
-
-#[derive(Properties, PartialEq)]
-pub struct MessageBoxProps {
-    pub messages: LinkedHashSet<Message>,
-}
+use yew::{html, AttrValue, Component, Context, Html, Properties};
 
 #[derive(PartialEq, Clone, Hash, Eq)]
 pub enum Message {
@@ -23,6 +16,7 @@ impl Message {
             Message::Info(m) => m,
         }
     }
+
     fn to_html(&self) -> Html {
         // TODO make more concise
         let message_type = match self {
@@ -41,6 +35,13 @@ impl Message {
     }
 }
 
+#[derive(Properties, PartialEq)]
+pub struct MessageBoxProps {
+    pub messages: LinkedHashSet<Message>,
+}
+
+pub struct MessageBox;
+
 impl Component for MessageBox {
     type Message = ();
     type Properties = MessageBoxProps;
@@ -50,9 +51,12 @@ impl Component for MessageBox {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let messages = ctx.props().messages.iter().map(|m| {
-            m.to_html()
-        }).collect::<Html>();
+        let messages = ctx
+            .props()
+            .messages
+            .iter()
+            .map(|m| m.to_html())
+            .collect::<Html>();
 
         html! {
             <>
