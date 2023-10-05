@@ -3,7 +3,7 @@ use tracing::debug;
 use web_sys::HtmlInputElement;
 use yew::{AttrValue, Callback, Component, Context, Html, html, NodeRef, Properties};
 
-use crate::link_form::LinkFormMessage;
+use super::link_form::LinkFormMessage;
 
 pub struct LinkInput {
     state: LinkInputState,

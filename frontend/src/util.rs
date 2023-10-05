@@ -1,11 +1,11 @@
 use std::ops::Deref;
 use std::sync::{Mutex, OnceLock, RwLock};
 
-use serde::Deserialize;
 use time::UtcOffset;
 use tiny_id::{ExhaustionStrategy, ShortCodeGenerator};
 use tracing::{debug, warn};
 use yew::platform::spawn_local;
+use crate::types::ServerConfig;
 
 static SHORT_CODE_GENERATOR: OnceLock<Mutex<ShortCodeGenerator<char>>> = OnceLock::new();
 static SERVER_CONFIG: OnceLock<RwLock<ServerConfig>> = OnceLock::new();
@@ -34,16 +34,6 @@ macro_rules! endpoint {
         let res = format!("{}/{}", *crate::util::origin(), format_args!($($arg)*));
         res
     }}
-}
-
-#[derive(Deserialize, Debug)]
-pub struct ServerConfig {
-    pub public_url: String,
-    pub max_link_length: usize,
-    pub max_json_size: usize,
-    pub max_custom_id_length: usize,
-    pub default_max_uses: i64,
-    pub default_valid_for: i64,
 }
 
 pub fn fetch_server_config() {

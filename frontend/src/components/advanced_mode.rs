@@ -1,6 +1,6 @@
 use yew::{AttrValue, Children, Component, Context, Html, html, NodeRef, Properties};
 
-use crate::toggle::{LabelPosition, Toggle, ToggleState};
+use super::toggle::{LabelPosition, Toggle, ToggleState};
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum AdvancedModeVisibility {

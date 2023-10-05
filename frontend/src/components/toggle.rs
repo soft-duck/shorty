@@ -3,8 +3,9 @@ use wasm_bindgen::JsCast;
 use web_sys::HtmlInputElement;
 use yew::{AttrValue, Callback, Component, Context, Html, html, InputEvent, NodeRef, Properties};
 
-use crate::advanced_mode::AdvancedModeVisibility;
 use crate::util::generate_id;
+
+use super::advanced_mode::AdvancedModeVisibility;
 
 #[derive(Copy, Clone, PartialEq, Default)]
 pub enum LabelPosition {

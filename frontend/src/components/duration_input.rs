@@ -352,7 +352,6 @@ impl Component for DurationInput {
             event.prevent_default();
         });
 
-        let input_ref = ctx.props().input_ref.clone();
         let onmouseup = ctx.link().callback(|event: MouseEvent| {
             event.prevent_default();
             DurationInputMessage::MouseUp

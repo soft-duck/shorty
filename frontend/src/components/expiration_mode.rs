@@ -3,9 +3,10 @@ use time::format_description::well_known::Iso8601;
 use time::OffsetDateTime;
 use yew::{Component, Context, Html, html, NodeRef, Properties};
 
-use crate::duration_input::DurationInput;
-use crate::toggle::{LabelPosition, Toggle, ToggleState};
 use crate::util::try_get_local_offset;
+
+use super::duration_input::DurationInput;
+use super::toggle::{LabelPosition, Toggle, ToggleState};
 
 pub struct ExpirationMode {
     input_type: ExpirationType,

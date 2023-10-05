@@ -4,12 +4,13 @@ use wasm_bindgen::JsCast;
 use web_sys::SubmitEvent;
 use yew::{AttrValue, Callback, Component, Context, Html, html, NodeRef, Properties};
 
-use crate::advanced_mode::AdvancedMode;
 use crate::endpoint;
-use crate::expiration_mode::ExpirationMode;
-use crate::link_config::LinkConfig;
-use crate::link_input::{LinkInput, LinkInputMessage};
-use crate::message_box::Message;
+use crate::types::link_config::LinkConfig;
+
+use super::advanced_mode::AdvancedMode;
+use super::expiration_mode::ExpirationMode;
+use super::link_input::{LinkInput, LinkInputMessage};
+use super::message_box::Message;
 
 #[derive(Default)]
 pub struct LinkForm {
@@ -57,21 +58,15 @@ impl Component for LinkForm {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        // let update = ctx.link().callback(|m| m);
         let display = ctx.props().callback.clone();
         let scope = ctx.link().clone();
         let refs = self.refs.clone();
 
         let callback = Callback::from(move |event: SubmitEvent| {
-            // let target: EventTarget = event.target().unwrap();
-            // let form = target.dyn_into::<HtmlFormElement>().unwrap();
-            // let form_data = FormData::new_with_form(&form).unwrap();
-
             let link_config = LinkConfig::try_from(&refs).unwrap();
 
             debug!("Sending: {:#?}\n to /custom", link_config);
             let d = display.clone();
-            // info!("works log");
 
             scope.send_future(async move {
                 let client = Client::new();
@@ -95,8 +90,6 @@ impl Component for LinkForm {
                     LinkFormMessage::Input
                 }
             });
-
-            // display.emit(Message::Info(AttrValue::from("Working!")));
 
             event.prevent_default();
         });
