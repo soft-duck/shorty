@@ -2,7 +2,7 @@ use std::env::VarError;
 use serde::{Serialize, Deserialize};
 use tracing::error;
 
-pub const SAMPLE_CONFIG: &str = include_str!("../../config.toml.sample");
+pub const SAMPLE_CONFIG: &str = include_str!("../config.toml.sample");
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
