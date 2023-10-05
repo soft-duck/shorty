@@ -150,6 +150,7 @@ fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
 	const INDEX_HTML: &[u8] = include_bytes!("../../frontend/dist/index.html");
 	const JS: &[u8] = include_bytes!("../../frontend/dist/frontend.js");
 	const WASM: &[u8] = include_bytes!("../../frontend/dist/frontend_bg.wasm");
+	const CSS: &[u8] = include_bytes!("../../frontend/dist/index.css");
 	// const STYLE_CSS: &[u8] = include_bytes!("../website/style.css");
 	// const ROBOTO_MONO_TTF: &[u8] = include_bytes!("../website/roboto_mono.ttf");
 
@@ -159,6 +160,7 @@ fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
 		"index.html" => { Some(("text/html", INDEX_HTML)) }
 		"frontend.js" => { Some(("text/javascript", JS)) },
 		"frontend_bg.wasm" => { Some(("application/wasm", WASM)) },
+		"index.css" => { Some(("text/css", CSS)) },
 		// "style.css" => { Some(("text/css", STYLE_CSS)) }
 		// "roboto_mono.ttf" => { Some(("font/ttf", ROBOTO_MONO_TTF)) }
 		_ => {
