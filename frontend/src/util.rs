@@ -3,7 +3,11 @@ use std::sync::{Mutex, OnceLock, RwLock};
 
 use time::UtcOffset;
 use tiny_id::{ExhaustionStrategy, ShortCodeGenerator};
-use tracing::{debug, warn};
+use tracing::{debug, Level, warn};
+use tracing_subscriber::fmt::time::UtcTime;
+use tracing_subscriber::fmt::writer::MakeWriterExt;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use yew::platform::spawn_local;
 use crate::types::ServerConfig;
 
@@ -63,4 +67,22 @@ pub fn try_get_local_offset() -> UtcOffset {
 
 pub fn server_config() -> Option<impl Deref<Target = ServerConfig>> {
     SERVER_CONFIG.get().map(|c| c.read().unwrap())
+}
+
+pub fn setup_tracing_subscriber() {
+    // done with consts because of https://github.com/rust-lang/rust/issues/15701
+    #[cfg(debug_assertions)]
+    const LEVEL: Level = Level::DEBUG;
+
+    #[cfg(not(debug_assertions))]
+    const LEVEL: Level = Level::WARN;
+
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_ansi(false)
+        .with_timer(UtcTime::rfc_3339())
+        .with_writer(tracing_web::MakeConsoleWriter.with_max_level(LEVEL));
+
+    tracing_subscriber::registry()
+        .with(fmt_layer)
+        .init();
 }

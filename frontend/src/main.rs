@@ -1,35 +1,10 @@
-use tracing::Level;
-use tracing_subscriber::fmt::time::UtcTime;
-use tracing_subscriber::fmt::writer::MakeWriterExt;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
-use yew::prelude::*;
-
 use crate::app::App;
-use crate::util::fetch_server_config;
+use crate::util::{fetch_server_config, setup_tracing_subscriber};
 
 mod util;
 mod components;
 mod app;
 mod types;
-
-fn setup_tracing_subscriber() {
-    // done with consts because of https://github.com/rust-lang/rust/issues/15701
-    #[cfg(debug_assertions)]
-    const LEVEL: Level = Level::DEBUG;
-
-    #[cfg(not(debug_assertions))]
-    const LEVEL: Level = Level::WARN;
-
-    let fmt_layer = tracing_subscriber::fmt::layer()
-        .with_ansi(false)
-        .with_timer(UtcTime::rfc_3339())
-        .with_writer(tracing_web::MakeConsoleWriter.with_max_level(LEVEL));
-
-    tracing_subscriber::registry()
-        .with(fmt_layer)
-        .init();
-}
 
 
 /*
@@ -44,6 +19,7 @@ fn setup_tracing_subscriber() {
         - css styling of the page
             - this includes redoing the message format or rephrasing error messages
         - migrate to yew 0.21.0
+        - rework build process (this includes changing the dockerfile)
     TODO less important:
         - decide between console_error_panic_hook and color_eyre and decide if any of these is needed at all
         - add a footer to the page for stuff like "about", "github source", ...
