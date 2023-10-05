@@ -152,7 +152,6 @@ impl Display for Duration {
 
 #[derive(Properties, PartialEq)]
 pub struct DurationInputProps {
-    pub name: Option<AttrValue>,
     pub input_ref: NodeRef,
 }
 
@@ -383,7 +382,6 @@ impl Component for DurationInput {
                     { onkeydown }
                     { onmouseup }
                     ref={ ctx.props().input_ref.clone() }
-                    name={ ctx.props().name.clone() }
                     pattern="^[0-9]{1,2}:[0-5][0-9]:[0-5][0-9]$"
                     style="text-align: right;"
                     type="text"
