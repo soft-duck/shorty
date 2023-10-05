@@ -169,22 +169,6 @@ fn cursor_location(input: &HtmlInputElement) -> u32 {
     start
 }
 
-// fn unselect(input: &HtmlInputElement) -> u32 {
-//     let direction = input.selection_direction().unwrap().unwrap();
-//
-//     let mut start = input.selection_start().unwrap().unwrap();
-//     let mut end = input.selection_end().unwrap().unwrap();
-//
-//     if direction == "forward" {
-//         input.set_selection_end(Some(start)).unwrap();
-//         mem::swap(&mut start, &mut end);
-//     } else {
-//         input.set_selection_start(Some(end)).unwrap();
-//     };
-//
-//     start
-// }
-
 #[derive(PartialEq)]
 pub enum DurationInputMessage {
     Key(Key),
@@ -194,12 +178,115 @@ pub enum DurationInputMessage {
 
 #[derive(PartialEq)]
 enum Key {
+    Arrow(Arrow),
+    Digit(i32),
+    Backspace,
+}
+
+#[derive(PartialEq)]
+enum Arrow {
     Right,
     Left,
     Up,
     Down,
-    Digit(i32),
-    Backspace,
+}
+
+impl DurationInput {
+    fn handle_key(&mut self, ctx: &Context<Self>, key: Key) {
+        match key {
+            Key::Arrow(arrow) => self.handle_arrow(ctx, arrow),
+            Key::Digit(d) => self.handle_digit(d),
+            Key::Backspace => self.handle_backspace(),
+        }
+    }
+
+    fn handle_digit(&mut self, mut n: i32) {
+        let sub_cursor = self.duration.sub_cursor;
+
+        if !sub_cursor {
+            n *= 10;
+        }
+
+        let parts = self.selection.unwrap().part_with(n);
+
+        if parts.valid() {
+            if !sub_cursor {
+                let mut zero_parts = self.duration.to_parts();
+                zero_parts.zero_selection(self.selection.unwrap());
+                self.duration.seconds = zero_parts.to_seconds();
+            }
+
+            self.duration.add_parts(parts);
+
+            if sub_cursor {
+                self.selection = Some(self.selection.unwrap().right());
+            } else {
+                self.duration.sub_cursor = true;
+            }
+        }
+    }
+
+    fn handle_backspace(&mut self) {
+        self.duration.sub_cursor = false;
+
+        if self.backspace {
+            self.backspace = false;
+
+            self.duration.reset();
+        } else {
+            self.backspace = true;
+
+            let mut parts = self.duration.to_parts();
+            parts.zero_selection(self.selection.unwrap());
+            self.duration.seconds = parts.to_seconds();
+        }
+    }
+
+    fn handle_arrow(&mut self, ctx: &Context<Self>, arrow: Arrow) {
+        let input = ctx.props().input_ref.cast::<HtmlInputElement>().unwrap();
+
+        match arrow {
+            Arrow::Right => {
+                self.selection = Some(self.selection.unwrap().right());
+                self.selection.unwrap().select(&input);
+            },
+            Arrow::Left => {
+                self.selection = Some(self.selection.unwrap().left());
+                self.selection.unwrap().select(&input);
+            },
+            Arrow::Up => {
+                let parts = self.selection.unwrap().part_with(1);
+                self.duration.add_parts(parts);
+            },
+            Arrow::Down => {
+                let parts = self.selection.unwrap().part_with(-1);
+                self.duration.add_parts(parts);
+            },
+        }
+    }
+
+    fn handle_mouseup(&mut self, ctx: &Context<Self>) {
+        let input = ctx.props().input_ref.cast::<HtmlInputElement>().unwrap();
+
+        let cursor = cursor_location(&input);
+        let selection = Selection::from_cursor(cursor);
+        self.selection = Some(selection);
+        self.duration.sub_cursor = false;
+    }
+
+    fn handle_focus(&mut self, ctx: &Context<Self>, focus: bool) {
+        let input = ctx.props().input_ref.cast::<HtmlInputElement>().unwrap();
+
+        if focus {
+            if self.selection.is_none() {
+                let cursor = cursor_location(&input);
+                let selection = Selection::from_cursor(cursor);
+                self.selection = Some(selection);
+            }
+        } else {
+            self.selection = None;
+        }
+    }
 }
 
 impl Component for DurationInput {
@@ -218,88 +305,16 @@ impl Component for DurationInput {
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        let input = ctx.props().input_ref.cast::<HtmlInputElement>().unwrap();
+        use DurationInputMessage as Msg;
 
-        if msg != DurationInputMessage::Key(Key::Backspace) {
+        if msg != Msg::Key(Key::Backspace) {
             self.backspace = false;
         }
 
         match msg {
-            DurationInputMessage::MouseUp => {
-                let cursor = cursor_location(&input);
-                let selection = Selection::from_cursor(cursor);
-                self.selection = Some(selection);
-                self.duration.sub_cursor = false;
-            },
-            DurationInputMessage::Key(key) if self.selection.is_some() => match key {
-                Key::Right => {
-                    self.selection = Some(self.selection.unwrap().right());
-                    self.selection.unwrap().select(&input);
-                },
-                Key::Left => {
-                    self.selection = Some(self.selection.unwrap().left());
-                    self.selection.unwrap().select(&input);
-                },
-                Key::Up => {
-                    let parts = self.selection.unwrap().part_with(1);
-                    self.duration.add_parts(parts);
-                },
-                Key::Down => {
-                    let parts = self.selection.unwrap().part_with(-1);
-                    self.duration.add_parts(parts);
-                },
-                Key::Digit(mut n) => {
-                    let sub_cursor = self.duration.sub_cursor;
-
-                    if !sub_cursor {
-                        n *= 10;
-                    }
-
-                    let parts = self.selection.unwrap().part_with(n);
-
-                    if parts.valid() {
-                        if !sub_cursor {
-                            let mut zero_parts = self.duration.to_parts();
-                            zero_parts.zero_selection(self.selection.unwrap());
-                            self.duration.seconds = zero_parts.to_seconds();
-                        }
-
-                        self.duration.add_parts(parts);
-
-                        if sub_cursor {
-                            self.selection = Some(self.selection.unwrap().right());
-                        } else {
-                            self.duration.sub_cursor = true;
-                        }
-                    }
-                },
-                Key::Backspace => {
-                    self.duration.sub_cursor = false;
-
-                    if self.backspace {
-                        self.backspace = false;
-
-                        self.duration.reset();
-                    } else {
-                        self.backspace = true;
-
-                        let mut parts = self.duration.to_parts();
-                        parts.zero_selection(self.selection.unwrap());
-                        self.duration.seconds = parts.to_seconds();
-                    }
-                },
-            },
-            DurationInputMessage::Focus(focus) => {
-                if focus {
-                    if self.selection.is_none() {
-                        let cursor = cursor_location(&input);
-                        let selection = Selection::from_cursor(cursor);
-                        self.selection = Some(selection);
-                    }
-                } else {
-                    self.selection = None;
-                }
-            },
+            Msg::MouseUp => self.handle_mouseup(ctx),
+            Msg::Focus(focus) => self.handle_focus(ctx, focus),
+            Msg::Key(key) if self.selection.is_some() => self.handle_key(ctx, key),
             _ => (),
         }
 
@@ -322,15 +337,15 @@ impl Component for DurationInput {
         // TODO allow numpad and other numbers
         let onkeydown = Callback::from(move |event: KeyboardEvent| {
             match event.code().as_str() {
-                "ArrowLeft" => send_key.emit(Key::Left),
-                "ArrowRight" => send_key.emit(Key::Right),
-                "ArrowUp" => send_key.emit(Key::Up),
-                "ArrowDown" => send_key.emit(Key::Down),
+                "ArrowLeft" => send_key.emit(Key::Arrow(Arrow::Left)),
+                "ArrowRight" => send_key.emit(Key::Arrow(Arrow::Right)),
+                "ArrowUp" => send_key.emit(Key::Arrow(Arrow::Up)),
+                "ArrowDown" => send_key.emit(Key::Arrow(Arrow::Down)),
+                "Backspace" => send_key.emit(Key::Backspace),
                 d if d.starts_with("Digit") => {
                     let n = d.chars().last().unwrap().to_digit(10).unwrap();
                     send_key.emit(Key::Digit(n as i32));
                 },
-                "Backspace" => send_key.emit(Key::Backspace),
                 _ => (),
             }
 
@@ -378,7 +393,7 @@ impl Component for DurationInput {
         }
     }
 
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, _: bool) {
         let input = ctx.props().input_ref.cast::<HtmlInputElement>().unwrap();
 
         if let Some(selection) = self.selection {

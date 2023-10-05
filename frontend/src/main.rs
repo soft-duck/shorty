@@ -103,7 +103,7 @@ fn setup_tracing_subscriber() {
         - add validation
             - to the frontend ui
             - before sending a request
-        - build or get a good duration input
+        - add server config params to html elements
         - css styling of the page
             - this includes redoing the message format or rephrasing error messages
         - migrate to yew 0.21.0
