@@ -95,6 +95,7 @@ impl Component for LinkInput {
                 },
                 LinkInputState::Copied => {
                     text = "Copied";
+
                     let reset = ctx
                         .link()
                         .callback(|_| LinkInputMessage::UpdateState(LinkInputState::Copy));
@@ -104,6 +105,17 @@ impl Component for LinkInput {
                     });
 
                     timeout.forget();
+
+                    let input = self.input_ref.cast::<HtmlInputElement>()
+                        .expect(&format!("Expected {:?} to be an HtmlInputElement", self.input_ref));
+
+                    let input_len = input.value().len() as u32;
+
+                    // TODO should this stay?
+                    // ignore results, if it does not work we do not care
+                    let _ = input.focus();
+                    let _ = input.set_selection_start(Some(0));
+                    let _ = input.set_selection_end(Some(input_len));
                 },
             }
         } else {
