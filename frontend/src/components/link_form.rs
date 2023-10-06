@@ -1,8 +1,9 @@
 use reqwest::Client;
 use tracing::debug;
 use wasm_bindgen::JsCast;
-use web_sys::SubmitEvent;
-use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
+use yew::{AttrValue, Callback, Component, Context, html, Html, NodeRef, Properties};
+
+use crate::{endpoint, types::link_config::LinkConfig};
 
 use super::{
     advanced_mode::AdvancedMode,
@@ -10,7 +11,6 @@ use super::{
     link_input::{LinkInput, LinkInputMessage},
     message_box::Message,
 };
-use crate::{endpoint, types::link_config::LinkConfig};
 
 #[derive(Default, Clone)]
 pub struct LinkFormRefs {
@@ -62,7 +62,7 @@ impl Component for LinkForm {
         let scope = ctx.link().clone();
         let refs = self.refs.clone();
 
-        let callback = Callback::from(move |event: SubmitEvent| {
+        let onclick = Callback::from(move |_| {
             let link_config = LinkConfig::try_from(&refs).unwrap();
 
             debug!("Sending: {:#?}\n to /custom", link_config);
@@ -99,16 +99,14 @@ impl Component for LinkForm {
                     LinkFormMessage::Input
                 }
             });
-
-            event.prevent_default();
         });
 
         let clear_callback = ctx.link().callback(|_| LinkFormMessage::Input);
 
         html! {
             <>
-                <form onsubmit={ callback }>
-                    <LinkInput input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } { clear_callback }/>
+                <form>
+                    <LinkInput { onclick } input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } { clear_callback }/>
                     <AdvancedMode toggle_ref={ self.refs.advanced_mode.clone() }>
                         <input ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder="Maximum usages"/>
                         <input ref={ self.refs.custom_id_input.clone() } type="text" placeholder="Custom alphanumeric id"/>

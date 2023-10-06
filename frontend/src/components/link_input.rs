@@ -1,7 +1,7 @@
 use gloo_timers::callback::Timeout;
 use tracing::debug;
-use web_sys::HtmlInputElement;
-use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
+use web_sys::{HtmlInputElement, MouseEvent};
+use yew::{AttrValue, Callback, Component, Context, html, Html, NodeRef, Properties};
 
 use super::link_form::LinkFormMessage;
 
@@ -35,6 +35,7 @@ pub struct LinkInputProps {
     pub message: LinkInputMessage,
     pub clear_callback: Callback<()>,
     pub input_ref: NodeRef,
+    pub onclick: Callback<MouseEvent>,
 }
 
 pub struct LinkInput {
@@ -77,12 +78,10 @@ impl Component for LinkInput {
         let mut onclick = None;
 
         let mut text = "Shorten";
-        let mut button_type = "submit";
         let mut content = None;
         let mut oninput = None;
 
         if let LinkInputMessage::Update { link } = &ctx.props().message {
-            button_type = "button";
             content = Some(link.clone());
             oninput = Some(ctx.link().callback(|_| LinkInputMessage::Clear));
 
@@ -107,12 +106,14 @@ impl Component for LinkInput {
                     timeout.forget();
                 },
             }
+        } else {
+            onclick = Some(ctx.props().onclick.clone());
         }
 
         html! {
             <>
                 <input ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
-                <button type={ button_type } onclick={ onclick }>{ text }</button>
+                <button type={ "button" } onclick={ onclick }>{ text }</button>
             </>
         }
     }
