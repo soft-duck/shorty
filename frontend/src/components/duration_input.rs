@@ -1,11 +1,10 @@
-use std::{
-    fmt::{Display, Formatter},
-    mem,
-};
+use std::mem;
 
 use strum::FromRepr;
 use web_sys::{DragEvent, Event, FocusEvent, HtmlInputElement, KeyboardEvent, MouseEvent};
-use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
+use yew::{html, Callback, Component, Context, Html, NodeRef, Properties, classes, Classes};
+
+use crate::types::duration::{Duration, Parts};
 
 fn cursor_location(input: &HtmlInputElement) -> u32 {
     let direction = input.selection_direction().unwrap().unwrap();
@@ -20,98 +19,8 @@ fn cursor_location(input: &HtmlInputElement) -> u32 {
     start
 }
 
-struct Duration {
-    seconds: u32,
-    sub_cursor: bool,
-}
-
-impl Duration {
-    const MAX_SECONDS: i32 = 99 * 60 * 60 + 59 * 60 + 59;
-
-    fn to_parts(&self) -> Parts {
-        let hours = self.seconds as i32 / Parts::SECONDS_HOUR;
-        let reminder = self.seconds as i32 % Parts::SECONDS_HOUR;
-        let minutes = reminder / Parts::SECONDS_MINUTES;
-        let seconds = reminder % Parts::SECONDS_MINUTES;
-
-        Parts {
-            hours,
-            minutes,
-            seconds,
-        }
-    }
-
-    fn from_parts(parts: Parts) -> Self {
-        Self {
-            seconds: parts.to_seconds(),
-            sub_cursor: false,
-        }
-    }
-
-    fn add_parts(&mut self, parts: Parts) {
-        self.sub_cursor = false;
-
-        let seconds = self.seconds as i32
-            + parts.seconds
-            + parts.minutes * Parts::SECONDS_MINUTES
-            + parts.hours * Parts::SECONDS_HOUR;
-
-        if seconds > Self::MAX_SECONDS || seconds < 0 {
-            return;
-        }
-
-        self.seconds = seconds as u32;
-    }
-
-    fn reset(&mut self) {
-        self.seconds = 0;
-        self.sub_cursor = false;
-    }
-}
-
-impl Display for Duration {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let parts = self.to_parts();
-
-        write!(
-            f,
-            "{:02}:{:02}:{:02}",
-            parts.hours, parts.minutes, parts.seconds
-        )
-    }
-}
-
-#[derive(Copy, Clone)]
-struct Parts {
-    hours: i32,
-    minutes: i32,
-    seconds: i32,
-}
-
-impl Parts {
-    const SECONDS_HOUR: i32 = 60 * 60;
-    const SECONDS_MINUTES: i32 = 60;
-
-    fn zero_selection(&mut self, selection: Selection) {
-        match selection {
-            Selection::Hours => self.hours = 0,
-            Selection::Minutes => self.minutes = 0,
-            Selection::Seconds => self.seconds = 0,
-        }
-    }
-
-    fn to_seconds(&self) -> u32 {
-        (self.hours * Self::SECONDS_HOUR + self.minutes * Self::SECONDS_MINUTES + self.seconds)
-            as u32
-    }
-
-    fn valid(&self) -> bool {
-        self.seconds < 60 && self.minutes < 60 && self.hours < 100
-    }
-}
-
 #[derive(FromRepr, Copy, Clone, PartialEq)]
-enum Selection {
+pub enum Selection {
     Hours = 0,
     Minutes = 1,
     Seconds = 2,
@@ -148,7 +57,7 @@ impl Selection {
         Self::from_repr(*self as usize + 1).unwrap()
     }
 
-    fn part_with(&self, n: i32) -> Parts {
+    fn part_with(&self, n: i64) -> Parts {
         let mut parts = Parts {
             hours: 0,
             minutes: 0,
@@ -173,14 +82,14 @@ pub enum DurationInputMessage {
 }
 
 #[derive(PartialEq)]
-enum Key {
+pub enum Key {
     Arrow(Arrow),
-    Digit(i32),
+    Digit(i64),
     Backspace,
 }
 
 #[derive(PartialEq)]
-enum Arrow {
+pub enum Arrow {
     Right,
     Left,
     Up,
@@ -190,13 +99,15 @@ enum Arrow {
 #[derive(Properties, PartialEq)]
 pub struct DurationInputProps {
     pub input_ref: NodeRef,
+    #[prop_or_default]
+    pub class: Option<Classes>
 }
-
 
 pub struct DurationInput {
     duration: Duration,
     selection: Option<Selection>,
     backspace: bool,
+    pub sub_cursor: bool,
 }
 
 impl DurationInput {
@@ -208,8 +119,9 @@ impl DurationInput {
         }
     }
 
-    fn handle_digit(&mut self, mut n: i32) {
-        let sub_cursor = self.duration.sub_cursor;
+    // TODO maybe handle the first digit as a ones digit if no further input occurs and else handle it as tens digit
+    fn handle_digit(&mut self, mut n: i64) {
+        let sub_cursor = self.sub_cursor;
 
         if !sub_cursor {
             n *= 10;
@@ -225,21 +137,20 @@ impl DurationInput {
             }
 
             self.duration.add_parts(parts);
+            self.sub_cursor = !self.sub_cursor;
 
             if sub_cursor {
                 self.selection = Some(self.selection.unwrap().right());
-            } else {
-                self.duration.sub_cursor = true;
             }
         }
     }
 
     fn handle_backspace(&mut self) {
-        self.duration.sub_cursor = false;
+        self.sub_cursor = false;
 
         if self.backspace {
             self.backspace = false;
-
+            self.sub_cursor = false;
             self.duration.reset();
         } else {
             self.backspace = true;
@@ -265,10 +176,12 @@ impl DurationInput {
             Arrow::Up => {
                 let parts = self.selection.unwrap().part_with(1);
                 self.duration.add_parts(parts);
+                self.sub_cursor = false;
             },
             Arrow::Down => {
                 let parts = self.selection.unwrap().part_with(-1);
                 self.duration.add_parts(parts);
+                self.sub_cursor = false;
             },
         }
     }
@@ -279,7 +192,7 @@ impl DurationInput {
         let cursor = cursor_location(&input);
         let selection = Selection::from_cursor(cursor);
         self.selection = Some(selection);
-        self.duration.sub_cursor = false;
+        self.sub_cursor = false;
     }
 
     fn handle_focus(&mut self, ctx: &Context<Self>, focus: bool) {
@@ -303,11 +216,9 @@ impl Component for DurationInput {
 
     fn create(_: &Context<Self>) -> Self {
         Self {
-            duration: Duration {
-                seconds: 0,
-                sub_cursor: false,
-            },
+            duration: Duration { seconds: 0 },
             selection: None,
+            sub_cursor: false,
             backspace: false,
         }
     }
@@ -350,7 +261,7 @@ impl Component for DurationInput {
                 "Backspace" => send_key.emit(Key::Backspace),
                 d if d.starts_with("Digit") => {
                     let n = d.chars().last().unwrap().to_digit(10).unwrap();
-                    send_key.emit(Key::Digit(n as i32));
+                    send_key.emit(Key::Digit(n as i64));
                 },
                 _ => (),
             }
@@ -369,11 +280,11 @@ impl Component for DurationInput {
 
         let onfocus = ctx
             .link()
-            .callback(|event: FocusEvent| DurationInputMessage::Focus(true));
+            .callback(|_: FocusEvent| DurationInputMessage::Focus(true));
 
         let onblur = ctx
             .link()
-            .callback(|event: FocusEvent| DurationInputMessage::Focus(false));
+            .callback(|_: FocusEvent| DurationInputMessage::Focus(false));
 
         let ondrop = Callback::from(|event: DragEvent| {
             event.prevent_default();
@@ -388,6 +299,7 @@ impl Component for DurationInput {
                     { onpaste }
                     { onkeydown }
                     { onmouseup }
+                    class={ classes!("input-box", "duration", ctx.props().class.clone()) }
                     ref={ ctx.props().input_ref.clone() }
                     pattern="^[0-9]{1,2}:[0-5][0-9]:[0-5][0-9]$"
                     style="text-align: right;"

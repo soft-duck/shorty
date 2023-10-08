@@ -1,5 +1,6 @@
+use color_eyre::owo_colors::OwoColorize;
 use linked_hash_set::LinkedHashSet;
-use yew::{html, AttrValue, Component, Context, Html, Properties};
+use yew::{html, AttrValue, Component, Context, Html, Properties, classes, Callback};
 
 #[derive(PartialEq, Clone, Hash, Eq)]
 pub enum Message {
@@ -17,18 +18,28 @@ impl Message {
         }
     }
 
-    fn to_html(&self) -> Html {
-        // TODO make more concise
-        let message_type = match self {
-            Message::Error(m) => "Error: ",
-            Message::Warning(m) => "Warning: ",
-            Message::Info(m) => "Info: ",
+    fn to_html(&self, rm: Callback<Message>) -> Html {
+        let (class, icon) = match self {
+            Message::Error(_) => (classes!("error"), "error"),
+            Message::Warning(_) => (classes!("warning"), "warning"),
+            Message::Info(_) => (classes!("info"), "info"),
         };
+
+        let message = self.clone();
+
+        let onclick = Callback::from(move |_| {
+            rm.emit(message.clone());
+        });
 
         html! {
             <>
-                <div>
-                    <span>{ message_type } { self.message() }</span>
+                <div { onclick } class={ classes!(class, "message") }>
+                    <span class={ classes!("material-symbols-outlined") }>
+                        { icon }
+                    </span>
+                    <span>
+                        { " " }{ self.message() }
+                    </span>
                 </div>
             </>
         }
@@ -38,6 +49,7 @@ impl Message {
 #[derive(Properties, PartialEq)]
 pub struct MessageBoxProps {
     pub messages: LinkedHashSet<Message>,
+    pub remove_message: Callback<Message>,
 }
 
 pub struct MessageBox;
@@ -55,12 +67,13 @@ impl Component for MessageBox {
             .props()
             .messages
             .iter()
-            .map(|m| m.to_html())
+            .rev()
+            .map(|m| m.to_html(ctx.props().remove_message.clone()))
             .collect::<Html>();
 
         html! {
             <>
-                <div>
+                <div class={ classes!("messagebox-container") }>
                     { messages }
                 </div>
             </>

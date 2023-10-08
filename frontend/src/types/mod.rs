@@ -1,6 +1,8 @@
-use serde::Deserialize;
-
+pub mod duration;
+pub mod error;
 pub mod link_config;
+
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct ServerConfig {

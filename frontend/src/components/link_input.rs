@@ -1,7 +1,7 @@
 use gloo_timers::callback::Timeout;
 use tracing::debug;
 use web_sys::{HtmlInputElement, MouseEvent};
-use yew::{AttrValue, Callback, Component, Context, html, Html, NodeRef, Properties};
+use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties, classes};
 
 use super::link_form::LinkFormMessage;
 
@@ -65,10 +65,9 @@ impl Component for LinkInput {
             let link = self.input_ref.cast::<HtmlInputElement>().unwrap().value();
             debug!("copying '{}' to clipboard", link);
 
-            // let clipboard = window().navigator().clipboard().unwrap();
             // FIXME handle promise and unwrap
             let c = web_sys::window().unwrap().navigator().clipboard().unwrap();
-            c.write_text(&link);
+            let _ = c.write_text(&link);
         }
 
         true
@@ -106,8 +105,10 @@ impl Component for LinkInput {
 
                     timeout.forget();
 
-                    let input = self.input_ref.cast::<HtmlInputElement>()
-                        .expect(&format!("Expected {:?} to be an HtmlInputElement", self.input_ref));
+                    let input = self.input_ref.cast::<HtmlInputElement>().expect(&format!(
+                        "Expected {:?} to be an HtmlInputElement",
+                        self.input_ref
+                    ));
 
                     let input_len = input.value().len() as u32;
 
@@ -124,8 +125,8 @@ impl Component for LinkInput {
 
         html! {
             <>
-                <input ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
-                <button type={ "button" } onclick={ onclick }>{ text }</button>
+                <input class={ classes!("input-box", "link-input") } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
+                <button class={ classes!("shorten-button") } type={ "button" } onclick={ onclick }>{ text }</button>
             </>
         }
     }

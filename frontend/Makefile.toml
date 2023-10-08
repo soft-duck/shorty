@@ -1,0 +1,13 @@
+[tasks.default]
+alias = "build"
+
+[tasks.build]
+clear = true
+alias = "build-frontend"
+
+[tasks.build-frontend]
+command = "trunk"
+args = ["build", "@@remove-empty(RELEASE_FLAG)"]
+
+[env.release]
+RELEASE_FLAG = "--release"

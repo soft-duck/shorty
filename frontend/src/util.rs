@@ -66,12 +66,12 @@ pub fn fetch_server_config() {
     });
 }
 
-pub fn try_get_local_offset() -> UtcOffset {
+pub fn try_get_local_offset() -> Option<UtcOffset> {
     match UtcOffset::current_local_offset() {
-        Ok(offset) => offset,
+        Ok(offset) => Some(offset),
         Err(e) => {
-            debug!("Unable to get local offset: {}\nUsing UTC offset", e);
-            UtcOffset::UTC
+            debug!("Unable to get local offset: {}", e);
+            None
         },
     }
 }

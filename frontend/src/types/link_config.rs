@@ -1,13 +1,28 @@
+use nonempty_collections::{nev, NEVec};
 use serde::Serialize;
-use time::{format_description::well_known::Iso8601, macros::time, Date, OffsetDateTime};
+use time::{
+    format_description::well_known::Iso8601,
+    macros::time,
+    Date,
+    OffsetDateTime,
+    UtcOffset,
+};
+use validated::{
+    Validated,
+    Validated::{Fail, Good},
+};
 use web_sys::HtmlInputElement;
 
 use crate::{
-    components::{expiration_mode::ExpirationType, link_form::LinkFormRefs, toggle_input::ToggleInputState},
-    util::try_get_local_offset,
+    components::{expiration_input::ExpirationType, link_form::LinkFormRefs},
+    types::{
+        duration::{Duration, Parts},
+        error::FormError,
+    },
+    util::server_config,
 };
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct LinkConfig {
     pub link: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -19,133 +34,200 @@ pub struct LinkConfig {
     pub valid_for: Option<i64>,
 }
 
-type ParseError = ();
-
 impl LinkConfig {
-    fn parse_id(refs: &LinkFormRefs) -> Result<Option<String>, ParseError> {
-        let mut id = None;
-
-        if let Some(id_input) = refs.custom_id_input.cast::<HtmlInputElement>() {
-            if !id_input.value().is_empty() {
-                id = Some(id_input.value())
-            }
-        }
-
-        Ok(id)
-    }
-
-    fn parse_max_uses(refs: &LinkFormRefs) -> Result<Option<i64>, ParseError> {
-        let mut max_uses = None;
-
-        if let Some(max_usages_input) = refs.max_usage_input.cast::<HtmlInputElement>() {
-            // TODO Handle this
-            if let Ok(value) = max_usages_input.value().parse::<i64>() {
-                // TODO should 0 uses be allowed?
-                if value > 0 {
-                    max_uses = Some(value)
-                } else {
-                    return Err(());
-                }
-            }
-        }
-
-        Ok(max_uses)
-    }
-
-    fn parse_date(refs: &LinkFormRefs) -> Result<Option<i64>, ParseError> {
-        let mut valid_for = None;
-
-        if let Some(expiration_input) = refs.expiration_input.cast::<HtmlInputElement>() {
-            if !expiration_input.value().is_empty() {
-                // TODO handle this
-                if let Ok(date) = Date::parse(&expiration_input.value(), &Iso8601::DATE) {
-                    let offset = try_get_local_offset();
-
-                    let date_time = date.with_time(time!(00:00)).assume_offset(offset);
-
-                    let local_now = OffsetDateTime::now_utc().to_offset(offset);
-
-                    // TODO should negative values be allowed?
-                    let mut difference = date_time.unix_timestamp() - local_now.unix_timestamp();
-                    // because the timestamp is needed in milliseconds
-                    difference *= 1000;
-
-                    valid_for = Some(difference);
-                }
-            }
-        }
-
-        Ok(valid_for)
-    }
-
-    fn parse_duration(refs: &LinkFormRefs) -> Result<Option<i64>, ParseError> {
-        let mut valid_for = None;
-
-        if let Some(expiration_input) = refs.expiration_input.cast::<HtmlInputElement>() {
-            let values = expiration_input.value()
-                .split(':')
-                // for now can be negative
-                .map(|n| n.parse::<i64>())
-                .collect::<Result<Vec<_>, _>>();
-
-            if let Ok(mut values) = values {
-                if values.len() <= 3 {
-                    values.reverse();
-                    values.resize(3, 0);
-                    values.reverse();
-
-                    valid_for = Some((values[0] * 60 * 60 + values[1] * 60 + values[2]) * 1000);
-                }
-            }
-        }
-
-        Ok(valid_for)
-    }
-}
-
-impl TryFrom<&LinkFormRefs> for LinkConfig {
-    type Error = ParseError;
-
     // TODO incorporate server config errors
     // TODO when https://github.com/flamion/shorty/issues/51 is resolved apply the solution
-    fn try_from(refs: &LinkFormRefs) -> Result<Self, Self::Error> {
-        let link = if let Some(link_input) = refs.link_input.cast::<HtmlInputElement>() {
-            link_input.value()
+    pub fn try_from(refs: &LinkFormRefs) -> Validated<Self, FormError> {
+        let input = refs
+            .advanced_mode
+            .cast::<HtmlInputElement>()
+            .expect(&format!(
+                "Expected {:?} to be an HtmlInputElement",
+                refs.advanced_mode
+            ));
+
+        let mut errors = vec![];
+
+        let link = Self::parse_link(refs)
+            .ok()
+            .map_err(|e| errors.extend(e.into_iter()));
+
+        let mut id = Ok(None);
+        let mut max_uses = Ok(None);
+        let mut valid_for = Ok(None);
+
+        if input.checked() {
+            id = Self::parse_id(refs)
+                .ok()
+                .map_err(|e| errors.extend(e.into_iter()));
+            max_uses = Self::parse_max_uses(refs)
+                .ok()
+                .map_err(|e| errors.extend(e.into_iter()));
+            valid_for = Self::parse_valid_for(refs)
+                .ok()
+                .map_err(|e| errors.extend(e.into_iter()));
+        }
+
+        if errors.is_empty() {
+            Good(Self {
+                link: link.unwrap(),
+                id: id.unwrap(),
+                max_uses: max_uses.unwrap(),
+                valid_for: valid_for.unwrap(),
+            })
         } else {
-            return Err(());
-        };
+            Fail(NEVec::from_vec(errors).unwrap())
+        }
+    }
 
-        let mut id = None;
-        let mut max_uses = None;
-        let mut valid_for = None;
+    fn parse_link(refs: &LinkFormRefs) -> Validated<String, FormError> {
+        let input = refs.link_input.cast::<HtmlInputElement>().expect(&format!(
+            "Expected {:?} to be an HtmlInputElement",
+            refs.link_input
+        ));
 
-        if let Some(advanced_mode) = refs.advanced_mode.cast::<HtmlInputElement>() {
-            if advanced_mode.checked() {
-                id = LinkConfig::parse_id(refs).unwrap();
-                max_uses = LinkConfig::parse_max_uses(refs).unwrap();
+        let value = input.value();
 
-                if let Some(expiration_input) = refs.expiration_input.cast::<HtmlInputElement>() {
-                    if let Some(expiration_type_input) =
-                        refs.expiration_type.cast::<HtmlInputElement>()
-                    {
-                        // TODO make this more concise
-                        if ExpirationType::from(ToggleInputState::from(expiration_type_input.checked()))
-                            == ExpirationType::Date
-                        {
-                            valid_for = LinkConfig::parse_date(refs).unwrap();
-                        } else {
-                            valid_for = LinkConfig::parse_duration(refs).unwrap();
-                        }
-                    }
-                }
+        let mut errors = vec![];
+
+        if let Some(config) = server_config() {
+            if value.len() > config.max_link_length {
+                errors.push(FormError::ExceededMaxLinkLength {
+                    link: value.clone(),
+                    max_length: config.max_link_length,
+                });
             }
         }
 
-        Ok(Self {
-            link,
-            id,
-            max_uses,
-            valid_for,
-        })
+        if value.is_empty() {
+            errors.push(FormError::LinkInputEmpty);
+        }
+
+        if !errors.is_empty() {
+            return Fail(NEVec::from_vec(errors).unwrap());
+        }
+
+        Good(value)
+    }
+
+    fn parse_id(refs: &LinkFormRefs) -> Validated<Option<String>, FormError> {
+        let input = refs
+            .custom_id_input
+            .cast::<HtmlInputElement>()
+            .expect(&format!(
+                "Expected {:?} to be an HtmlInputElement",
+                refs.custom_id_input
+            ));
+
+        let value = input.value();
+
+        if value.is_empty() {
+            return Good(None);
+        }
+
+        if let Some(config) = server_config() {
+            if value.len() > config.max_custom_id_length {
+                return Fail(nev![FormError::ExceededMaxIdLength {
+                    id: value,
+                    max_length: config.max_custom_id_length
+                }]);
+            }
+        }
+
+        Good(Some(value))
+    }
+
+    fn parse_max_uses(refs: &LinkFormRefs) -> Validated<Option<i64>, FormError> {
+        let input = refs
+            .max_usage_input
+            .cast::<HtmlInputElement>()
+            .expect(&format!(
+                "Expected {:?} to be an HtmlInputElement",
+                refs.max_usage_input
+            ));
+
+        let untrimmed = input.value();
+        let value = untrimmed.trim();
+
+        if value.is_empty() {
+            return Good(None);
+        }
+
+        // TODO seems to always succeed because firefox does not set the value field if its not a number on type="number"
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1398528
+        // TODO use input.validity.valid for mor fine grained errors https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.ValidityState.html
+        let Ok(value) = value.parse::<i64>() else {
+            return Fail(nev![FormError::ParseNumberFailure {
+                number: value.to_string()
+            }]);
+        };
+
+        Good(Some(value))
+    }
+
+    fn parse_valid_for(refs: &LinkFormRefs) -> Validated<Option<i64>, FormError> {
+        let input = refs
+            .expiration_type
+            .cast::<HtmlInputElement>()
+            .expect(&format!(
+                "Expected {:?} to be an HtmlInputElement",
+                refs.expiration_type
+            ));
+
+        if ExpirationType::Date == ExpirationType::from(input.checked()) {
+            Self::parse_date(refs)
+        } else {
+            Self::parse_duration(refs)
+        }
+    }
+
+    fn parse_duration(refs: &LinkFormRefs) -> Validated<Option<i64>, FormError> {
+        let input = refs
+            .expiration_input
+            .cast::<HtmlInputElement>()
+            .expect(&format!(
+                "Expected {:?} to be an HtmlInputElement",
+                refs.expiration_input
+            ));
+
+        let value = input.value();
+
+        if value == format!("{}", Duration::ZERO) {
+            return Good(None);
+        }
+
+        let parts =
+            Parts::try_from(value.as_str()).expect(&format!("Format unexpected: {}", value));
+
+        Good(Some(Duration::from_parts(parts).seconds * 1000))
+    }
+
+    fn parse_date(refs: &LinkFormRefs) -> Validated<Option<i64>, FormError> {
+        let input = refs
+            .expiration_input
+            .cast::<HtmlInputElement>()
+            .expect(&format!(
+                "Expected {:?} to be an HtmlInputElement",
+                refs.expiration_input
+            ));
+
+        let value = input.value();
+
+        if value.is_empty() {
+            return Good(None);
+        }
+
+        let date = Date::parse(&input.value(), &Iso8601::DATE)
+            .expect(&format!("Unexpected date format: {}", value));
+
+        let date_time = date.with_time(time!(00:00)).assume_offset(UtcOffset::UTC);
+
+        let local_now = OffsetDateTime::now_utc();
+
+        let mut difference = date_time.unix_timestamp() - local_now.unix_timestamp();
+        // because the timestamp is needed in milliseconds
+        difference *= 1000;
+
+        Good(Some(difference))
     }
 }
