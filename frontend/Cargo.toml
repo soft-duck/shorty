@@ -43,7 +43,7 @@ features = ["time"]
 
 [dependencies.web-sys]
 version = "0.3"
-features = ["HtmlInputElement", "SubmitEvent", "Navigator", "Clipboard", "KeyboardEvent", "ValidityState", "HtmlElement", "CssStyleDeclaration", "HtmlDialogElement"]
+features = ["HtmlInputElement", "SubmitEvent", "Navigator", "Clipboard", "KeyboardEvent", "ValidityState", "HtmlElement", "CssStyleDeclaration", "HtmlDialogElement", "Element", "DomRect"]
 
 [dependencies.tiny_id]
 version = "0.1"

@@ -91,7 +91,10 @@ pub fn setup_tracing_subscriber() {
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_ansi(false)
         .with_timer(UtcTime::rfc_3339())
-        .with_writer(tracing_web::MakeConsoleWriter.with_max_level(LEVEL));
+        .with_writer(
+             tracing_web::MakeConsoleWriter
+                    .with_max_level(LEVEL)
+        );
 
     tracing_subscriber::registry().with(fmt_layer).init();
 }

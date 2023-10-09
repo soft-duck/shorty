@@ -13,10 +13,12 @@ mod util;
         - add server config params to html elements
             - needs a callback to update the element when server config is fetched
         - css styling of the page
+            - fix layout shift
+            - mobile friendly
+            - adjust pixel distances
             - this includes redoing the message format or rephrasing error messages
     TODO less important:
         - fix firefox number input
-        - add a footer to the page for stuff like "about", "github source", ...
         - improve link_config parsing code
             - this includes better errors with input.validity
         - look into caching
@@ -25,6 +27,7 @@ mod util;
         - should callbacks always be assigned in the view() method or is there another way (static?), that's more optimized
         - do not use the App component as as a middleman but talk directly to message box
         - write test-cases for ui (how?)
+        - rerender on server config
     TODO @flamion:
         - negative max_uses, valid_for
         - backend error enum or similar to give more specific messages

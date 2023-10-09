@@ -61,6 +61,8 @@ body {
 .page-container {
     display: flex;
     flex-direction: column;
+
+
     min-height: 100vh;
     color: $font-color;
     //font-family: ';
@@ -80,6 +82,12 @@ input, button {
 }
 
 .messagebox-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+
+    width: 100%;
+
     display: flex;
     flex-direction: column;
 }
@@ -112,6 +120,8 @@ input, button {
     transform: scale(1);
     user-select: none;
 
+    // TODO jakob fragen ob es overflow fixed
+    overflow: hidden;
 
     /* from https://www.florin-pop.com/blog/2019/03/css-pulse-effect/ */
     @keyframes pulse {
@@ -169,7 +179,16 @@ input, button {
     margin-right: 5px;
 }
 
+.link-input-container {
+    white-space: nowrap;
+}
+
 .link-shortener-group {
+    //position: fixed;
+    //left: 50%;
+    //top: 50%;
+    //transform: translate(-50%, -50%);
+
     background-color: $background;
     // TODO with or without border
     //border-style: solid;
@@ -200,6 +219,18 @@ input, button {
     margin: 15px;
     display: flex;
     flex-direction: column;
+}
+
+.advanced-mode-node-container {
+    display: flex;
+
+    & > * {
+        flex: 1;
+    }
+}
+
+input[type=date] {
+    text-align: right;
 }
 
 //.advanced-mode-nodes-inner-container > div {
@@ -271,6 +302,11 @@ dialog > form {
     border-radius: 10px;
     border-style: solid;
 }
+
+//.advanced-mode-outer-container {
+//
+//    //height: 230px;
+//}
 
 .advanced-mode-toggle-container {
     display: flex;
@@ -413,13 +449,39 @@ input[type=number] {
     font-size: 18px;
     height: 40px;
     user-select: none;
+    min-width: 84px;
     //min-width: 26px;
+}
+
+.shorten-button.copy {
+    //outline-style: solid;
+    //outline-width: 3px;
+    //outline-color: #2222ca;
+
+    background-color: #2222ca;
+
+    &:hover {
+        background-color: #1b1b9e;
+    }
+}
+
+.shorten-button.copied {
+    //outline-style: solid;
+    //outline-width: 3px;
+    //outline-color: #1dd320;
+
+    background-color: #1dd320;
 }
 
 #footer {
     justify-content: center;
     display: flex;
     flex-wrap: wrap;
+
+    position: fixed;
+    left: 0;
+    bottom: 0;
+
     padding: 0 20px;
     border: $trim $trim-width none;
     border-top-style: solid;
@@ -429,7 +491,7 @@ input[type=number] {
     //vertical-align: bottom;
     width: 100%;
     box-sizing: border-box;
-    //background-color: $background;
+    background-color: $background;
 }
 
 .footer-column {

@@ -1,7 +1,7 @@
 use gloo_timers::callback::Timeout;
 use tracing::debug;
 use web_sys::{HtmlInputElement, MouseEvent};
-use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties, classes};
+use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties, classes, Classes};
 
 use super::link_form::LinkFormMessage;
 
@@ -9,6 +9,15 @@ use super::link_form::LinkFormMessage;
 pub enum LinkInputState {
     Copied,
     Copy,
+}
+
+impl LinkInputState {
+    fn class(&self) -> Classes {
+        classes!(match self {
+            LinkInputState::Copied => "copied",
+            LinkInputState::Copy => "copy",
+        })
+    }
 }
 
 #[derive(Default, PartialEq, Debug)]
@@ -79,6 +88,7 @@ impl Component for LinkInput {
         let mut text = "Shorten";
         let mut content = None;
         let mut oninput = None;
+        let mut classes = Some(self.state.class());
 
         if let LinkInputMessage::Update { link } = &ctx.props().message {
             content = Some(link.clone());
@@ -120,13 +130,16 @@ impl Component for LinkInput {
                 },
             }
         } else {
+            classes = None;
             onclick = Some(ctx.props().onclick.clone());
         }
 
         html! {
             <>
-                <input class={ classes!("input-box", "link-input") } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
-                <button class={ classes!("shorten-button") } type={ "button" } onclick={ onclick }>{ text }</button>
+                <div class={ classes!("link-input-container") }>
+                    <input class={ classes!("input-box", "link-input") } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
+                    <button class={ classes!("shorten-button", classes) } type={ "button" } onclick={ onclick }>{ text }</button>
+                </div>
             </>
         }
     }

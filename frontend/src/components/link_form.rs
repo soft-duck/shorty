@@ -152,12 +152,8 @@ impl Component for LinkForm {
                 <h1 class={ classes!("heading") }>{ "[WIP] Link Shortener" }</h1>
                 <LinkInput { onclick } input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } { clear_callback }/>
                 <AdvancedMode toggle_ref={ self.refs.advanced_mode.clone() }>
-                    <div>
-                        <input class={ classes!("input-box") } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder="Maximum usages"/>
-                    </div>
-                    <div>
-                        <input class={ classes!("input-box") } ref={ self.refs.custom_id_input.clone() } type="text" placeholder="Custom alphanumeric id"/>
-                    </div>
+                    <input class={ classes!("input-box") } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder="Maximum usages"/>
+                    <input class={ classes!("input-box") } ref={ self.refs.custom_id_input.clone() } type="text" placeholder="Custom alphanumeric id"/>
                     <div class={ classes!("expiration-mode-container") }>
                         <ExpirationInput toggle_ref={ self.refs.expiration_type.clone() } input_ref={ self.refs.expiration_input.clone() }/>
                     </div>

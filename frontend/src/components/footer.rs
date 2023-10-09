@@ -40,6 +40,7 @@ impl Component for Footer {
         let html = [
             ("Source", "https://github.com/flamion/shorty"),
             ("Issues", "https://github.com/flamion/shorty/issues"),
+            ("Matrix", "https://matrix.to/#/#shorty:matrix.netflam.de"),
         ].map(|(text, href)| {
             html! {
                 <>

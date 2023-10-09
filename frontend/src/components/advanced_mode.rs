@@ -45,6 +45,9 @@ pub struct AdvancedModeProps {
 pub struct AdvancedMode {
     visibility: AdvancedModeVisibility,
     content_ref: NodeRef,
+    toggle_container_ref: NodeRef,
+    size_shadow_ref: NodeRef,
+    old_heights: (i32, i32)
 }
 
 impl Component for AdvancedMode {
@@ -55,6 +58,9 @@ impl Component for AdvancedMode {
         Self {
             visibility: AdvancedModeVisibility::Collapsed,
             content_ref: NodeRef::default(),
+            toggle_container_ref: NodeRef::default(),
+            size_shadow_ref: NodeRef::default(),
+            old_heights: (0, 0),
         }
     }
 
@@ -78,9 +84,9 @@ impl Component for AdvancedMode {
             .map(|f| {
                 html! {
                     <>
-                        // <div>
+                        <div class={ classes!("advanced-mode-node-container") }>
                             { f.clone() }
-                        // </div>
+                        </div>
                     </>
                 }
             })
@@ -88,13 +94,15 @@ impl Component for AdvancedMode {
 
         html! {
             <>
-                <div class={ classes!("advanced-mode-container") }>
-                    <div class={ classes!("advanced-mode-toggle-container") }>
-                        <ToggleInput class={ classes!("advanced-mode-toggle") } checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" position={ LabelPosition::Right } { callback }/>
-                    </div>
-                    <div ref={ self.content_ref.clone() } class={ classes!("advanced-mode-nodes-outer-container"/*, self.visibility.class()*/) }>
-                        <div class={ classes!("advanced-mode-nodes-inner-container") }>
-                            { elements }
+                <div ref={ self.size_shadow_ref.clone() }>
+                    <div class={ classes!("advanced-mode-container") }>
+                        <div ref={ self.toggle_container_ref.clone() } class={ classes!("advanced-mode-toggle-container") }>
+                            <ToggleInput class={ classes!("advanced-mode-toggle") } checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" position={ LabelPosition::Right } { callback }/>
+                        </div>
+                        <div ref={ self.content_ref.clone() } class={ classes!("advanced-mode-nodes-outer-container"/*, self.visibility.class()*/) }>
+                            <div class={ classes!("advanced-mode-nodes-inner-container") }>
+                                { elements }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -104,17 +112,49 @@ impl Component for AdvancedMode {
 
     // https://www.w3schools.com/howto/howto_js_collapsible.asp
     // TODO remove unwraps
-    fn rendered(&mut self, _: &Context<Self>, _: bool) {
+    fn rendered(&mut self, _: &Context<Self>, first_render: bool) {
+        // let outer_container = self.outer_container_ref.cast::<HtmlElement>().unwrap();
+        //
+        // debug!("{}", outer_container.scroll_height());
+
         let content = self.content_ref.cast::<HtmlElement>().unwrap();
-        let scroll_height = content.scroll_height();
+        let toggle_container = self.toggle_container_ref.cast::<HtmlElement>().unwrap();
+        let size_shadow = self.size_shadow_ref.cast::<HtmlElement>().unwrap();
+
+        let mut content_height = content.scroll_height();
+        let mut toggle_height = toggle_container.scroll_height();
+
+        // only needed because scroll_height is rounded, this mitigates rounding fluctuations
+        // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight#problems_and_solutions
+        if first_render {
+            self.old_heights = (content_height, toggle_height);
+        } else {
+            if (content_height - self.old_heights.0).abs() > 1 {
+                self.old_heights.0 = content_height;
+            } else {
+                content_height = self.old_heights.0;
+            }
+
+            if (toggle_height - self.old_heights.1).abs() > 1 {
+                self.old_heights.1 = toggle_height;
+            } else {
+                toggle_height = self.old_heights.1;
+            }
+        }
+
+        debug!("{}", content_height);
+
+        let height = toggle_height + content_height;
+
+        size_shadow.style().set_property("height", &format!("{}px", height)).unwrap();
 
         if self.visibility == AdvancedModeVisibility::Expanded {
-            content.style().set_property("max-height", &format!("{}px", scroll_height)).unwrap();
+            content.style().set_property("max-height", &format!("{}px", content_height)).unwrap();
         } else {
             content.style().remove_property("max-height").unwrap();
         }
 
-        debug!("{}", content.scroll_height());
+        // debug!("{}", content.scroll_height());
     }
 
     // fn rendered(&mut self, ctx: &Context<Self>, _: bool) {
