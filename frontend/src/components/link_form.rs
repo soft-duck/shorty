@@ -9,7 +9,7 @@ use yew::{AttrValue, Callback, classes, Component, Context, html, Html, NodeRef,
 use crate::{endpoint, types::link_config::LinkConfig};
 use crate::app::index::IndexMessage;
 use crate::types::error::RequestError;
-use crate::util::server_config;
+use crate::util::{generate_id, server_config};
 
 use super::{
     advanced_mode::AdvancedMode,
@@ -148,15 +148,26 @@ impl Component for LinkForm {
         // TODO rerender if server_config is fetched or not if it failed
         // let size = server_config().map(|c| c.max_custom_id_length.to_string());
 
+        let ids = [generate_id(), generate_id(), generate_id()];
+
         html! {
             <>
                 <h1 class={ classes!("heading") }>{ "[WIP] Link Shortener" }</h1>
                 <LinkInput { onclick } input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } manage_messages={ ctx.props().manage_messages.clone() } { clear_callback }/>
                 <AdvancedMode toggle_ref={ self.refs.advanced_mode.clone() }>
-                    <input class={ classes!("input-box") } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder="Maximum usages"/>
-                    <input class={ classes!("input-box") } ref={ self.refs.custom_id_input.clone() } type="text" placeholder="Custom alphanumeric id"/>
-                    <div class={ classes!("expiration-mode-container") }>
-                        <ExpirationInput toggle_ref={ self.refs.expiration_type.clone() } input_ref={ self.refs.expiration_input.clone() }/>
+                    <div class={ classes!("input-label-container") }>
+                        <label class={ classes!("input-label") } for={ ids[0].clone() }>{ "Max. usages" }</label>
+                        <input id={ ids[0].clone() } class={ classes!("input-box") } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder=""/>
+                    </div>
+                    <div class={ classes!("input-label-container") }>
+                        <label class={ classes!("input-label") } for={ ids[1].clone() }>{ "Custom id" }</label>
+                        <input id={ ids[1].clone() } class={ classes!("input-box") } ref={ self.refs.custom_id_input.clone() } type="text" placeholder=""/>
+                    </div>
+                    <div class={ classes!("input-label-container") }>
+                        <label class={ classes!("input-label") } for={ ids[2].clone() }>{ "Expire after" }</label>
+                        <div class={ classes!("expiration-mode-container") }>
+                            <ExpirationInput id={ ids[2].clone() } toggle_ref={ self.refs.expiration_type.clone() } input_ref={ self.refs.expiration_input.clone() }/>
+                        </div>
                     </div>
                 </AdvancedMode>
             </>

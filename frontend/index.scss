@@ -217,6 +217,7 @@ input, button {
 
 .advanced-mode-nodes-inner-container {
     margin: 15px;
+    margin-top: 8px;
     display: flex;
     flex-direction: column;
 }
@@ -329,12 +330,32 @@ label.advanced-mode-toggle {
     }
 }
 
+label.input-label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 3px;
+    //margin-right: 2px;
+    padding-left: 5px;
+}
+
+.input-label-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    //border-width: 1px;
+    //border-style: solid;
+    //border-radius: 8px;
+    //border-color: red;
+    margin-top: 2px;
+}
+
 .expiration-mode-container {
     display: flex;
     flex-direction: column;
+    flex: 1;
     min-width: $input-width;
     // TODO fix this to adjust with other inputs
-    width: $input-width;
+    //width: $input-width;
 }
 
 input.expiration-input {

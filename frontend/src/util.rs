@@ -11,6 +11,7 @@ use tracing_subscriber::{
     layer::SubscriberExt,
     util::SubscriberInitExt,
 };
+use yew::AttrValue;
 use yew::platform::spawn_local;
 
 use crate::types::ServerConfig;
@@ -20,17 +21,19 @@ static SERVER_CONFIG: OnceLock<RwLock<ServerConfig>> = OnceLock::new();
 static ORIGIN: OnceLock<RwLock<String>> = OnceLock::new();
 
 /// generate a guaranteed to be unique alphanumeric id
-pub fn generate_id() -> String {
-    SHORT_CODE_GENERATOR
-        .get_or_init(|| {
-            let generator = ShortCodeGenerator::new_alphanumeric(4)
-                .exhaustion_strategy(ExhaustionStrategy::IncreaseLength);
+pub fn generate_id() -> AttrValue {
+    AttrValue::from(
+        SHORT_CODE_GENERATOR
+            .get_or_init(|| {
+                let generator = ShortCodeGenerator::new_alphanumeric(4)
+                    .exhaustion_strategy(ExhaustionStrategy::IncreaseLength);
 
-            Mutex::new(generator)
-        })
-        .lock()
-        .unwrap()
-        .next_string()
+                Mutex::new(generator)
+            })
+            .lock()
+            .unwrap()
+            .next_string()
+    )
 }
 
 pub fn origin() -> impl Deref<Target = String> {

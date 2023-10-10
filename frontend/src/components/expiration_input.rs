@@ -1,6 +1,6 @@
 use strum_macros::Display;
 use time::{format_description::well_known::Iso8601, OffsetDateTime};
-use yew::{html, Component, Context, Html, NodeRef, Properties, classes};
+use yew::{html, Component, Context, Html, NodeRef, Properties, classes, AttrValue};
 
 use super::{
     duration_input::DurationInput,
@@ -56,6 +56,7 @@ impl From<bool> for ExpirationType {
 pub struct ExpirationInputProps {
     pub input_ref: NodeRef,
     pub toggle_ref: NodeRef,
+    pub id: Option<AttrValue>,
 }
 
 pub struct ExpirationInput {
@@ -92,9 +93,9 @@ impl Component for ExpirationInput {
         html! {
             <>
                 if self.input_type == ExpirationType::Date {
-                    <input class={ classes!("input-box", "expiration-input") } min={ today } ref={ ctx.props().input_ref.clone() } type="date"/>
+                    <input id={ ctx.props().id.clone() } class={ classes!("input-box", "expiration-input") } min={ today } ref={ ctx.props().input_ref.clone() } type="date"/>
                 } else {
-                    <DurationInput class={ classes!("expiration-input") } input_ref={ ctx.props().input_ref.clone() }/>
+                    <DurationInput id={ ctx.props().id.clone() } class={ classes!("expiration-input") } input_ref={ ctx.props().input_ref.clone() }/>
                 }
 
                 <ToggleInput class={ classes!("expiration-mode-toggle") } checkbox_ref={ ctx.props().toggle_ref.clone() } label={ self.input_type.flipped().html() } position={ LabelPosition::Right } { callback }/>

@@ -125,7 +125,7 @@ impl Component for AdvancedMode {
                         <div ref={ self.toggle_container_ref.clone() } class={ classes!("advanced-mode-toggle-container") }>
                             <ToggleInput class={ classes!("advanced-mode-toggle") } checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" position={ LabelPosition::Right } { callback }/>
                         </div>
-                        <div ref={ self.content_ref.clone() } class={ classes!("advanced-mode-nodes-outer-container"/*, self.visibility.class()*/) }>
+                        <div ref={ self.content_ref.clone() } class={ classes!("advanced-mode-nodes-outer-container") }>
                             <div class={ classes!("advanced-mode-nodes-inner-container") }>
                                 { elements }
                             </div>

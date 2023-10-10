@@ -2,7 +2,7 @@ use std::mem;
 
 use strum::FromRepr;
 use web_sys::{DragEvent, Event, FocusEvent, HtmlInputElement, KeyboardEvent, MouseEvent};
-use yew::{html, Callback, Component, Context, Html, NodeRef, Properties, classes, Classes};
+use yew::{html, Callback, Component, Context, Html, NodeRef, Properties, classes, Classes, AttrValue};
 
 use crate::types::duration::{Duration, Parts};
 
@@ -100,7 +100,8 @@ pub enum Arrow {
 pub struct DurationInputProps {
     pub input_ref: NodeRef,
     #[prop_or_default]
-    pub class: Option<Classes>
+    pub class: Option<Classes>,
+    pub id: Option<AttrValue>,
 }
 
 pub struct DurationInput {
@@ -301,6 +302,7 @@ impl Component for DurationInput {
                     { onmouseup }
                     class={ classes!("input-box", "duration", ctx.props().class.clone()) }
                     ref={ ctx.props().input_ref.clone() }
+                    id={ ctx.props().id.clone() }
                     pattern="^[0-9]{1,2}:[0-5][0-9]:[0-5][0-9]$"
                     style="text-align: right;"
                     type="text"
