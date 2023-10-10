@@ -11,6 +11,7 @@ use crate::components::{
 pub enum IndexMessage {
     AddMessage(Message),
     RemoveMessage(Message),
+    ClearMessages,
 }
 
 pub struct Index {
@@ -23,11 +24,13 @@ impl Component for Index {
 
     fn create(_: &Context<Self>) -> Self {
         let mut messages = LinkedHashSet::new();
-        // let message = AttrValue::from("A looooooooooooong message to see css styling effects");
-        //
-        // messages.insert(Message::Error(message.clone()));
-        // messages.insert(Message::Warning(message.clone()));
-        // messages.insert(Message::Info(message));
+
+        // for i in 0..10 {
+        //     let message = AttrValue::from(format!("A looooooooooooong message to see css styling effects {}", i));
+        //     messages.insert(Message::Error(message.clone()));
+        //     messages.insert(Message::Warning(message.clone()));
+        //     messages.insert(Message::Info(message));
+        // }
 
         Self {
             messages,
@@ -39,33 +42,34 @@ impl Component for Index {
             IndexMessage::AddMessage(m) => {
                 self.messages.insert(m.clone());
 
-                let callback = ctx.link().callback(|m| IndexMessage::RemoveMessage(m));
-                let timeout = Timeout::new(5_000, move || {
-                    callback.emit(m);
-                });
-
-                timeout.forget();
+                // TODO check with @flamion
+                // let callback = ctx.link().callback(|m| IndexMessage::RemoveMessage(m));
+                // let timeout = Timeout::new(5_000, move || {
+                //     callback.emit(m);
+                // });
+                //
+                // timeout.forget();
             },
             IndexMessage::RemoveMessage(m) => {
                 self.messages.remove(&m);
             },
+            IndexMessage::ClearMessages => self.messages.clear(),
         }
 
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let add_message = ctx.link().callback(|m| IndexMessage::AddMessage(m));
-        let remove_message = ctx.link().callback(|m| IndexMessage::RemoveMessage(m));
+        let manage_messages = ctx.link().callback(|m| m);
 
         html! {
             <>
                 <div class={ classes!("page-container") }>
                     // TODO clone could be mitigated with an appropriate pointer type
-                    <MessageBox { remove_message } messages={ self.messages.clone() }/>
+                    <MessageBox manage_messages={ manage_messages.clone() } messages={ self.messages.clone() }/>
                     <div class={ classes!("link-shortener-group-container") }>
                         <div class={ classes!("link-shortener-group") }>
-                            <LinkForm callback={ add_message }/>
+                            <LinkForm { manage_messages } />
                         </div>
                     </div>
                     <Footer/>

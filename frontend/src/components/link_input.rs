@@ -2,6 +2,7 @@ use gloo_timers::callback::Timeout;
 use tracing::debug;
 use web_sys::{HtmlInputElement, MouseEvent};
 use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties, classes, Classes};
+use crate::app::index::IndexMessage;
 
 use super::link_form::LinkFormMessage;
 
@@ -45,6 +46,7 @@ pub struct LinkInputProps {
     pub clear_callback: Callback<()>,
     pub input_ref: NodeRef,
     pub onclick: Callback<MouseEvent>,
+    pub manage_messages: Callback<IndexMessage>,
 }
 
 pub struct LinkInput {
@@ -131,7 +133,11 @@ impl Component for LinkInput {
             }
         } else {
             classes = None;
-            onclick = Some(ctx.props().onclick.clone());
+            let manage_messages = ctx.props().manage_messages.clone();
+            onclick = Some(ctx.props().onclick.reform(move |event| {
+                manage_messages.emit(IndexMessage::ClearMessages);
+                event
+            }));
         }
 
         html! {

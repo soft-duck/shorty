@@ -1,4 +1,4 @@
-mod index;
+pub mod index;
 
 use index::Index;
 use yew::{html, Component, Context, Html};

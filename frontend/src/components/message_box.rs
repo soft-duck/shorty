@@ -1,6 +1,7 @@
 use color_eyre::owo_colors::OwoColorize;
 use linked_hash_set::LinkedHashSet;
 use yew::{html, AttrValue, Component, Context, Html, Properties, classes, Callback};
+use crate::app::index::IndexMessage;
 
 #[derive(PartialEq, Clone, Hash, Eq)]
 pub enum Message {
@@ -18,7 +19,7 @@ impl Message {
         }
     }
 
-    fn to_html(&self, rm: Callback<Message>) -> Html {
+    fn to_html(&self, rm: Callback<IndexMessage>) -> Html {
         let (class, icon) = match self {
             Message::Error(_) => (classes!("error"), "error"),
             Message::Warning(_) => (classes!("warning"), "warning"),
@@ -28,7 +29,7 @@ impl Message {
         let message = self.clone();
 
         let onclick = Callback::from(move |_| {
-            rm.emit(message.clone());
+            rm.emit(IndexMessage::RemoveMessage(message.clone()));
         });
 
         html! {
@@ -49,7 +50,7 @@ impl Message {
 #[derive(Properties, PartialEq)]
 pub struct MessageBoxProps {
     pub messages: LinkedHashSet<Message>,
-    pub remove_message: Callback<Message>,
+    pub manage_messages: Callback<IndexMessage>,
 }
 
 pub struct MessageBox;
@@ -68,7 +69,10 @@ impl Component for MessageBox {
             .messages
             .iter()
             .rev()
-            .map(|m| m.to_html(ctx.props().remove_message.clone()))
+            // only display 3 messages at a time
+            // TODO maybe also display a message that says n more messages
+            .take(3)
+            .map(|m| m.to_html(ctx.props().manage_messages.clone()))
             .collect::<Html>();
 
         html! {

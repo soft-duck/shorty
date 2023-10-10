@@ -7,6 +7,7 @@ use web_sys::KeyboardEvent;
 use yew::{AttrValue, Callback, classes, Component, Context, html, Html, NodeRef, Properties};
 
 use crate::{endpoint, types::link_config::LinkConfig};
+use crate::app::index::IndexMessage;
 use crate::types::error::RequestError;
 use crate::util::server_config;
 
@@ -85,7 +86,7 @@ pub enum LinkFormMessage {
 
 #[derive(Properties, PartialEq)]
 pub struct LinkFormPros {
-    pub callback: Callback<Message>,
+    pub manage_messages: Callback<IndexMessage>,
 }
 
 #[derive(Default)]
@@ -112,7 +113,7 @@ impl Component for LinkForm {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let display = ctx.props().callback.clone();
+        let manage_messages = ctx.props().manage_messages.clone();
         let scope = ctx.link().clone();
         let refs = self.refs.clone();
 
@@ -121,7 +122,7 @@ impl Component for LinkForm {
 
             match link_config {
                 Validated::Good(config) => {
-                    let display = display.clone();
+                    let manage_messages = manage_messages.clone();
 
                     debug!("Sending: {:#?}\n to /custom", config);
 
@@ -129,7 +130,7 @@ impl Component for LinkForm {
                         match make_request(config).await {
                             Ok(link) => LinkFormMessage::Display(link),
                             Err(e) => {
-                                display.emit(e.into());
+                                manage_messages.emit(IndexMessage::AddMessage(e.into()));
                                 LinkFormMessage::Input
                             }
                         }
@@ -137,7 +138,7 @@ impl Component for LinkForm {
                 },
                 Validated::Fail(errors) => {
                     for error in errors {
-                        display.emit(error.into());
+                        manage_messages.emit(IndexMessage::AddMessage(error.into()));
                     }
                 },
             }
@@ -150,7 +151,7 @@ impl Component for LinkForm {
         html! {
             <>
                 <h1 class={ classes!("heading") }>{ "[WIP] Link Shortener" }</h1>
-                <LinkInput { onclick } input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } { clear_callback }/>
+                <LinkInput { onclick } input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } manage_messages={ ctx.props().manage_messages.clone() } { clear_callback }/>
                 <AdvancedMode toggle_ref={ self.refs.advanced_mode.clone() }>
                     <input class={ classes!("input-box") } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder="Maximum usages"/>
                     <input class={ classes!("input-box") } ref={ self.refs.custom_id_input.clone() } type="text" placeholder="Custom alphanumeric id"/>
