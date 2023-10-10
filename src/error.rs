@@ -15,6 +15,8 @@ pub enum ShortyError {
 	LinkEmpty,
 	#[error("Maximum retries to generate a random link ID were exceeded.")]
 	RandomIDMaxRetriesExceeded,
+	#[error("An already expired Link was provided.")]
+	ExpiredLinkProvided,
 	#[error(transparent)]
 	Database(#[from] sqlx::Error),
 	#[error(transparent)]
@@ -27,6 +29,7 @@ impl ResponseError for ShortyError {
 			ShortyError::LinkConflict => StatusCode::CONFLICT,
 			ShortyError::LinkExceedsMaxLength
 			| ShortyError::LinkEmpty
+			| ShortyError::ExpiredLinkProvided
 			| ShortyError::CustomIDExceedsMaxLength => StatusCode::BAD_REQUEST,
 			_ => StatusCode::INTERNAL_SERVER_ERROR,
 		}
