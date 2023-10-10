@@ -1,5 +1,5 @@
 use gloo_timers::callback::Timeout;
-use linked_hash_set::LinkedHashSet;
+use ritelinked::LinkedHashSet;
 use yew::{html, Component, Context, Html, classes, AttrValue};
 
 use crate::components::{
@@ -25,12 +25,12 @@ impl Component for Index {
     fn create(_: &Context<Self>) -> Self {
         let mut messages = LinkedHashSet::new();
 
-        // for i in 0..10 {
-        //     let message = AttrValue::from(format!("A looooooooooooong message to see css styling effects {}", i));
-        //     messages.insert(Message::Error(message.clone()));
-        //     messages.insert(Message::Warning(message.clone()));
-        //     messages.insert(Message::Info(message));
-        // }
+        for i in 0..10 {
+            let message = AttrValue::from(format!("A looooooooooooong message to see css styling effects {}", i));
+            messages.insert(Message::Error(message.clone()));
+            messages.insert(Message::Warning(message.clone()));
+            messages.insert(Message::Info(message));
+        }
 
         Self {
             messages,
