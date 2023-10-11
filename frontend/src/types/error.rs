@@ -14,6 +14,11 @@ pub enum FormError {
     ExceededMaxIdLength { id: String, max_length: usize },
     #[error("{number} is not a valid number. Please input a valid one.")]
     ParseNumberFailure { number: String },
+    // TODO make error message better by including set date or duration
+    #[error("Expiration is in the past which would invalidate the link instantly upon creation")]
+    NegativeExpiration { seconds: i64 },
+    #[error("The number of uses is negative and would therefore invalidate the link instantly upon creation")]
+    NegativeMaxUses { max_uses: i64 },
 }
 
 #[derive(Error, Debug)]

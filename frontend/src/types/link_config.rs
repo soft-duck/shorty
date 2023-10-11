@@ -127,10 +127,10 @@ impl LinkConfig {
 
         if let Some(config) = server_config() {
             if value.len() > config.max_custom_id_length {
-                return Fail(nev![FormError::ExceededMaxIdLength {
+                return Validated::fail(FormError::ExceededMaxIdLength {
                     id: value,
                     max_length: config.max_custom_id_length
-                }]);
+                });
             }
         }
 
@@ -157,10 +157,14 @@ impl LinkConfig {
         // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1398528
         // TODO use input.validity.valid for mor fine grained errors https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.ValidityState.html
         let Ok(value) = value.parse::<i64>() else {
-            return Fail(nev![FormError::ParseNumberFailure {
+            return Validated::fail(FormError::ParseNumberFailure {
                 number: value.to_string()
-            }]);
+            });
         };
+
+        if value < 0 {
+            return Validated::fail(FormError::NegativeMaxUses { max_uses: value });
+        }
 
         Good(Some(value))
     }
@@ -199,7 +203,13 @@ impl LinkConfig {
         let parts =
             Parts::try_from(value.as_str()).expect(&format!("Format unexpected: {}", value));
 
-        Good(Some(Duration::from_parts(parts).seconds * 1000))
+        let seconds = Duration::from_parts(parts).seconds * 1000;
+
+        if seconds < 0 {
+            return Validated::fail(FormError::NegativeExpiration { seconds });
+        }
+
+        Good(Some(seconds))
     }
 
     fn parse_date(refs: &LinkFormRefs) -> Validated<Option<i64>, FormError> {
@@ -227,6 +237,10 @@ impl LinkConfig {
         let mut difference = date_time.unix_timestamp() - local_now.unix_timestamp();
         // because the timestamp is needed in milliseconds
         difference *= 1000;
+
+        if difference < 0 {
+            return Validated::fail(FormError::NegativeExpiration { seconds: difference });
+        }
 
         Good(Some(difference))
     }
