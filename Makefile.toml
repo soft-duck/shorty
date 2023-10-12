@@ -1,0 +1,9 @@
+[tasks.default]
+alias = "build"
+
+[tasks.build]
+workspace = false
+clear = true
+dependencies = [
+    { name = "build", path = "backend" },
+]

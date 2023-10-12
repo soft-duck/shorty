@@ -1,0 +1,16 @@
+[tasks.default]
+alias = "build"
+
+[tasks.build]
+clear = true
+alias = "build-backend"
+
+[tasks.build-backend]
+command = "cargo"
+args = ["build", "@@remove-empty(RELEASE_FLAG)"]
+dependencies = [
+    { name = "build", path = "../frontend" },
+]
+
+[env.release]
+RELEASE_FLAG = "--release"

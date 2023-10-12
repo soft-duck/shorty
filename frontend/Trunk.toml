@@ -1,0 +1,4 @@
+[build]
+target = "index.html"
+filehash = false
+public_url = "/assets/"

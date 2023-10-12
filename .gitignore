@@ -1,9 +1,10 @@
 /target
-/config.toml
+/backend/config.toml
 /database
 /.env
 database.db
-/database.db-shm
-/database.db-wal
+database.db-shm
+database.db-wal
 .idea
-/.fleet/
+.fleet
+/frontend/dist

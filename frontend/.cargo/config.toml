@@ -1,0 +1,3 @@
+[build]
+# needed for https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Navigator.html#method.clipboard
+rustflags = ["--cfg=web_sys_unstable_apis"]

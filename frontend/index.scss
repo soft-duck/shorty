@@ -1,0 +1,32 @@
+@font-face {
+    font-family: 'Material Symbols Outlined';
+    font-style: normal;
+    src: url('fonts/material-symbols.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Roboto Slab';
+    font-style: normal;
+    src: url('fonts/roboto-slab.woff2') format('woff2');
+}
+
+// from https://www.florin-pop.com/blog/2019/03/css-pulse-effect/
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    70% {
+        transform: scale(1.01);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+// TODO add additional shift animation
+@keyframes popUp {
+    0% { transform: scale(0.1); }
+    100% { transform: scale(1); }
+}
