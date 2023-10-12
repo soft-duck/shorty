@@ -28,7 +28,8 @@ chrono = "0.4.23"
 thiserror = "1.0.38"
 
 lazy_static = "1.4.0"
-dotenv = "0.15.0"
+
+dotenvy = "0.15.7"
 
 [dependencies.sqlx]
 version = "0.6.2"
