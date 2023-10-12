@@ -27,16 +27,12 @@ pub enum RequestError {
     JsonSizeExceeded,
     #[error("Request to backend unsuccessful: {error}")]
     // TODO better name
-    UnsuccessfulRequest {
-        error: reqwest::Error,
-    },
+    UnsuccessfulRequest { error: reqwest::Error },
     // TODO make error more specific by documenting the backend error possibilities
     #[error("Json malformed")]
     Backend400,
     #[error("Id '{id}' already in use")]
-    IdInUse {
-        id: String,
-    },
+    IdInUse { id: String },
 }
 
 impl Into<Message> for RequestError {

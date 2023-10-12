@@ -34,8 +34,3 @@ dotenv = "0.15.0"
 [dependencies.sqlx]
 version = "0.6.2"
 features = ["runtime-tokio-rustls", "chrono", "migrate", "offline", "macros", "sqlite"]
-
-[profile.production]
-inherits = "release"
-lto = "fat"
-strip = true

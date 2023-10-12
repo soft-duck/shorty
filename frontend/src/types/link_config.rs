@@ -1,4 +1,4 @@
-use nonempty_collections::{nev, NEVec};
+use nonempty_collections::NEVec;
 use serde::Serialize;
 use time::{
     format_description::well_known::Iso8601,
@@ -129,7 +129,7 @@ impl LinkConfig {
             if value.len() > config.max_custom_id_length {
                 return Validated::fail(FormError::ExceededMaxIdLength {
                     id: value,
-                    max_length: config.max_custom_id_length
+                    max_length: config.max_custom_id_length,
                 });
             }
         }
@@ -158,7 +158,7 @@ impl LinkConfig {
         // TODO use input.validity.valid for mor fine grained errors https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.ValidityState.html
         let Ok(value) = value.parse::<i64>() else {
             return Validated::fail(FormError::ParseNumberFailure {
-                number: value.to_string()
+                number: value.to_string(),
             });
         };
 
@@ -239,7 +239,9 @@ impl LinkConfig {
         difference *= 1000;
 
         if difference < 0 {
-            return Validated::fail(FormError::NegativeExpiration { seconds: difference });
+            return Validated::fail(FormError::NegativeExpiration {
+                seconds: difference,
+            });
         }
 
         Good(Some(difference))

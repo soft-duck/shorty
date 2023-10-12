@@ -1,12 +1,25 @@
 use enclose::enclose;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlInputElement;
-use yew::{html, AttrValue, Callback, Component, Context, Html, InputEvent, NodeRef, Properties, Classes, classes};
+use yew::{
+    classes,
+    html,
+    AttrValue,
+    Callback,
+    Classes,
+    Component,
+    Context,
+    Html,
+    InputEvent,
+    NodeRef,
+    Properties,
+};
 
 use super::advanced_mode::AdvancedModeVisibility;
 use crate::util::generate_id;
 
 #[derive(Copy, Clone, PartialEq, Default)]
+// TODO decide if it should be deprecated / removed
 pub enum LabelPosition {
     Left,
     #[default]
@@ -52,7 +65,7 @@ pub struct ToggleInputProps {
     pub callback: Option<Callback<ToggleInputState>>,
     pub checkbox_ref: NodeRef,
     #[prop_or_default]
-    pub class: Option<Classes>
+    pub class: Option<Classes>,
 }
 
 pub struct ToggleInput {

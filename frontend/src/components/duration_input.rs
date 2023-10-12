@@ -2,9 +2,24 @@ use std::mem;
 
 use strum::FromRepr;
 use web_sys::{DragEvent, Event, FocusEvent, HtmlInputElement, KeyboardEvent, MouseEvent};
-use yew::{html, Callback, Component, Context, Html, NodeRef, Properties, classes, Classes, AttrValue};
+use yew::{
+    classes,
+    html,
+    AttrValue,
+    Callback,
+    Classes,
+    Component,
+    Context,
+    Html,
+    NodeRef,
+    Properties,
+};
 
-use crate::types::duration::{Duration, Parts};
+use super::TEXT_INPUT;
+use crate::{
+    types::duration::{Duration, Parts},
+    util::AsClasses,
+};
 
 fn cursor_location(input: &HtmlInputElement) -> u32 {
     let direction = input.selection_direction().unwrap().unwrap();
@@ -300,7 +315,7 @@ impl Component for DurationInput {
                     { onpaste }
                     { onkeydown }
                     { onmouseup }
-                    class={ classes!("input-box", "duration", ctx.props().class.clone()) }
+                    class={ classes!(TEXT_INPUT.as_classes(), "duration", ctx.props().class.clone()) }
                     ref={ ctx.props().input_ref.clone() }
                     id={ ctx.props().id.clone() }
                     pattern="^[0-9]{1,2}:[0-5][0-9]:[0-5][0-9]$"

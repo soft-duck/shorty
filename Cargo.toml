@@ -1,5 +1,11 @@
 [workspace]
+resolver = "2"
 members = [
     "backend",
     "frontend",
 ]
+
+[profile.production]
+inherits = "release"
+lto = "fat"
+strip = true

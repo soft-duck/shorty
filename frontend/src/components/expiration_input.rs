@@ -1,12 +1,60 @@
 use strum_macros::Display;
+use stylist::{css, StyleSource};
 use time::{format_description::well_known::Iso8601, OffsetDateTime};
-use yew::{html, Component, Context, Html, NodeRef, Properties, classes, AttrValue};
+use yew::{classes, html, AttrValue, Component, Context, Html, NodeRef, Properties};
 
 use super::{
     duration_input::DurationInput,
     toggle_input::{LabelPosition, ToggleInput, ToggleInputState},
 };
-use crate::util::try_get_local_offset;
+use crate::{
+    components::{ICON, TEXT_INPUT},
+    util::{try_get_local_offset, AsClasses},
+    ACCENT_COLOR,
+    INPUT_WIDTH,
+};
+
+thread_local! {
+    // because icon is not aligned with text
+    static DATE_ICON_HEIGHT: StyleSource = css!(r#"
+        vertical-align: -3px;
+    "#);
+
+    // because icon is not aligned with text
+    static CLOCK_ICON_HEIGHT: StyleSource = css!(r#"
+        vertical-align: -4px;
+    "#);
+
+    static EXPIRATION_INPUT: StyleSource = css!(r#"
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    "#);
+
+    // TODO find better way than that calculation
+    static TOGGLE: StyleSource = css!(r#"
+        &:is(label) {
+            user-select: none;
+        }
+
+        &:is(label) > span {
+            padding-top: 2px;
+            padding-bottom: 4px;
+            background-color: ${ac};
+            border-radius: 0 0 8px 8px;
+            min-width: ${iw} + 16 + 2;
+            text-align: center;
+            display: block;
+        }
+
+        &:is(label):hover > span {
+            background-color: #b31234;
+        }
+
+        &:is(input[type=checkbox]) {
+            display: none;
+        }
+    "#, ac = ACCENT_COLOR, iw = INPUT_WIDTH);
+}
 
 #[derive(Copy, Clone, PartialEq, Display)]
 pub enum ExpirationType {
@@ -24,13 +72,13 @@ impl ExpirationType {
 
     fn html(&self) -> Html {
         let icon = match self {
-            ExpirationType::Date => ("date", "calendar_month"),
-            ExpirationType::Duration => ("duration", "schedule"),
+            ExpirationType::Date => (DATE_ICON_HEIGHT.as_classes(), "calendar_month"),
+            ExpirationType::Duration => (CLOCK_ICON_HEIGHT.as_classes(), "schedule"),
         };
 
         html! {
             <span>
-                <span class={ classes!("material-symbols-outlined", "icon-size", icon.0) }>{ icon.1 }</span>
+                <span class={ classes!(ICON.as_classes(), icon.0) }>{ icon.1 }</span>
                 { " " }{ self.to_string() }
             </span>
         }
@@ -93,12 +141,12 @@ impl Component for ExpirationInput {
         html! {
             <>
                 if self.input_type == ExpirationType::Date {
-                    <input id={ ctx.props().id.clone() } class={ classes!("input-box", "expiration-input") } min={ today } ref={ ctx.props().input_ref.clone() } type="date"/>
+                    <input id={ ctx.props().id.clone() } class={ classes!(TEXT_INPUT.as_classes(), EXPIRATION_INPUT.as_classes()) } min={ today } ref={ ctx.props().input_ref.clone() } type="date"/>
                 } else {
-                    <DurationInput id={ ctx.props().id.clone() } class={ classes!("expiration-input") } input_ref={ ctx.props().input_ref.clone() }/>
+                    <DurationInput id={ ctx.props().id.clone() } class={ EXPIRATION_INPUT.as_classes() } input_ref={ ctx.props().input_ref.clone() }/>
                 }
 
-                <ToggleInput class={ classes!("expiration-mode-toggle") } checkbox_ref={ ctx.props().toggle_ref.clone() } label={ self.input_type.flipped().html() } position={ LabelPosition::Right } { callback }/>
+                <ToggleInput class={ TOGGLE.as_classes() } checkbox_ref={ ctx.props().toggle_ref.clone() } label={ self.input_type.flipped().html() } position={ LabelPosition::Right } { callback }/>
             </>
         }
     }

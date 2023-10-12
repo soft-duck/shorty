@@ -1,31 +1,84 @@
+use stylist::{css, StyleSource};
 use tracing::debug;
-use wasm_bindgen::closure::Closure;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::{Element, HtmlElement, ResizeObserver};
-use yew::{html, AttrValue, Children, Component, Context, Html, NodeRef, Properties, classes, Classes};
+use yew::{classes, html, Children, Component, Context, Html, NodeRef, Properties};
 
 use super::toggle_input::{LabelPosition, ToggleInput, ToggleInputState};
+use crate::{util::AsClasses, ACCENT_COLOR};
+
+thread_local! {
+    // https://www.w3schools.com/howto/howto_js_collapsible.asp
+    // TODO split with other parts
+    static CONTAINER: StyleSource = css!(r#"
+        margin-top: 15px;
+        border-color: ${ac};
+        border-width: 1px;
+        border-radius: 10px;
+        border-style: solid;
+    "#, ac = ACCENT_COLOR);
+
+    static NODE_CONTAINER: StyleSource = css!(r#"
+        display: flex;
+
+        & > * {
+            flex: 1;
+        }
+    "#);
+
+    static NODES_OUTER: StyleSource = css!(r#"
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height .5s;
+    "#);
+
+    static NODES_INNER: StyleSource = css!(r#"
+        margin: 15px;
+        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+    "#);
+
+    static TOGGLE_CONTAINER: StyleSource = css!(r#"
+        display: flex;
+        justify-content: center;
+    "#);
+
+    static TOGGLE: StyleSource = css!(r#"
+        &:is(label) {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color .5s, border-radius .1s;
+            user-select: none;
+            outline: ${ac} solid 1px;
+        }
+
+        &:is(label):hover {
+            background-color: #b31234;
+        }
+
+        &:is(input[type=checkbox]) {
+            display: none;
+        }
+
+        &:is(input[type=checkbox]):checked + &:is(label) {
+            background-color: ${ac};
+            border-radius: 8px 8px 0 0;
+            outline: ${ac} solid 1px;
+        }
+
+        &:is(input[type=checkbox]):checked + &:is(label):hover {
+            background-color: #b31234;
+        }
+    "#, ac = ACCENT_COLOR);
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum AdvancedModeVisibility {
     Collapsed,
     Expanded,
-}
-
-impl AdvancedModeVisibility {
-    fn style(&self) -> AttrValue {
-        match self {
-            AdvancedModeVisibility::Collapsed => AttrValue::from("visibility: hidden;"),
-            AdvancedModeVisibility::Expanded => AttrValue::from("visibility: visible;"),
-        }
-    }
-
-    fn class(&self) -> Classes {
-        match self {
-            AdvancedModeVisibility::Collapsed => classes!(),
-            AdvancedModeVisibility::Expanded => classes!("expanded"),
-        }
-    }
 }
 
 impl From<ToggleInputState> for AdvancedModeVisibility {
@@ -76,8 +129,10 @@ impl Component for AdvancedMode {
 
             let height = toggle_height + content_height;
 
-            size_shadow.style().set_property("height", &format!("{}px", height)).unwrap();
-
+            size_shadow
+                .style()
+                .set_property("height", &format!("{}px", height))
+                .unwrap();
         });
 
         Self {
@@ -121,12 +176,12 @@ impl Component for AdvancedMode {
         html! {
             <>
                 <div ref={ self.size_shadow_ref.clone() } class={ classes!("size-shadow") }>
-                    <div class={ classes!("advanced-mode-container") }>
-                        <div ref={ self.toggle_container_ref.clone() } class={ classes!("advanced-mode-toggle-container") }>
-                            <ToggleInput class={ classes!("advanced-mode-toggle") } checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" position={ LabelPosition::Right } { callback }/>
+                    <div class={ CONTAINER.as_classes() }>
+                        <div ref={ self.toggle_container_ref.clone() } class={ TOGGLE_CONTAINER.as_classes() }>
+                            <ToggleInput class={ TOGGLE.as_classes() } checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" position={ LabelPosition::Right } { callback }/>
                         </div>
-                        <div ref={ self.content_ref.clone() } class={ classes!("advanced-mode-nodes-outer-container") }>
-                            <div class={ classes!("advanced-mode-nodes-inner-container") }>
+                        <div ref={ self.content_ref.clone() } class={ NODES_OUTER.as_classes() }>
+                            <div class={ NODES_INNER.as_classes() }>
                                 { elements }
                             </div>
                         </div>
@@ -141,13 +196,17 @@ impl Component for AdvancedMode {
     fn rendered(&mut self, _: &Context<Self>, first_render: bool) {
         if first_render {
             //TODO is there a better place?
-            self.observer.observe(&self.toggle_container_ref.cast::<Element>().unwrap());
+            self.observer
+                .observe(&self.toggle_container_ref.cast::<Element>().unwrap());
         }
         let content = self.content_ref.cast::<HtmlElement>().unwrap();
         let content_height = content.scroll_height();
 
         if self.visibility == AdvancedModeVisibility::Expanded {
-            content.style().set_property("max-height", &format!("{}px", content_height)).unwrap();
+            content
+                .style()
+                .set_property("max-height", &format!("{}px", content_height))
+                .unwrap();
         } else {
             content.style().remove_property("max-height").unwrap();
         }

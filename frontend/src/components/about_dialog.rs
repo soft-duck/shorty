@@ -1,5 +1,39 @@
+use stylist::{css, StyleSource};
 use web_sys::HtmlDialogElement;
-use yew::{Callback, classes, Component, Context, Html, html, NodeRef, Properties};
+use yew::{html, Callback, Component, Context, Html, NodeRef, Properties};
+
+use crate::util::AsClasses;
+
+thread_local! {
+    static BUTTON_CONTAINER: StyleSource = css!(r#"
+        display: flex;
+        justify-content: center;
+    "#);
+
+    static CONTENT_CONTAINER: StyleSource = css!(r#"
+        flex: 1;
+        text-align: center;
+    "#);
+
+    static HEADING: StyleSource = css!(r#"
+        margin-bottom: 15px;
+        margin-top: 15px;
+    "#);
+
+    static BUTTON: StyleSource = css!(r#"
+        background-color: transparent;
+        border-style: none;
+        outline-style: none;
+        cursor: pointer;
+        color: white;
+        text-decoration: underline;
+        font-size: 16px;
+
+        &:hover {
+            color: rgb(94, 101, 103);
+        }
+    "#);
+}
 
 pub struct AboutDialog {
     dialog_ref: NodeRef,
@@ -32,8 +66,8 @@ impl Component for AboutDialog {
         html! {
             <dialog ref={ self.dialog_ref.clone() }>
                 <form method="dialog">
-                    <div class={ classes!("dialog-content-container") }>
-                        <h1 class={ classes!("dialog-heading") }>{ "About" }</h1>
+                    <div class={ CONTENT_CONTAINER.as_classes() }>
+                        <h1 class={ HEADING.as_classes() }>{ "About" }</h1>
                         <p>{
                             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do \
                             eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad \
@@ -44,8 +78,8 @@ impl Component for AboutDialog {
                             mollit anim id est laborum."
                         }</p>
                     </div>
-                    <div class={ classes!("dialog-button-container") }>
-                        <button class={ classes!("dialog-close-button") }>{ "Close" }</button>
+                    <div class={ BUTTON_CONTAINER.as_classes() }>
+                        <button class={ BUTTON.as_classes() }>{ "Close" }</button>
                     </div>
                 </form>
             </dialog>

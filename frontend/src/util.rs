@@ -1,6 +1,7 @@
 use std::{
     ops::Deref,
     sync::{Mutex, OnceLock, RwLock},
+    thread::LocalKey,
 };
 
 use time::UtcOffset;
@@ -11,8 +12,7 @@ use tracing_subscriber::{
     layer::SubscriberExt,
     util::SubscriberInitExt,
 };
-use yew::AttrValue;
-use yew::platform::spawn_local;
+use yew::{classes, platform::spawn_local, AttrValue, Classes};
 
 use crate::types::ServerConfig;
 
@@ -32,7 +32,7 @@ pub fn generate_id() -> AttrValue {
             })
             .lock()
             .unwrap()
-            .next_string()
+            .next_string(),
     )
 }
 
@@ -94,10 +94,21 @@ pub fn setup_tracing_subscriber() {
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_ansi(false)
         .with_timer(UtcTime::rfc_3339())
-        .with_writer(
-             tracing_web::MakeConsoleWriter
-                    .with_max_level(LEVEL)
-        );
+        .with_writer(tracing_web::MakeConsoleWriter.with_max_level(LEVEL));
 
     tracing_subscriber::registry().with(fmt_layer).init();
+}
+
+pub trait AsClasses {
+    fn as_classes(&'static self) -> Classes;
+}
+
+impl<T: Clone> AsClasses for LocalKey<T>
+where
+    Classes: From<T>,
+{
+    fn as_classes(&'static self) -> Classes {
+        // should be fine because T is a StyleSource and StyleSource only holds Rc's
+        self.with(|a| classes!(a.clone()))
+    }
 }

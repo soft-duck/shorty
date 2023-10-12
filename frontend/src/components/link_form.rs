@@ -1,30 +1,56 @@
-use std::future::Future;
-
 use reqwest::Client;
+use stylist::{css, StyleSource};
 use tracing::debug;
 use validated::Validated;
-use web_sys::KeyboardEvent;
-use yew::{AttrValue, Callback, classes, Component, Context, html, Html, NodeRef, Properties};
-
-use crate::{endpoint, types::link_config::LinkConfig};
-use crate::app::index::IndexMessage;
-use crate::types::error::RequestError;
-use crate::util::{generate_id, server_config};
+use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
 
 use super::{
     advanced_mode::AdvancedMode,
     expiration_input::ExpirationInput,
     link_input::{LinkInput, LinkInputMessage},
-    message_box::Message,
+    TEXT_INPUT,
+};
+use crate::{
+    app::index::IndexMessage,
+    endpoint,
+    types::{error::RequestError, link_config::LinkConfig},
+    util::{generate_id, server_config, AsClasses},
+    INPUT_WIDTH,
 };
 
+thread_local! {
+    static LABEL: StyleSource = css!(r#"
+        display: block;
+        font-size: 12px;
+        margin-bottom: 3px;
+        padding-left: 5px;
+    "#);
+
+    static CONTAINER: StyleSource = css!(r#"
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-top: 2px;
+    "#);
+
+    static EXPIRATION_CONTAINER: StyleSource = css!(r#"
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: ${iw};
+    "#, iw = INPUT_WIDTH);
+
+    static HEADING: StyleSource = css!(r#"
+        margin: 0 0 4px;
+    "#);
+}
+
 async fn make_request(link_config: LinkConfig) -> Result<AttrValue, RequestError> {
-    let json = serde_json::to_string(&link_config)
-        .expect("Json could not be serialized");
+    let json = serde_json::to_string(&link_config).expect("Json could not be serialized");
 
     if let Some(config) = server_config() {
         if json.len() > config.max_json_size {
-            return Err(RequestError::JsonSizeExceeded)
+            return Err(RequestError::JsonSizeExceeded);
         }
     }
 
@@ -43,7 +69,9 @@ async fn make_request(link_config: LinkConfig) -> Result<AttrValue, RequestError
     let response = result.unwrap();
     let status = response.status();
 
-    let text = response.text().await
+    let text = response
+        .text()
+        .await
         .expect("Expected a text/plain response");
 
     debug!(
@@ -59,8 +87,9 @@ async fn make_request(link_config: LinkConfig) -> Result<AttrValue, RequestError
             // TODO use concrete backend error enum to match
             400 => RequestError::Backend400,
             409 => RequestError::IdInUse {
-                id: link_config.id
-                    .expect("Server returned an in use id, even though no custom id was provided")
+                id: link_config
+                    .id
+                    .expect("Server returned an in use id, even though no custom id was provided"),
             },
             code => panic!("Unexpected return code: {}", code),
         })
@@ -132,7 +161,7 @@ impl Component for LinkForm {
                             Err(e) => {
                                 manage_messages.emit(IndexMessage::AddMessage(e.into()));
                                 LinkFormMessage::Input
-                            }
+                            },
                         }
                     });
                 },
@@ -150,22 +179,23 @@ impl Component for LinkForm {
 
         let ids = [generate_id(), generate_id(), generate_id()];
 
+        // TODO remove code duplication
         html! {
             <>
-                <h1 class={ classes!("heading") }>{ "[WIP] Link Shortener" }</h1>
+                <h1 class={ HEADING.as_classes() }>{ "[WIP] Link Shortener" }</h1>
                 <LinkInput { onclick } input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } manage_messages={ ctx.props().manage_messages.clone() } { clear_callback }/>
                 <AdvancedMode toggle_ref={ self.refs.advanced_mode.clone() }>
-                    <div class={ classes!("input-label-container") }>
-                        <label class={ classes!("input-label") } for={ ids[0].clone() }>{ "Max. usages" }</label>
-                        <input id={ ids[0].clone() } class={ classes!("input-box") } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder=""/>
+                    <div class={ CONTAINER.as_classes() }>
+                        <label class={ LABEL.as_classes() } for={ ids[0].clone() }>{ "Max. usages" }</label>
+                        <input id={ ids[0].clone() } class={ TEXT_INPUT.as_classes() } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder=""/>
                     </div>
-                    <div class={ classes!("input-label-container") }>
-                        <label class={ classes!("input-label") } for={ ids[1].clone() }>{ "Custom id" }</label>
-                        <input id={ ids[1].clone() } class={ classes!("input-box") } ref={ self.refs.custom_id_input.clone() } type="text" placeholder=""/>
+                    <div class={ CONTAINER.as_classes() }>
+                        <label class={ LABEL.as_classes() } for={ ids[1].clone() }>{ "Custom id" }</label>
+                        <input id={ ids[1].clone() } class={ TEXT_INPUT.as_classes() } ref={ self.refs.custom_id_input.clone() } type="text" placeholder=""/>
                     </div>
-                    <div class={ classes!("input-label-container") }>
-                        <label class={ classes!("input-label") } for={ ids[2].clone() }>{ "Expire after" }</label>
-                        <div class={ classes!("expiration-mode-container") }>
+                    <div class={ CONTAINER.as_classes() }>
+                        <label class={ LABEL.as_classes() } for={ ids[2].clone() }>{ "Expire after" }</label>
+                        <div class={ EXPIRATION_CONTAINER.as_classes() }>
                             <ExpirationInput id={ ids[2].clone() } toggle_ref={ self.refs.expiration_type.clone() } input_ref={ self.refs.expiration_input.clone() }/>
                         </div>
                     </div>

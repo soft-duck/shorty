@@ -1,10 +1,64 @@
 use gloo_timers::callback::Timeout;
+use stylist::{css, StyleSource};
 use tracing::debug;
 use web_sys::{HtmlInputElement, MouseEvent};
-use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties, classes, Classes};
-use crate::app::index::IndexMessage;
+use yew::{
+    classes,
+    html,
+    AttrValue,
+    Callback,
+    Classes,
+    Component,
+    Context,
+    Html,
+    NodeRef,
+    Properties,
+};
 
-use super::link_form::LinkFormMessage;
+use super::{link_form::LinkFormMessage, TEXT_INPUT};
+use crate::{app::index::IndexMessage, util::AsClasses, ACCENT_COLOR, FONT_COLOR};
+
+thread_local! {
+    // TODO make variable
+    static COPY: StyleSource = css!(r#"
+        background-color: #2222ca;
+
+        &:hover {
+            background-color: #1b1b9e;
+        }
+    "#);
+
+    // TODO make variable
+    static COPIED: StyleSource = css!(r#"
+        background-color: #1dd320;
+    "#);
+
+    // TODO make variable
+    static BUTTON: StyleSource = css!(r#"
+        background-color: ${ac};
+        color: ${fc};
+        padding: 8px;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        height: 40px;
+        user-select: none;
+        min-width: 84px;
+
+        &:hover {
+            background-color: #b31234;
+        }
+    "#, ac = ACCENT_COLOR, fc = FONT_COLOR);
+
+    static LINK_INPUT: StyleSource = css!(r#"
+        margin-bottom: 0;
+        margin-right: 5px;
+    "#);
+
+    static CONTAINER: StyleSource = css!(r#"
+        white-space: nowrap;
+    "#);
+}
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum LinkInputState {
@@ -14,10 +68,10 @@ pub enum LinkInputState {
 
 impl LinkInputState {
     fn class(&self) -> Classes {
-        classes!(match self {
-            LinkInputState::Copied => "copied",
-            LinkInputState::Copy => "copy",
-        })
+        match self {
+            LinkInputState::Copied => COPIED.as_classes(),
+            LinkInputState::Copy => COPY.as_classes(),
+        }
     }
 }
 
@@ -142,9 +196,9 @@ impl Component for LinkInput {
 
         html! {
             <>
-                <div class={ classes!("link-input-container") }>
-                    <input class={ classes!("input-box", "link-input") } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
-                    <button class={ classes!("shorten-button", classes) } type={ "button" } onclick={ onclick }>{ text }</button>
+                <div class={ CONTAINER.as_classes() }>
+                    <input class={ classes!(TEXT_INPUT.as_classes(), LINK_INPUT.as_classes()) } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
+                    <button class={ classes!(BUTTON.as_classes(), classes) } type={ "button" } onclick={ onclick }>{ text }</button>
                 </div>
             </>
         }
