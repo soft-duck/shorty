@@ -2,7 +2,6 @@
 name = "shorty"
 version = "0.8.1"
 edition = "2021"
-rust-version =  "1.60"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
