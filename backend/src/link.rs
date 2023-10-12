@@ -92,7 +92,6 @@ impl Link {
 				return Err(ShortyError::CustomIDExceedsMaxLength);
 			}
 
-
 			replace_illegal_url_chars(&id)
 		} else {
 			get_random_id(pool).await?
@@ -120,6 +119,19 @@ impl Link {
 			}
 		}
 
+		let shortened = Self {
+			id,
+			redirect_to,
+			max_uses,
+			invocations,
+			created_at,
+			valid_for,
+		};
+
+		if shortened.is_expired() {
+			return Err(ShortyError::ExpiredLinkProvided);
+		}
+
 		// We checked if the link exists already and is valid.
 		// If it exists it has to be stale and can be replaced.
 		sqlx::query!(
@@ -127,8 +139,8 @@ impl Link {
 				INSERT OR REPLACE INTO links
 				VALUES ($1, $2, $3, $4, $5, $6)
 			"#,
-			id,
-			redirect_to,
+			shortened.id,
+			shortened.redirect_to,
 			max_uses,
 			invocations,
 			created_at,
@@ -138,25 +150,23 @@ impl Link {
 			.await?;
 
 
-		Ok(Self {
-			id,
-			redirect_to,
-			max_uses,
-			invocations,
-			created_at,
-			valid_for,
-		})
+		Ok(shortened)
 	}
 
+	/// A link with a valid_for of 0 is considered non-expiring based on time.
+	/// A link with max_uses of 0 is considered infinitely usable, as long as it hasn't
+	/// expired time-wise.
 	#[must_use]
 	pub fn is_expired(&self) -> bool {
-		let expired = self.valid_for != 0
-			&& (Local::now().timestamp_millis() - self.created_at) > self.valid_for;
+		let time_expired = self.valid_for < 0 || (self.valid_for > 0
+			&& (Local::now().timestamp_millis() - self.created_at) > self.valid_for);
 
-		let uses_valid = self.max_uses != 0 && self.invocations >= self.max_uses;
+		let uses_invalid = self.max_uses < 0
+			|| (self.max_uses > 0 && self.invocations >= self.max_uses);
 
-
-		expired || uses_valid
+		debug!("time_expired: {time_expired}");
+		debug!("uses_invalid: {uses_invalid}");
+		time_expired || uses_invalid
 	}
 
 	/// Retrieves a link from the database, if it exists.

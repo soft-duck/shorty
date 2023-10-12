@@ -32,7 +32,7 @@ which should have appeared.
 ### Configuration
 
 A sample config with the name `config.toml.sample` is provided in this repository. Alternatively, if it
-can't find a config file,shorty will create the sample at the config location.
+can't find a config file, shorty will create the sample at the config location.
 The config location by default is next to the binary, but can be customized via the `SHORTY_CONFIG`
 environment variable.
 
