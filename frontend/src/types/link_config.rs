@@ -1,9 +1,9 @@
 use nonempty_collections::NEVec;
 use serde::Serialize;
 use time::{
+    Date,
     format_description::well_known::Iso8601,
     macros::time,
-    Date,
     OffsetDateTime,
     UtcOffset,
 };
@@ -35,8 +35,6 @@ pub struct LinkConfig {
 }
 
 impl LinkConfig {
-    // TODO incorporate server config errors
-    // TODO when https://github.com/flamion/shorty/issues/51 is resolved apply the solution
     pub fn try_from(refs: &LinkFormRefs) -> Validated<Self, FormError> {
         let input = refs
             .advanced_mode

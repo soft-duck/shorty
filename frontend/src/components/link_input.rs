@@ -3,20 +3,21 @@ use stylist::{css, StyleSource};
 use tracing::debug;
 use web_sys::{HtmlInputElement, MouseEvent};
 use yew::{
-    classes,
-    html,
     AttrValue,
     Callback,
+    classes,
     Classes,
     Component,
     Context,
+    html,
     Html,
     NodeRef,
     Properties,
 };
 
+use crate::{ACCENT_COLOR, app::index::IndexMessage, FONT_COLOR, util::AsClasses};
+
 use super::{link_form::LinkFormMessage, TEXT_INPUT};
-use crate::{app::index::IndexMessage, util::AsClasses, ACCENT_COLOR, FONT_COLOR};
 
 thread_local! {
     // TODO make variable
@@ -178,7 +179,6 @@ impl Component for LinkInput {
 
                     let input_len = input.value().len() as u32;
 
-                    // TODO should this stay?
                     // ignore results, if it does not work we do not care
                     let _ = input.focus();
                     let _ = input.set_selection_start(Some(0));

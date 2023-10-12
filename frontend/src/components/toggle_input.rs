@@ -2,29 +2,22 @@ use enclose::enclose;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlInputElement;
 use yew::{
-    classes,
-    html,
     AttrValue,
     Callback,
+    classes,
     Classes,
     Component,
     Context,
+    html,
     Html,
     InputEvent,
     NodeRef,
     Properties,
 };
 
-use super::advanced_mode::AdvancedModeVisibility;
 use crate::util::generate_id;
 
-#[derive(Copy, Clone, PartialEq, Default)]
-// TODO decide if it should be deprecated / removed
-pub enum LabelPosition {
-    Left,
-    #[default]
-    Right,
-}
+use super::advanced_mode::AdvancedModeVisibility;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum ToggleInputState {
@@ -60,8 +53,6 @@ impl From<AdvancedModeVisibility> for ToggleInputState {
 #[derive(Properties, PartialEq, Clone)]
 pub struct ToggleInputProps {
     pub label: Html,
-    #[prop_or_default]
-    pub position: LabelPosition,
     pub callback: Option<Callback<ToggleInputState>>,
     pub checkbox_ref: NodeRef,
     #[prop_or_default]
@@ -103,20 +94,11 @@ impl Component for ToggleInput {
             }
         });
 
-        let label = html! {
+        html! {
+            <>
+                <input class={ classes!(ctx.props().class.clone()) } ref={ ctx.props().checkbox_ref.clone() } type="checkbox" checked={ self.state.checked() } id={ self.id.clone() } { oninput }/>
                 <label class={ classes!(ctx.props().class.clone()) } for={ self.id.clone() }>{ ctx.props().label.clone() }</label>
-        };
-
-        let mut html = vec![html! {
-            <input class={ classes!(ctx.props().class.clone()) } ref={ ctx.props().checkbox_ref.clone() } type="checkbox" checked={ self.state.checked() } id={ self.id.clone() } { oninput }/>
-        }];
-
-        if ctx.props().position == LabelPosition::Left {
-            html.insert(0, label);
-        } else {
-            html.push(label);
+            </>
         }
-
-        html.into_iter().collect()
     }
 }

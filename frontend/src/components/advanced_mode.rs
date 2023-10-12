@@ -2,10 +2,11 @@ use stylist::{css, StyleSource};
 use tracing::debug;
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::{Element, HtmlElement, ResizeObserver};
-use yew::{classes, html, Children, Component, Context, Html, NodeRef, Properties};
+use yew::{Children, classes, Component, Context, html, Html, NodeRef, Properties};
 
-use super::toggle_input::{LabelPosition, ToggleInput, ToggleInputState};
-use crate::{util::AsClasses, ACCENT_COLOR};
+use crate::{ACCENT_COLOR, util::AsClasses};
+
+use super::toggle_input::{ToggleInput, ToggleInputState};
 
 thread_local! {
     // https://www.w3schools.com/howto/howto_js_collapsible.asp
@@ -178,7 +179,7 @@ impl Component for AdvancedMode {
                 <div ref={ self.size_shadow_ref.clone() } class={ classes!("size-shadow") }>
                     <div class={ CONTAINER.as_classes() }>
                         <div ref={ self.toggle_container_ref.clone() } class={ TOGGLE_CONTAINER.as_classes() }>
-                            <ToggleInput class={ TOGGLE.as_classes() } checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" position={ LabelPosition::Right } { callback }/>
+                            <ToggleInput class={ TOGGLE.as_classes() } checkbox_ref={ ctx.props().toggle_ref.clone() } label="Advanced mode" { callback }/>
                         </div>
                         <div ref={ self.content_ref.clone() } class={ NODES_OUTER.as_classes() }>
                             <div class={ NODES_INNER.as_classes() }>

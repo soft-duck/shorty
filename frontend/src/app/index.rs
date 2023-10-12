@@ -1,18 +1,18 @@
 use ritelinked::LinkedHashSet;
 use stylist::{css, StyleSource};
-use yew::{html, AttrValue, Component, Context, Html};
+use yew::{Component, Context, html, Html};
 
 use crate::{
+    ACCENT_COLOR,
+    BACKGROUND_COLOR,
     components::{
         footer::Footer,
         link_form::LinkForm,
         message_box::{Message, MessageBox},
     },
-    util::AsClasses,
-    ACCENT_COLOR,
-    BACKGROUND_COLOR,
     FONT_COLOR,
     FONT_FAMILY,
+    util::AsClasses,
 };
 
 pub enum IndexMessage {
@@ -99,19 +99,7 @@ impl Component for Index {
     type Properties = ();
 
     fn create(_: &Context<Self>) -> Self {
-        let mut messages = LinkedHashSet::new();
-
-        // for i in 0..10 {
-        //     let message = AttrValue::from(format!(
-        //         "A looooooooooooong message to see css styling effects {}",
-        //         i
-        //     ));
-        //     messages.insert(Message::Error(message.clone()));
-        //     messages.insert(Message::Warning(message.clone()));
-        //     messages.insert(Message::Info(message));
-        // }
-
-        Self { messages }
+        Self { messages: LinkedHashSet::new() }
     }
 
     fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {

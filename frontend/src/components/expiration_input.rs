@@ -1,17 +1,18 @@
 use strum_macros::Display;
 use stylist::{css, StyleSource};
 use time::{format_description::well_known::Iso8601, OffsetDateTime};
-use yew::{classes, html, AttrValue, Component, Context, Html, NodeRef, Properties};
+use yew::{AttrValue, classes, Component, Context, html, Html, NodeRef, Properties};
+
+use crate::{
+    ACCENT_COLOR,
+    components::{ICON, TEXT_INPUT},
+    INPUT_WIDTH,
+    util::{AsClasses, try_get_local_offset},
+};
 
 use super::{
     duration_input::DurationInput,
-    toggle_input::{LabelPosition, ToggleInput, ToggleInputState},
-};
-use crate::{
-    components::{ICON, TEXT_INPUT},
-    util::{try_get_local_offset, AsClasses},
-    ACCENT_COLOR,
-    INPUT_WIDTH,
+    toggle_input::{ToggleInput, ToggleInputState},
 };
 
 thread_local! {
@@ -146,7 +147,7 @@ impl Component for ExpirationInput {
                     <DurationInput id={ ctx.props().id.clone() } class={ EXPIRATION_INPUT.as_classes() } input_ref={ ctx.props().input_ref.clone() }/>
                 }
 
-                <ToggleInput class={ TOGGLE.as_classes() } checkbox_ref={ ctx.props().toggle_ref.clone() } label={ self.input_type.flipped().html() } position={ LabelPosition::Right } { callback }/>
+                <ToggleInput class={ TOGGLE.as_classes() } checkbox_ref={ ctx.props().toggle_ref.clone() } label={ self.input_type.flipped().html() } { callback }/>
             </>
         }
     }

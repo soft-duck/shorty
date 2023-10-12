@@ -52,7 +52,9 @@ thread_local! {
 #[derivative(PartialEq, Hash)]
 pub enum Message {
     Error(AttrValue),
+    #[allow(unused)]
     Warning(AttrValue),
+    #[allow(unused)]
     Info(AttrValue),
     More(
         #[derivative(PartialEq = "ignore")]
