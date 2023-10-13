@@ -161,8 +161,8 @@ fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
 		"frontend.js" => { Some(("text/javascript", JS)) },
 		"frontend_bg.wasm" => { Some(("application/wasm", WASM)) },
 		"index.css" => { Some(("text/css", CSS)) },
-        "roboto-slab.woff2" => { Some(("font/woff", ROBOTO_SLAB)) },
-        "material-symbols.woff2" => { Some(("font/woff", MATERIAL_SYMBOLS)) },
+        "fonts/roboto-slab.woff2" => { Some(("font/woff", ROBOTO_SLAB)) },
+        "fonts/material-symbols.woff2" => { Some(("font/woff", MATERIAL_SYMBOLS)) },
 		_ => {
 			warn!("Got request for {file} but couldn't find embedded asset.");
 			None
