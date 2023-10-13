@@ -1,6 +1,6 @@
 [package]
 name = "shorty"
-version = "0.8.4"
+version = "0.8.3"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -23,6 +23,8 @@ serde = "1.0.152"
 serde_json = "1.0.93"
 toml = "0.7.2"
 
+static-files = "0.2"
+
 chrono = "0.4.23"
 
 thiserror = "1.0.38"
@@ -34,3 +36,7 @@ dotenvy = "0.15.7"
 [dependencies.sqlx]
 version = "0.6.2"
 features = ["runtime-tokio-rustls", "chrono", "migrate", "offline", "macros", "sqlite"]
+
+[build-dependencies]
+static-files = "0.2"
+

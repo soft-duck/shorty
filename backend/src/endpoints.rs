@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use actix_files::NamedFile;
 use actix_web::{get, HttpRequest, HttpResponse, post, Responder, web};
+use static_files::Resource;
 use tracing::{debug, info, warn};
 
 use crate::CONFIG;
@@ -145,28 +147,19 @@ pub async fn serve_file(asset: web::Path<String>, req: HttpRequest) -> Result<im
 	}
 }
 
+include!(concat!(env!("OUT_DIR"), "/generated.rs"));
+
 /// Returns a Tuple of Mime Type (as &str) and file content (as &[u8]).
 fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
-	const INDEX_HTML: &[u8] = include_bytes!("../../frontend/dist/index.html");
-	const JS: &[u8] = include_bytes!("../../frontend/dist/frontend.js");
-	const WASM: &[u8] = include_bytes!("../../frontend/dist/frontend_bg.wasm");
-	const CSS: &[u8] = include_bytes!("../../frontend/dist/index.css");
-    const ROBOTO_SLAB: &[u8] = include_bytes!("../../frontend/fonts/roboto-slab.woff2");
-    const MATERIAL_SYMBOLS: &[u8] = include_bytes!("../../frontend/fonts/material-symbols.woff2");
+	let resources: HashMap<&str, Resource> = generate();
 
 	debug!("Getting embedded file: {file}");
 
-	match file {
-		"index.html" => { Some(("text/html", INDEX_HTML)) }
-		"frontend.js" => { Some(("text/javascript", JS)) },
-		"frontend_bg.wasm" => { Some(("application/wasm", WASM)) },
-		"index.css" => { Some(("text/css", CSS)) },
-        "fonts/roboto-slab.woff2" => { Some(("font/woff", ROBOTO_SLAB)) },
-        "fonts/material-symbols.woff2" => { Some(("font/woff", MATERIAL_SYMBOLS)) },
-		_ => {
-			warn!("Got request for {file} but couldn't find embedded asset.");
-			None
-		}
-	}
+	resources.get(file).map(|file| {
+		(file.mime_type, file.data)
+	}).or_else(|| {
+		warn!("Got request for {file} but couldn't find embedded asset.");
+		None
+	})
 }
 
