@@ -151,6 +151,8 @@ fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
 	const JS: &[u8] = include_bytes!("../../frontend/dist/frontend.js");
 	const WASM: &[u8] = include_bytes!("../../frontend/dist/frontend_bg.wasm");
 	const CSS: &[u8] = include_bytes!("../../frontend/dist/index.css");
+    const ROBOTO_SLAB: &[u8] = include_bytes!("../../frontend/fonts/roboto-slab.woff2");
+    const MATERIAL_SYMBOLS: &[u8] = include_bytes!("../../frontend/fonts/material-symbols.woff2");
 
 	debug!("Getting embedded file: {file}");
 
@@ -159,6 +161,8 @@ fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
 		"frontend.js" => { Some(("text/javascript", JS)) },
 		"frontend_bg.wasm" => { Some(("application/wasm", WASM)) },
 		"index.css" => { Some(("text/css", CSS)) },
+        "roboto-slab.woff2" => { Some(("font/woff", ROBOTO_SLAB)) },
+        "material-symbols.woff2" => { Some(("font/woff", MATERIAL_SYMBOLS)) },
 		_ => {
 			warn!("Got request for {file} but couldn't find embedded asset.");
 			None
