@@ -1,10 +1,13 @@
-FROM docker.io/clux/muslrust:stable as builder
+FROM docker.io/archlinux as builder
+RUN pacman -Syu --noconfirm base-devel rustup
+RUN rustup default stable && rustup target add wasm32-unknown-unknown
+RUN cargo install cargo-make trunk
 WORKDIR /build
 COPY . ./
-RUN cargo build --profile production
+RUN cargo make -p release
 
 
-FROM scratch
+FROM docker.io/archlinux
 WORKDIR /root
-COPY --from=builder /build/target/x86_64-unknown-linux-musl/production/shorty .
+COPY --from=builder /build/target/release/shorty .
 CMD ["./shorty"]
