@@ -1,8 +1,6 @@
-use std::collections::HashMap;
 use actix_files::NamedFile;
 use actix_web::{get, HttpRequest, HttpResponse, post, Responder, web};
-use static_files::Resource;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 use crate::CONFIG;
 use crate::error::ShortyError;
@@ -20,12 +18,19 @@ pub async fn index(req: HttpRequest) -> Result<impl Responder, Box<dyn std::erro
 		return Ok(NamedFile::open(path)?.into_response(&req));
 	}
 
-	let response = get_embedded_file("index.html").unwrap();
-	Ok(
-		HttpResponse::Ok()
-			.content_type(response.0)
-			.body(response.1)
-	)
+	#[cfg(feature = "integrated-frontend")]
+	{
+		let response = get_embedded_file("index.html").unwrap();
+
+		return Ok(
+			HttpResponse::Ok()
+				.content_type(response.0)
+				.body(response.1)
+		);
+	}
+
+	#[allow(unreachable_code)]
+	{ unreachable!("If this is encountered, the `frontend_location` config key was not ensured to be present"); }
 }
 
 #[get("/{shortened_url:.*}")]
@@ -132,33 +137,43 @@ pub async fn serve_file(asset: web::Path<String>, req: HttpRequest) -> Result<im
 		return Ok(NamedFile::open(path)?.into_response(&req));
 	}
 
-	// Tuple of MIME Type and Content.
-	let response_opt: Option<(&str, &[u8])> = get_embedded_file(asset.as_str());
+	#[cfg(feature = "integrated-frontend")]
+	{
+		// Tuple of MIME Type and Content.
+		let response_opt: Option<(&str, &[u8])> = get_embedded_file(asset.as_str());
 
 
-	if let Some(response) = response_opt {
-		Ok(
-			HttpResponse::Ok()
-				.content_type(response.0)
-				.body(response.1)
-		)
-	} else {
-		Ok(HttpResponse::NotFound().finish())
+		return if let Some(response) = response_opt {
+			Ok(
+				HttpResponse::Ok()
+					.content_type(response.0)
+					.body(response.1)
+			)
+		} else {
+			Ok(HttpResponse::NotFound().finish())
+		};
 	}
+
+	#[allow(unreachable_code)]
+	{ unreachable!("If this is encountered, the `frontend_location` config key was not ensured to be present"); }
 }
 
+#[cfg(feature = "integrated-frontend")]
 include!(concat!(env!("OUT_DIR"), "/generated.rs"));
 
 /// Returns a Tuple of Mime Type (as &str) and file content (as &[u8]).
+#[cfg(feature = "integrated-frontend")]
 fn get_embedded_file(file: &str) -> Option<(&'static str, &'static [u8])> {
-	let resources: HashMap<&str, Resource> = generate();
+	use std::collections::HashMap;
+
+	let resources: HashMap<&str, static_files::Resource> = generate();
 
 	debug!("Getting embedded file: {file}");
 
 	resources.get(file).map(|file| {
 		(file.mime_type, file.data)
 	}).or_else(|| {
-		warn!("Got request for {file} but couldn't find embedded asset.");
+		tracing::warn!("Got request for {file} but couldn't find embedded asset.");
 		None
 	})
 }
