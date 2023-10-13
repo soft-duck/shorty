@@ -47,8 +47,7 @@ pub fn origin() -> impl Deref<Target = String> {
 #[macro_export]
 macro_rules! endpoint {
     ($($arg:tt)*) => {{
-        let res = format!("{}/{}", *crate::util::origin(), format_args!($($arg)*));
-        res
+        format!("{}/{}", *crate::util::origin(), format_args!($($arg)*))
     }}
 }
 
