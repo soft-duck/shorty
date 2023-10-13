@@ -2382,7 +2382,7 @@ dependencies = [
 
 [[package]]
 name = "shorty"
-version = "0.8.4"
+version = "0.8.5"
 dependencies = [
  "actix-cors",
  "actix-files",
