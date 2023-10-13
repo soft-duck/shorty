@@ -9,5 +9,5 @@ RUN cargo make -p release
 
 FROM docker.io/archlinux
 WORKDIR /root
-COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/shorty .
+COPY --from=builder /build/target/release/shorty .
 CMD ["./shorty"]
