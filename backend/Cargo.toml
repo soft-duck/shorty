@@ -23,8 +23,6 @@ serde = "1.0.189"
 serde_json = "1.0.107"
 toml = "0.8.2"
 
-static-files = "0.2"
-
 chrono = "0.4.31"
 
 thiserror = "1.0.49"
@@ -37,6 +35,14 @@ dotenvy = "0.15.7"
 version = "0.6.3"
 features = ["runtime-tokio-rustls", "chrono", "migrate", "offline", "macros", "sqlite"]
 
-[build-dependencies]
-static-files = "0.2"
+[dependencies.static-files]
+version = "0.2"
+optional = true
 
+[build-dependencies.static-files]
+version = "0.2"
+#optional = true
+
+[features]
+default = ["integrated-frontend"]
+integrated-frontend = ["static-files"]

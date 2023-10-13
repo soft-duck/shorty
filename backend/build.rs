@@ -2,6 +2,8 @@
 fn main() {
     // trigger recompilation when a new migration is added
     println!("cargo:rerun-if-changed=migrations");
+
+    #[cfg(feature = "integrated-frontend")]
     static_files::resource_dir("../frontend/dist").build().unwrap();
 }
 

@@ -48,9 +48,16 @@ impl Config {
 
 		if config.frontend_location.is_none() {
 			match std::env::var("SHORTY_WEBSITE") {
-				Ok(path) => { config.frontend_location = Some(path) }
-				Err(VarError::NotPresent) => {},
-				Err(why) => { error!("{why}") }
+				Ok(path) => { config.frontend_location = Some(path) },
+				#[allow(unused)]
+				Err(e) => {
+					#[cfg(not(feature = "integrated-frontend"))]
+					panic!("Shorty was compiled without the `integrated-frontend` feature, therefore the frontend_location key is mandatory");
+
+					if e != VarError::NotPresent {
+						error!("{e}");
+					}
+				},
 			}
 		}
 
