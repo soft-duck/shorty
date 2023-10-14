@@ -2,11 +2,10 @@ use stylist::{css, StyleSource};
 use tracing::debug;
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::{Element, HtmlElement, ResizeObserver};
-use yew::{Children, classes, Component, Context, html, Html, NodeRef, Properties};
-
-use crate::{ACCENT_COLOR, util::AsClasses};
+use yew::{classes, html, Children, Component, Context, Html, NodeRef, Properties};
 
 use super::toggle_input::{ToggleInput, ToggleInputState};
+use crate::{util::AsClasses, ACCENT_COLOR};
 
 thread_local! {
     // https://www.w3schools.com/howto/howto_js_collapsible.asp

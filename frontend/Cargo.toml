@@ -34,7 +34,7 @@ features = ["json"]
 
 [dependencies.serde]
 version = "1.0"
-features = ["derive"]
+features = ["derive", "rc"]
 
 # needed for UtcTime in tracing_subscriber
 [dependencies.time]

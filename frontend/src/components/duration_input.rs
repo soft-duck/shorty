@@ -3,24 +3,23 @@ use std::mem;
 use strum::FromRepr;
 use web_sys::{DragEvent, Event, FocusEvent, HtmlInputElement, KeyboardEvent, MouseEvent};
 use yew::{
+    classes,
+    html,
     AttrValue,
     Callback,
-    classes,
     Classes,
     Component,
     Context,
-    html,
     Html,
     NodeRef,
     Properties,
 };
 
+use super::TEXT_INPUT;
 use crate::{
     types::duration::{Duration, Parts},
     util::AsClasses,
 };
-
-use super::TEXT_INPUT;
 
 fn cursor_location(input: &HtmlInputElement) -> u32 {
     let direction = input.selection_direction().unwrap().unwrap();

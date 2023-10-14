@@ -1,9 +1,9 @@
 use nonempty_collections::NEVec;
 use serde::Serialize;
 use time::{
-    Date,
     format_description::well_known::Iso8601,
     macros::time,
+    Date,
     OffsetDateTime,
     UtcOffset,
 };
@@ -18,8 +18,8 @@ use crate::{
     types::{
         duration::{Duration, Parts},
         error::FormError,
+        ServerConfig,
     },
-    util::server_config,
 };
 
 #[derive(Debug, Serialize, Clone)]
@@ -35,7 +35,10 @@ pub struct LinkConfig {
 }
 
 impl LinkConfig {
-    pub fn try_from(refs: &LinkFormRefs) -> Validated<Self, FormError> {
+    pub fn try_from(
+        refs: &LinkFormRefs,
+        server_config: Option<ServerConfig>,
+    ) -> Validated<Self, FormError> {
         let input = refs
             .advanced_mode
             .cast::<HtmlInputElement>()
@@ -46,7 +49,7 @@ impl LinkConfig {
 
         let mut errors = vec![];
 
-        let link = Self::parse_link(refs)
+        let link = Self::parse_link(refs, server_config.clone())
             .ok()
             .map_err(|e| errors.extend(e.into_iter()));
 
@@ -55,7 +58,7 @@ impl LinkConfig {
         let mut valid_for = Ok(None);
 
         if input.checked() {
-            id = Self::parse_id(refs)
+            id = Self::parse_id(refs, server_config)
                 .ok()
                 .map_err(|e| errors.extend(e.into_iter()));
             max_uses = Self::parse_max_uses(refs)
@@ -78,7 +81,10 @@ impl LinkConfig {
         }
     }
 
-    fn parse_link(refs: &LinkFormRefs) -> Validated<String, FormError> {
+    fn parse_link(
+        refs: &LinkFormRefs,
+        server_config: Option<ServerConfig>,
+    ) -> Validated<String, FormError> {
         let input = refs.link_input.cast::<HtmlInputElement>().expect(&format!(
             "Expected {:?} to be an HtmlInputElement",
             refs.link_input
@@ -88,7 +94,7 @@ impl LinkConfig {
 
         let mut errors = vec![];
 
-        if let Some(config) = server_config() {
+        if let Some(config) = server_config {
             if value.len() > config.max_link_length {
                 errors.push(FormError::ExceededMaxLinkLength {
                     link: value.clone(),
@@ -108,7 +114,10 @@ impl LinkConfig {
         Good(value)
     }
 
-    fn parse_id(refs: &LinkFormRefs) -> Validated<Option<String>, FormError> {
+    fn parse_id(
+        refs: &LinkFormRefs,
+        server_config: Option<ServerConfig>,
+    ) -> Validated<Option<String>, FormError> {
         let input = refs
             .custom_id_input
             .cast::<HtmlInputElement>()
@@ -123,7 +132,7 @@ impl LinkConfig {
             return Good(None);
         }
 
-        if let Some(config) = server_config() {
+        if let Some(config) = server_config {
             if value.len() > config.max_custom_id_length {
                 return Validated::fail(FormError::ExceededMaxIdLength {
                     id: value,

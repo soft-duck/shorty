@@ -1,8 +1,19 @@
+use enclose::enclose;
 use reqwest::Client;
 use stylist::{css, StyleSource};
-use tracing::debug;
+use tracing::{debug, warn};
 use validated::Validated;
-use yew::{html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
+use yew::{
+    html,
+    platform::spawn_local,
+    AttrValue,
+    Callback,
+    Component,
+    Context,
+    Html,
+    NodeRef,
+    Properties,
+};
 
 use super::{
     advanced_mode::AdvancedMode,
@@ -13,8 +24,8 @@ use super::{
 use crate::{
     app::index::IndexMessage,
     endpoint,
-    types::{error::RequestError, link_config::LinkConfig},
-    util::{generate_id, server_config, AsClasses},
+    types::{error::RequestError, link_config::LinkConfig, ServerConfig},
+    util::{generate_id, AsClasses},
     INPUT_WIDTH,
 };
 
@@ -45,10 +56,13 @@ thread_local! {
     "#);
 }
 
-async fn make_request(link_config: LinkConfig) -> Result<AttrValue, RequestError> {
+async fn make_request(
+    link_config: LinkConfig,
+    server_config: Option<ServerConfig>,
+) -> Result<AttrValue, RequestError> {
     let json = serde_json::to_string(&link_config).expect("Json could not be serialized");
 
-    if let Some(config) = server_config() {
+    if let Some(config) = server_config {
         if json.len() > config.max_json_size {
             return Err(RequestError::JsonSizeExceeded);
         }
@@ -106,8 +120,14 @@ pub struct LinkFormRefs {
     pub expiration_type: NodeRef,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub enum LinkFormMessage {
+    UpdateState(LinkFormState),
+    UpdateServerConfig(ServerConfig),
+}
+
+#[derive(Clone, Debug, Default)]
+pub enum LinkFormState {
     #[default]
     Input,
     Display(AttrValue),
@@ -120,23 +140,47 @@ pub struct LinkFormPros {
 
 #[derive(Default)]
 pub struct LinkForm {
-    state: LinkFormMessage,
+    state: LinkFormState,
     refs: LinkFormRefs,
+    server_config: Option<ServerConfig>,
 }
 
 impl Component for LinkForm {
     type Message = LinkFormMessage;
     type Properties = LinkFormPros;
 
-    fn create(_: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
+        let update_server_config = ctx
+            .link()
+            .callback(|config| LinkFormMessage::UpdateServerConfig(config));
+
+        spawn_local(async move {
+            debug!("fetching server config...");
+
+            match reqwest::get(endpoint!("config")).await {
+                Ok(response) => match response.json::<ServerConfig>().await {
+                    Ok(config) => {
+                        debug!("successfully fetched config: {:#?}", config);
+                        update_server_config.emit(config);
+                    },
+                    Err(e) => warn!("failed to parse json server config with: {}", e),
+                },
+                Err(e) => warn!("fetching server config failed with: {}", e),
+            }
+        });
+
         Self {
-            state: LinkFormMessage::Input,
+            state: LinkFormState::Input,
             refs: LinkFormRefs::default(),
+            server_config: None,
         }
     }
 
     fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
-        self.state = msg;
+        match msg {
+            LinkFormMessage::UpdateState(s) => self.state = s,
+            LinkFormMessage::UpdateServerConfig(config) => self.server_config = Some(config),
+        }
 
         true
     }
@@ -146,8 +190,9 @@ impl Component for LinkForm {
         let scope = ctx.link().clone();
         let refs = self.refs.clone();
 
-        let onclick = Callback::from(move |_| {
-            let link_config = LinkConfig::try_from(&refs);
+        let onclick = Callback::from(enclose!((self.server_config => s)move |_| {
+            let server_config = s.clone();
+            let link_config = LinkConfig::try_from(&refs, server_config.clone());
 
             match link_config {
                 Validated::Good(config) => {
@@ -156,11 +201,11 @@ impl Component for LinkForm {
                     debug!("Sending: {:#?}\n to /custom", config);
 
                     scope.send_future(async move {
-                        match make_request(config).await {
-                            Ok(link) => LinkFormMessage::Display(link),
+                        match make_request(config, server_config.clone()).await {
+                            Ok(link) => LinkFormMessage::UpdateState(LinkFormState::Display(link)),
                             Err(e) => {
                                 manage_messages.emit(IndexMessage::AddMessage(e.into()));
-                                LinkFormMessage::Input
+                                LinkFormMessage::UpdateState(LinkFormState::Input)
                             },
                         }
                     });
@@ -171,11 +216,17 @@ impl Component for LinkForm {
                     }
                 },
             }
-        });
+        }));
 
-        let clear_callback = ctx.link().callback(|_| LinkFormMessage::Input);
-        // TODO rerender if server_config is fetched or not if it failed
-        // let size = server_config().map(|c| c.max_custom_id_length.to_string());
+        let clear_callback = ctx
+            .link()
+            .callback(|_| LinkFormMessage::UpdateState(LinkFormState::Input));
+
+        // TODO to_string could be optimized
+        let maxlength = self
+            .server_config
+            .as_ref()
+            .map(|c| c.max_custom_id_length.to_string());
 
         let ids = [generate_id(), generate_id(), generate_id()];
 
@@ -191,7 +242,7 @@ impl Component for LinkForm {
                     </div>
                     <div class={ CONTAINER.as_classes() }>
                         <label class={ LABEL.as_classes() } for={ ids[1].clone() }>{ "Custom id" }</label>
-                        <input id={ ids[1].clone() } class={ TEXT_INPUT.as_classes() } ref={ self.refs.custom_id_input.clone() } type="text" placeholder=""/>
+                        <input id={ ids[1].clone() } class={ TEXT_INPUT.as_classes() } { maxlength } ref={ self.refs.custom_id_input.clone() } type="text" placeholder=""/>
                     </div>
                     <div class={ CONTAINER.as_classes() }>
                         <label class={ LABEL.as_classes() } for={ ids[2].clone() }>{ "Expire after" }</label>

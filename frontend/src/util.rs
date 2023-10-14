@@ -6,18 +6,15 @@ use std::{
 
 use time::UtcOffset;
 use tiny_id::{ExhaustionStrategy, ShortCodeGenerator};
-use tracing::{debug, warn, Level};
+use tracing::{debug, Level};
 use tracing_subscriber::{
     fmt::{time::UtcTime, writer::MakeWriterExt},
     layer::SubscriberExt,
     util::SubscriberInitExt,
 };
-use yew::{classes, platform::spawn_local, AttrValue, Classes};
-
-use crate::types::ServerConfig;
+use yew::{classes, AttrValue, Classes};
 
 static SHORT_CODE_GENERATOR: OnceLock<Mutex<ShortCodeGenerator<char>>> = OnceLock::new();
-static SERVER_CONFIG: OnceLock<RwLock<ServerConfig>> = OnceLock::new();
 static ORIGIN: OnceLock<RwLock<String>> = OnceLock::new();
 
 /// generate a guaranteed to be unique alphanumeric id
@@ -52,23 +49,6 @@ macro_rules! endpoint {
     }}
 }
 
-pub fn fetch_server_config() {
-    spawn_local(async {
-        debug!("Fetching server config...");
-        let result = reqwest::get(endpoint!("config")).await;
-
-        match result {
-            Ok(response) => {
-                if let Ok(config) = response.json::<ServerConfig>().await {
-                    debug!("Successfully fetched config: {:#?}", config);
-                    SERVER_CONFIG.set(RwLock::new(config)).unwrap();
-                }
-            },
-            Err(e) => warn!("Fetching server config failed with: {}", e),
-        }
-    });
-}
-
 pub fn try_get_local_offset() -> Option<UtcOffset> {
     match UtcOffset::current_local_offset() {
         Ok(offset) => Some(offset),
@@ -77,10 +57,6 @@ pub fn try_get_local_offset() -> Option<UtcOffset> {
             None
         },
     }
-}
-
-pub fn server_config() -> Option<impl Deref<Target = ServerConfig>> {
-    SERVER_CONFIG.get().map(|c| c.read().unwrap())
 }
 
 pub fn setup_tracing_subscriber() {

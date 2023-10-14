@@ -2,22 +2,21 @@ use enclose::enclose;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlInputElement;
 use yew::{
+    classes,
+    html,
     AttrValue,
     Callback,
-    classes,
     Classes,
     Component,
     Context,
-    html,
     Html,
     InputEvent,
     NodeRef,
     Properties,
 };
 
-use crate::util::generate_id;
-
 use super::advanced_mode::AdvancedModeVisibility;
+use crate::util::generate_id;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum ToggleInputState {
