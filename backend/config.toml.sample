@@ -16,8 +16,8 @@ public_url = 'http://localhost:7999'
 database_location = 'database.db'
 
 # The maximum length a link may have.
-# Optional; default is 2500 chars length.
-# max_link_length = 2500
+# Optional; default is 500 chars length.
+# max_link_length = 500
 
 # The maximum json payload size for custom links in bytes.
 # Optional; default is 2 MB
