@@ -2,7 +2,7 @@ use std::env::VarError;
 use serde::{Serialize, Deserialize};
 use tracing::error;
 
-pub const SAMPLE_CONFIG: &str = include_str!("../config.toml.sample");
+pub const SAMPLE_CONFIG: &str = include_str!(concat!(env!("OUT_DIR"), "/config.toml.sample"));
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -61,7 +61,6 @@ impl Config {
 			}
 		}
 
-
 		Ok(config)
 	}
 
@@ -72,32 +71,29 @@ impl Config {
 	}
 }
 
-fn listen_url_default() -> String {
-	"127.0.0.1".to_owned()
-}
+fn listen_url_default() -> String { env!("LISTEN_URL_DEFAULT").to_owned() }
 
 const fn port_default() -> u16 {
-	7999
+	konst::unwrap_ctx!(konst::primitive::parse_u16(env!("PORT_DEFAULT")))
 }
-
 const fn max_link_length_default() -> usize {
-	2_500
+	konst::unwrap_ctx!(konst::primitive::parse_usize(env!("MAX_LINK_LENGTH_DEFAULT")))
 }
 
 const fn max_json_size_default() -> usize {
-	2_097_152 // 2 Mebibyte
+	konst::unwrap_ctx!(konst::primitive::parse_usize(env!("MAX_JSON_SIZE_DEFAULT")))
 }
 
 const fn max_custom_id_length_default() -> usize {
-	500
+	konst::unwrap_ctx!(konst::primitive::parse_usize(env!("MAX_CUSTOM_ID_LENGTH_DEFAULT")))
 }
 
 // Link configuration default values
 
 const fn max_uses_default() -> i64 {
-	0 // unlimited uses
+	konst::unwrap_ctx!(konst::primitive::parse_i64(env!("MAX_USES_DEFAULT")))
 }
 
 const fn valid_for_duration_default() -> i64 {
-	7 * 1000 * 60 * 60 * 24 // 7 days
+	konst::unwrap_ctx!(konst::primitive::parse_i64(env!("VALID_FOR_DURATION_DEFAULT")))
 }
