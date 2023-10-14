@@ -36,9 +36,10 @@ fn cursor_location(input: &HtmlInputElement) -> u32 {
 
 #[derive(FromRepr, Copy, Clone, PartialEq)]
 pub enum Selection {
-    Hours = 0,
-    Minutes = 1,
-    Seconds = 2,
+    Days = 0,
+    Hours = 1,
+    Minutes = 2,
+    Seconds = 3,
 }
 
 impl Selection {
@@ -49,7 +50,7 @@ impl Selection {
     }
 
     fn from_cursor(cursor: u32) -> Self {
-        if cursor > 8 {
+        if cursor > 11 {
             unreachable!("should not occur as the input field gets reset on input");
         }
 
@@ -57,7 +58,7 @@ impl Selection {
     }
 
     fn left(&self) -> Self {
-        if *self == Self::Hours {
+        if *self == Self::Days {
             return *self;
         }
 
@@ -74,12 +75,14 @@ impl Selection {
 
     fn part_with(&self, n: i64) -> Parts {
         let mut parts = Parts {
+            days: 0,
             hours: 0,
             minutes: 0,
             seconds: 0,
         };
 
         match self {
+            Selection::Days => parts.days = n,
             Selection::Hours => parts.hours = n,
             Selection::Minutes => parts.minutes = n,
             Selection::Seconds => parts.seconds = n,
@@ -179,6 +182,7 @@ impl DurationInput {
 
     fn handle_arrow(&mut self, ctx: &Context<Self>, arrow: Arrow) {
         let input = ctx.props().input_ref.cast::<HtmlInputElement>().unwrap();
+        self.sub_cursor = false;
 
         match arrow {
             Arrow::Right => {
@@ -192,12 +196,10 @@ impl DurationInput {
             Arrow::Up => {
                 let parts = self.selection.unwrap().part_with(1);
                 self.duration.add_parts(parts);
-                self.sub_cursor = false;
             },
             Arrow::Down => {
                 let parts = self.selection.unwrap().part_with(-1);
                 self.duration.add_parts(parts);
-                self.sub_cursor = false;
             },
         }
     }
@@ -318,7 +320,7 @@ impl Component for DurationInput {
                     class={ classes!(TEXT_INPUT.as_classes(), "duration", ctx.props().class.clone()) }
                     ref={ ctx.props().input_ref.clone() }
                     id={ ctx.props().id.clone() }
-                    pattern="^[0-9]{1,2}:[0-5][0-9]:[0-5][0-9]$"
+                    pattern="^\\d{2}:(0\\d|1\\d|2[0-3]):[0-5]\\d:[0-5]\\d$"
                     style="text-align: right;"
                     type="text"
                     value={ format!("{}", self.duration) }/>

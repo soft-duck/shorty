@@ -107,6 +107,8 @@ pub struct LinkInputProps {
     pub input_ref: NodeRef,
     pub onclick: Callback<MouseEvent>,
     pub manage_messages: Callback<IndexMessage>,
+    #[prop_or_default]
+    pub maxlength: Option<AttrValue>,
 }
 
 pub struct LinkInput {
@@ -202,7 +204,7 @@ impl Component for LinkInput {
         html! {
             <>
                 <div class={ CONTAINER.as_classes() }>
-                    <input class={ classes!(TEXT_INPUT.as_classes(), LINK_INPUT.as_classes()) } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
+                    <input class={ classes!(TEXT_INPUT.as_classes(), LINK_INPUT.as_classes()) } maxlength={ ctx.props().maxlength.clone() } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
                     <button class={ classes!(BUTTON.as_classes(), classes) } type={ "button" } onclick={ onclick }>{ text }</button>
                 </div>
             </>

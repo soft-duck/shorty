@@ -7,16 +7,19 @@ pub struct Duration {
 }
 
 impl Duration {
-    const MAX_SECONDS: i64 = 99 * 60 * 60 + 59 * 60 + 59;
+    pub const MAX_SECONDS: i64 = 99 * 24 * 60 * 60 + 23 * 60 * 60 + 59 * 60 + 59;
     pub const ZERO: Self = Self { seconds: 0 };
 
     pub fn to_parts(&self) -> Parts {
-        let hours = self.seconds / Parts::SECONDS_HOUR;
-        let reminder = self.seconds % Parts::SECONDS_HOUR;
+        let days = self.seconds / Parts::SECONDS_DAYS;
+        let reminder = self.seconds % Parts::SECONDS_DAYS;
+        let hours = reminder / Parts::SECONDS_HOUR;
+        let reminder = reminder % Parts::SECONDS_HOUR;
         let minutes = reminder / Parts::SECONDS_MINUTES;
         let seconds = reminder % Parts::SECONDS_MINUTES;
 
         Parts {
+            days,
             hours,
             minutes,
             seconds,
@@ -33,7 +36,8 @@ impl Duration {
         let seconds = self.seconds
             + parts.seconds
             + parts.minutes * Parts::SECONDS_MINUTES
-            + parts.hours * Parts::SECONDS_HOUR;
+            + parts.hours * Parts::SECONDS_HOUR
+            + parts.days * Parts::SECONDS_DAYS;
 
         if seconds > Self::MAX_SECONDS || seconds < 0 {
             return;
@@ -53,25 +57,28 @@ impl Display for Duration {
 
         write!(
             f,
-            "{:02}:{:02}:{:02}",
-            parts.hours, parts.minutes, parts.seconds
+            "{:02}:{:02}:{:02}:{:02}",
+            parts.days, parts.hours, parts.minutes, parts.seconds
         )
     }
 }
 
 #[derive(Copy, Clone)]
 pub struct Parts {
+    pub days: i64,
     pub hours: i64,
     pub minutes: i64,
     pub seconds: i64,
 }
 
 impl Parts {
-    const SECONDS_HOUR: i64 = 60 * 60;
+    const SECONDS_DAYS: i64 = 24 * Self::SECONDS_HOUR;
+    const SECONDS_HOUR: i64 = 60 * Self::SECONDS_MINUTES;
     const SECONDS_MINUTES: i64 = 60;
 
     pub fn zero_selection(&mut self, selection: Selection) {
         match selection {
+            Selection::Days => self.days = 0,
             Selection::Hours => self.hours = 0,
             Selection::Minutes => self.minutes = 0,
             Selection::Seconds => self.seconds = 0,
@@ -79,11 +86,14 @@ impl Parts {
     }
 
     pub fn to_seconds(&self) -> i64 {
-        self.hours * Self::SECONDS_HOUR + self.minutes * Self::SECONDS_MINUTES + self.seconds
+        self.days * Self::SECONDS_DAYS
+            + self.hours * Self::SECONDS_HOUR
+            + self.minutes * Self::SECONDS_MINUTES
+            + self.seconds
     }
 
     pub fn valid(&self) -> bool {
-        self.seconds < 60 && self.minutes < 60 && self.hours < 100
+        self.seconds < 60 && self.minutes < 60 && self.hours < 24 && self.days < 100
     }
 }
 
@@ -102,14 +112,15 @@ impl TryFrom<&str> for Parts {
 
         let values = values.unwrap();
 
-        if values.len() != 3 {
+        if values.len() != 4 {
             return Err(());
         }
 
         Ok(Self {
-            hours: values[0],
-            minutes: values[1],
-            seconds: values[2],
+            days: values[0],
+            hours: values[1],
+            minutes: values[2],
+            seconds: values[3],
         })
     }
 }

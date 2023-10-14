@@ -222,11 +222,10 @@ impl Component for LinkForm {
             .link()
             .callback(|_| LinkFormMessage::UpdateState(LinkFormState::Input));
 
-        // TODO to_string could be optimized
-        let maxlength = self
-            .server_config
-            .as_ref()
-            .map(|c| c.max_custom_id_length.to_string());
+        // TODO could be refactored
+        let maxlength_id = self.server_config.as_ref().map(|c| AttrValue::from(format!("{}", c.max_link_length)));
+        let maxlength_link = self.server_config.as_ref().map(|c| AttrValue::from(format!("{}", c.max_custom_id_length)));
+        let max_uses = self.server_config.as_ref().map(|c| AttrValue::from(format!("{}", c.default_max_uses)));
 
         let ids = [generate_id(), generate_id(), generate_id()];
 
@@ -234,15 +233,15 @@ impl Component for LinkForm {
         html! {
             <>
                 <h1 class={ HEADING.as_classes() }>{ "[WIP] Link Shortener" }</h1>
-                <LinkInput { onclick } input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } manage_messages={ ctx.props().manage_messages.clone() } { clear_callback }/>
+                <LinkInput maxlength={ maxlength_id } { onclick } input_ref={ self.refs.link_input.clone() } message={ LinkInputMessage::from(self.state.clone()) } manage_messages={ ctx.props().manage_messages.clone() } { clear_callback }/>
                 <AdvancedMode toggle_ref={ self.refs.advanced_mode.clone() }>
                     <div class={ CONTAINER.as_classes() }>
                         <label class={ LABEL.as_classes() } for={ ids[0].clone() }>{ "Max. usages" }</label>
-                        <input id={ ids[0].clone() } class={ TEXT_INPUT.as_classes() } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder=""/>
+                        <input id={ ids[0].clone() } class={ TEXT_INPUT.as_classes() } ref={ self.refs.max_usage_input.clone() } type="number" min="0" placeholder={ max_uses }/>
                     </div>
                     <div class={ CONTAINER.as_classes() }>
                         <label class={ LABEL.as_classes() } for={ ids[1].clone() }>{ "Custom id" }</label>
-                        <input id={ ids[1].clone() } class={ TEXT_INPUT.as_classes() } { maxlength } ref={ self.refs.custom_id_input.clone() } type="text" placeholder=""/>
+                        <input id={ ids[1].clone() } class={ TEXT_INPUT.as_classes() } maxlength={ maxlength_link } ref={ self.refs.custom_id_input.clone() } type="text"/>
                     </div>
                     <div class={ CONTAINER.as_classes() }>
                         <label class={ LABEL.as_classes() } for={ ids[2].clone() }>{ "Expire after" }</label>
