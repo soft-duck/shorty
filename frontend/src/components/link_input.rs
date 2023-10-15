@@ -3,21 +3,26 @@ use stylist::{css, StyleSource};
 use tracing::debug;
 use web_sys::{HtmlInputElement, MouseEvent};
 use yew::{
+    classes,
+    html,
     AttrValue,
     Callback,
-    classes,
     Classes,
     Component,
     Context,
-    html,
     Html,
     NodeRef,
     Properties,
 };
 
-use crate::{ACCENT_COLOR, app::index::IndexMessage, FONT_COLOR, util::AsClasses};
-
-use super::{link_form::LinkFormMessage, TEXT_INPUT};
+use super::TEXT_INPUT;
+use crate::{
+    app::index::IndexMessage,
+    components::link_form::LinkFormState,
+    util::AsClasses,
+    ACCENT_COLOR,
+    FONT_COLOR,
+};
 
 thread_local! {
     // TODO make variable
@@ -86,11 +91,11 @@ pub enum LinkInputMessage {
     UpdateState(LinkInputState),
 }
 
-impl From<LinkFormMessage> for LinkInputMessage {
-    fn from(value: LinkFormMessage) -> Self {
+impl From<LinkFormState> for LinkInputMessage {
+    fn from(value: LinkFormState) -> Self {
         match value {
-            LinkFormMessage::Input => Self::Clear,
-            LinkFormMessage::Display(m) => Self::Update { link: m },
+            LinkFormState::Input => Self::Clear,
+            LinkFormState::Display(m) => Self::Update { link: m },
         }
     }
 }
@@ -102,6 +107,8 @@ pub struct LinkInputProps {
     pub input_ref: NodeRef,
     pub onclick: Callback<MouseEvent>,
     pub manage_messages: Callback<IndexMessage>,
+    #[prop_or_default]
+    pub maxlength: Option<AttrValue>,
 }
 
 pub struct LinkInput {
@@ -197,7 +204,7 @@ impl Component for LinkInput {
         html! {
             <>
                 <div class={ CONTAINER.as_classes() }>
-                    <input class={ classes!(TEXT_INPUT.as_classes(), LINK_INPUT.as_classes()) } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
+                    <input class={ classes!(TEXT_INPUT.as_classes(), LINK_INPUT.as_classes()) } maxlength={ ctx.props().maxlength.clone() } ref={ self.input_ref.clone() } type="text" value={ content } oninput={ oninput } placeholder="Put a link to shorten here!"/>
                     <button class={ classes!(BUTTON.as_classes(), classes) } type={ "button" } onclick={ onclick }>{ text }</button>
                 </div>
             </>

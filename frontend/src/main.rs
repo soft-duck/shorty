@@ -1,7 +1,4 @@
-use crate::{
-    app::App,
-    util::{fetch_server_config, setup_tracing_subscriber},
-};
+use crate::{app::App, util::setup_tracing_subscriber};
 
 mod app;
 mod components;
@@ -44,8 +41,6 @@ pub const INPUT_WIDTH: &str = "235px";
 */
 fn main() {
     setup_tracing_subscriber();
-    // used to fetch the server config in the beginning
-    fetch_server_config();
 
     yew::Renderer::<App>::new().render();
 }

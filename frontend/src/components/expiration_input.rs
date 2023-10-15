@@ -1,18 +1,17 @@
 use strum_macros::Display;
 use stylist::{css, StyleSource};
 use time::{format_description::well_known::Iso8601, OffsetDateTime};
-use yew::{AttrValue, classes, Component, Context, html, Html, NodeRef, Properties};
-
-use crate::{
-    ACCENT_COLOR,
-    components::{ICON, TEXT_INPUT},
-    INPUT_WIDTH,
-    util::{AsClasses, try_get_local_offset},
-};
+use yew::{classes, html, AttrValue, Component, Context, Html, NodeRef, Properties};
 
 use super::{
     duration_input::DurationInput,
     toggle_input::{ToggleInput, ToggleInputState},
+};
+use crate::{
+    components::{ICON, TEXT_INPUT},
+    util::{try_get_local_offset, AsClasses},
+    ACCENT_COLOR,
+    INPUT_WIDTH,
 };
 
 thread_local! {
