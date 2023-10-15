@@ -1,16 +1,17 @@
 use std::env::VarError;
 use serde::{Serialize, Deserialize};
 use tracing::error;
+use utoipa::ToSchema;
 
 pub const SAMPLE_CONFIG: &str = include_str!(concat!(env!("OUT_DIR"), "/config.toml.sample"));
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct Config {
 	#[serde(default = "listen_url_default")]
 	#[serde(skip_serializing)]
 	pub listen_url: String,
 	/// The public URL that gets used for shortened links.
-	/// It is different from the listen_url if shorty is run behind a reverse proxy.
+	// It is different from the listen_url if shorty is run behind a reverse proxy.
 	pub public_url: String,
 	/// The listen port.
 	#[serde(default = "port_default")]
