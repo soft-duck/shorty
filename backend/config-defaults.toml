@@ -1,7 +1,0 @@
-listen_url_default = "127.0.0.1"
-port_default = 7999
-max_link_length_default = 2_500
-max_json_size_default = 2_097_152 # 2 mebibyte
-max_custom_id_length_default = 500
-max_uses_default = 0 # unlimited uses
-valid_for_duration_default = 604800000 # 7 days
