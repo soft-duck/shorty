@@ -2,7 +2,6 @@ use std::fmt::{Display, Formatter};
 
 use chrono::Local;
 use serde::Deserialize;
-use serde_json::json;
 use sqlx::{Pool, Sqlite};
 use tracing::debug;
 use utoipa::ToSchema;
