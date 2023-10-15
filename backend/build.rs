@@ -8,7 +8,12 @@ fn main() {
 	let table = toml::Table::from_str(&toml_file).unwrap();
 	let mut sample_config = DEFAULT_SAMPLE.to_owned();
 	for (key, value) in table.iter() {
-		println!("cargo:rustc-env={}={value}", key.to_uppercase());
+		let formatted_value = if let Some(string) = value.as_str() {
+			string.to_owned()
+		} else {
+			value.to_string()
+		};
+		println!("cargo:rustc-env={}={}", key.to_uppercase(), formatted_value); // toml returns strings with quotation marks, so we trim them
 		sample_config = sample_config.replace(&format!("_{}", key.to_uppercase()), &value.to_string());
 	}
 	fs::write(var("OUT_DIR").unwrap() + "/config.toml.sample", sample_config).unwrap();
