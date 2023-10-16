@@ -4,6 +4,7 @@ use chrono::Local;
 use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use tracing::debug;
+use utoipa::ToSchema;
 
 use crate::{CONFIG, ensure_http_prefix};
 use crate::error::ShortyError;
@@ -12,7 +13,8 @@ use crate::util::{get_random_id, replace_illegal_url_chars, time_now};
 /// This struct holds configuration options for a custom link.
 /// Optional fields are: `custom_id`, `max_uses`, and `valid_for`.
 /// `valid_for` and `max_uses` default to 0, which means essentially infinite.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+#[schema(example = json!({"link": "https://google.com", "custom_id": "search", "max_uses": 0, "valid_for": 0}))]
 pub struct LinkConfig {
 	/// The link that should be shortened.
 	pub link: String,

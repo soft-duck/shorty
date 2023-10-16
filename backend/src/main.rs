@@ -13,10 +13,12 @@ use sqlx::Sqlite;
 use sqlx::sqlite::{SqliteAutoVacuum, SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
 use tracing::{debug, error, info, Level};
 use tracing_subscriber::EnvFilter;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::config::Config;
 use crate::config::SAMPLE_CONFIG;
-use crate::endpoints::{api_docs, create_shortened, create_shortened_custom, get_config, get_favicon, get_shortened, index, serve_file};
+use crate::endpoints::{ApiDoc, create_shortened, create_shortened_custom, get_config, get_favicon, get_shortened, index, serve_file};
 use crate::error::ShortyError;
 use crate::link::{LinkConfig, LinkStore};
 use crate::util::ensure_http_prefix;
@@ -117,6 +119,8 @@ async fn main() -> Result<(), ShortyError> {
 	let pool = web::Data::new(pool);
 	info!("Starting server at {}:{}", CONFIG.listen_url, CONFIG.port);
 
+	let openapi = ApiDoc::openapi();
+
 	HttpServer::new(move || {
 		let json_config = web::JsonConfig::default()
 			.limit(CONFIG.max_json_size);
@@ -130,9 +134,11 @@ async fn main() -> Result<(), ShortyError> {
 			.app_data(json_config)
 			.app_data(links.clone())
 			.app_data(pool.clone())
+			.service(
+				SwaggerUi::new("/documentation/{_:.*}").url("/documentation/openapi.json", openapi.clone())
+			)
 			.service(get_config)
 			.service(index)
-			.service(api_docs)
 			.service(serve_file)
 			.service(get_favicon)
 			.service(get_shortened)

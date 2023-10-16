@@ -1,12 +1,30 @@
 use actix_files::NamedFile;
 use actix_web::{get, HttpRequest, HttpResponse, post, Responder, web};
 use tracing::{debug, info};
+use utoipa::OpenApi;
 
 use crate::CONFIG;
+use crate::config::Config;
 use crate::error::ShortyError;
 use crate::LinkConfig;
 use crate::LinkStore;
 use crate::util::uri_to_url;
+
+#[derive(OpenApi)]
+#[openapi(
+	paths(
+		get_shortened,
+		get_config,
+		create_shortened,
+		create_shortened_custom,
+	),
+	tags(
+		(name = "/", description = "Simple shortening"),
+		(name = "/custom", description = "Advanced shortening"),
+		(name = "/config", description = "Server configuration"),
+	)
+)]
+pub struct ApiDoc;
 
 // The function is async because the actix-web macro requires it.
 #[allow(clippy::unused_async)]
@@ -33,17 +51,30 @@ pub async fn index(req: HttpRequest) -> Result<impl Responder, Box<dyn std::erro
 	{ unreachable!("If this is encountered, the `frontend_location` config key was not ensured to be present"); }
 }
 
-#[get("/{shortened_url:.*}")]
+/// Redirect to the aliased url
+#[utoipa::path(
+	tag = "/",
+	params((
+		"link_id" = inline(String),
+		Path,
+		description = "The id of the aliased url",
+	)),
+	responses(
+		(status = 307, description = "Redirection to aliased url"),
+		(status = 404, description = "Shortened ID couldn't be found or was expired"),
+	),
+)]
+#[get("/{link_id:.*}")]
 async fn get_shortened(
 	params: web::Path<String>,
 	link_store: web::Data<LinkStore>,
 ) -> Result<impl Responder, ShortyError> {
-	let shortened_url = params.into_inner();
-	debug!("Got request for {shortened_url}");
+	let link_id = params.into_inner();
+	debug!("Got request for {link_id}");
 
 
-	if let Some(link) = link_store.get(shortened_url.as_str()).await {
-		info!("Return url for {shortened_url} is {link}");
+	if let Some(link) = link_store.get(link_id.as_str()).await {
+		info!("Return url for {link_id} is {link}");
 		Ok(
 			HttpResponse::TemporaryRedirect()
 				.append_header(("Location", link.redirect_to.as_str()))
@@ -54,6 +85,13 @@ async fn get_shortened(
 	}
 }
 
+/// Retrieves the servers configuration details
+#[utoipa::path(
+	tag = "/config",
+	responses(
+		(status = 200, body = inline(Config), description = "The server config as json"),
+	),
+)]
 // The function is async because the actix-web macro requires it.
 #[allow(clippy::unused_async)]
 #[get("/config")]
@@ -63,18 +101,18 @@ async fn get_config() -> impl Responder {
 		.body(CONFIG.json_string())
 }
 
-// The function is async because the actix-web macro requires it.
-#[allow(clippy::unused_async)]
-#[get("/documentation")]
-pub async fn api_docs() -> impl Responder {
-	const DOCUMENTATION_YAML: &str = include_str!("../../meta/docs/api.yaml");
-
-	HttpResponse::Ok()
-		.content_type("text/x-yaml")
-		.body(DOCUMENTATION_YAML)
-}
-
-/// Creates a shortened link by taking the requested uri and turning it into a shortened link.
+/// Create a simple, unconfigured shortened link.
+#[utoipa::path(
+	tag = "/",
+	params((
+		"url" = inline(String),
+	Path,
+		description = "The url to shorten",
+	)),
+	responses(
+		(status = 200, description = "The url was successfully shortened"),
+	),
+)]
 #[post("/{url:.*}")]
 #[allow(clippy::similar_names)]
 async fn create_shortened(
@@ -97,8 +135,18 @@ async fn create_shortened(
 	)
 }
 
-/// Custom shortened URL, configured via Json.
-/// Also see [`LinkConfig`].
+/// Advanced url shortening
+///
+/// Shortens a URL, allowing for advanced configuration.
+#[utoipa::path(
+	tag = "/custom",
+	request_body(content = inline(LinkConfig), description = "The settings for the url to alias"),
+	responses(
+		(status = 200, description = "The url was successfully registered as an alias and is now retrievable with at the get endpoint"),
+		(status = 400, description = "Json is malformed, the link exceeds the max length allowed by the server or the link was empty"),
+		(status = 409, description = "The specified ID is already in use"),
+	),
+)]
 #[post("/custom")]
 async fn create_shortened_custom(
 	link_store: web::Data<LinkStore>,
