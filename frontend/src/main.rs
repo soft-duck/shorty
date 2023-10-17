@@ -33,11 +33,8 @@ pub const INPUT_WIDTH: &str = "235px";
         - write test-cases for ui (how?)
         - rerender on server config
     TODO @flamion:
-        - negative max_uses, valid_for
         - backend error enum or similar to give more specific messages
             - alternately display the backend error directly
-        - rework build process (this includes changing the dockerfile)
-            - decision needed
 */
 fn main() {
     setup_tracing_subscriber();
