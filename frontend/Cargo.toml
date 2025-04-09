@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 gloo-net = "0.4"
-wasm-bindgen = "0.2"
+wasm-bindgen = "0.2.88"
 enclose = "1.1"
 tracing-web = "0.1"
 tracing = "0.1"
@@ -38,7 +38,7 @@ features = ["derive", "rc"]
 
 # needed for UtcTime in tracing_subscriber
 [dependencies.time]
-version = "0.3"
+version = "0.3.35"
 features = ["wasm-bindgen", "parsing", "local-offset", "macros"]
 
 [dependencies.tracing-subscriber]
