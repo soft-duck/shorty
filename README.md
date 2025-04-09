@@ -6,6 +6,7 @@ An instance is currently hosted at https://s.flamion.dev
 if you want to try it out :)
 
 - [Self hosting](#self-hosting)
+  - [Docker / Podman](#docker)
   - [Self compiling](#self-compiling)
   - [Configuration](#configuration)
   - [Reverse proxy](#reverse-proxy)
@@ -19,6 +20,15 @@ https. I personally use nginx, but you can use any reverse proxy you want.
 
 There's multiple ways to run shorty, you can either grab a pre-compiled binary (from a release for example)
 or you can compile it yourself.
+
+### Docker
+There is a docker file provided, you can just build it with docker.
+A sample command for running it is:
+```
+podman run -d --name shorty -p 7999:7999 -v /home/podman/shorty:/data -e SHORTY_CONFIG=/data/config.toml
+```
+Switch out the directory before running. 
+After running it for the first time, it will create a sample config which has to be adjusted.
 
 ### Self compiling
 
