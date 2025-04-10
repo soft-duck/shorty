@@ -7,6 +7,7 @@ RUN cargo make -p release
 
 
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/soft-duck/shorty"
 WORKDIR /root
 COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/shorty .
 CMD ["./shorty"]
