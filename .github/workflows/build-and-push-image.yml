@@ -1,0 +1,27 @@
+name: Build and Deploy Images to GHCR
+on:
+  push:
+    branches:
+      # TODO include meister in the future
+      # - meister
+      - nächtlich
+  workflow_dispatch:
+
+jobs:
+      push-container-image:
+        runs-on: ubuntu-latest
+        steps:
+          - name: 'Checkout GitHub Action'
+            uses: actions/checkout@main
+
+          - name: 'Login to GitHub Container Registry'
+            uses: docker/login-action@v1
+            with:
+              registry: ghcr.io
+              username: ${{github.actor}}
+              password: ${{secrets.GITHUB_TOKEN}}
+
+          - name: 'Build Inventory Image'
+            run: |
+              docker build . --tag ghcr.io/soft-duck/shorty:latest
+              docker push ghcr.io/soft-duck/shorty:latest
