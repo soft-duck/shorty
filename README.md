@@ -26,7 +26,7 @@ There is a docker file provided, you can just build it with docker.
 
 Alternatively the image can be pulled from `ghcr.io/soft-duck/shorty:latest` with:
 ```
-docker pull ghcr.io/soft-duck/shorty:latest
+podman pull ghcr.io/soft-duck/shorty:latest
 ```
 > [!NOTE]
 > For now only the `latest` tag is available, which currently reflects the most recent nightly commit.
