@@ -23,9 +23,17 @@ or you can compile it yourself.
 
 ### Docker
 There is a docker file provided, you can just build it with docker.
+
+Alternatively the image can be pulled from `ghcr.io/soft-duck/shorty:latest` with:
+```
+docker pull ghcr.io/soft-duck/shorty:latest
+```
+> [!NOTE]
+> For now only the `latest` tag is available, which currently reflects the most recent nightly commit.
+
 A sample command for running it is:
 ```
-podman run -d --name shorty -p 7999:7999 -v /home/podman/shorty:/data -e SHORTY_CONFIG=/data/config.toml
+podman run -d --name shorty -p 7999:7999 -v /home/podman/shorty:/data -e SHORTY_CONFIG=/data/config.toml shorty
 ```
 Switch out the directory before running. 
 After running it for the first time, it will create a sample config which has to be adjusted.
